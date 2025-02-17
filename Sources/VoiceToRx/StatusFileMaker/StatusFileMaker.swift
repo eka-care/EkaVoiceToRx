@@ -94,7 +94,7 @@ final class StatusFileMaker {
       doc_oid: docOid,
       doc_uuid: V2RxInitConfigurations.shared.ownerUUID ?? "",
       date: Date().toIsoDateStringWithMilliSeconds(),
-      contextData: contextData, 
+      contextData: contextData,
       fileChunksInfo: fileChunksInfo,
       mode: conversationType?.rawValue
     )
@@ -107,14 +107,21 @@ final class StatusFileMaker {
       sessionID: sessionId
     ) { fileURL in
       guard let fileURL else { return }
-      fileUploader.uploadFile(url: fileURL, key: key, contentType: "application/json") { result in
-        switch result {
-        case .success:
-          debugPrint("Status File uploaded successfully")
-        case .failure(let error):
-          debugPrint("Error in uploading file -> \(error.localizedDescription)")
+      fileUploader
+        .uploadFile(
+          url: fileURL,
+          key: key,
+          contentType: "application/json"
+        ) { result in
+          switch result {
+          case .success:
+            /// Remove file from local after successfully uploaded
+            FileHelper.removeFile(at: fileURL)
+            debugPrint("Status File uploaded successfully")
+          case .failure(let error):
+            debugPrint("Error in uploading file -> \(error.localizedDescription)")
+          }
         }
-      }
     }
   }
   
@@ -144,17 +151,6 @@ final class StatusFileMaker {
     } catch {
       print("Error creating JSON file: \(error)")
       completion(nil)
-    }
-  }
-  
-  func deleteStatusFiles() {
-    statusFileURLs.forEach { url in
-      do {
-        try FileManager.default.removeItem(at: url)
-        debugPrint("Status file deleted successfully")
-      } catch {
-        debugPrint("Error deleting temporary files: \(error)")
-      }
     }
   }
 }

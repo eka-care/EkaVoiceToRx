@@ -356,20 +356,16 @@ extension VoiceToRxViewModel {
 // MARK: - Retry
 
 extension VoiceToRxViewModel {
-  /// Retry upload failed recordings
-  public func retryFailedRecordings(
-    completion: @escaping () -> Void
-  ) {
+  /// Used to retry file upload if any file was missed
+  public func retryIfNeeded() {
     guard let sessionID else { return }
-    /// Get the unuploaded files by matching the last component from the files upload mapper
-    let unuploadedFiles = audioChunkUploader.audioBufferToM4AConverter.urlsStored.filter {
-      audioChunkUploader.fileUploadMapper.contains($0.lastPathComponent)
+    let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
+    if let unuploadedFileUrls = FileHelper.getFileURLs(in: directory) {
+      fileRetryService.retryFilesUpload(
+        unuploadedFileUrls: unuploadedFileUrls,
+        sessionID: sessionID.uuidString
+      ) {}
     }
-    fileRetryService.retryFilesUpload(
-      unuploadedFileUrls: unuploadedFiles,
-      sessionID: sessionID.uuidString,
-      completion: completion
-    )
   }
 }
 
@@ -378,9 +374,6 @@ extension VoiceToRxViewModel {
 extension VoiceToRxViewModel {
   /// Reinitialize all the values to make sure nothing from previouse session remains
   func clearSession() {
-    /// Delete all the files from local
-    audioChunkUploader.audioBufferToM4AConverter.deleteFiles()
-    statusJSONFileMaker.deleteStatusFiles()
     vadAudioChunker.reset()
     audioChunkUploader.reset()
     pcmBuffersListRaw = []

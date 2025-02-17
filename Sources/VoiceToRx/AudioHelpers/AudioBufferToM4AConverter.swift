@@ -77,21 +77,11 @@ final class AudioBufferToM4AConverter {
     /// If Any of the file urls are present
     guard !urlsStored.isEmpty || !cafUrlsStored.isEmpty else { return }
     urlsStored.forEach { url in
-      do {
-        try FileManager.default.removeItem(at: url)
-        debugPrint("Deleted File with url -> \(url)")
-      } catch {
-        debugPrint("Error deleting temporary files: \(error)")
-      }
+      FileHelper.removeFile(at: url)
     }
     
     cafUrlsStored.forEach { url in
-      do {
-        try FileManager.default.removeItem(at: url)
-        debugPrint("Deleted File with url -> \(url)")
-      } catch {
-        debugPrint("Error deleting temporary files: \(error)")
-      }
+      FileHelper.removeFile(at: url)
     }
   }
   
