@@ -11,12 +11,12 @@ import SwiftData
 
 @Model
 final class VoiceConversationModel {
-  @Attribute(.unique) let id: UUID
-  let fileURL: String?
-  let date: Date
-  var transcriptionText: String
+  @Attribute(.unique) public let id: UUID
+  public let fileURL: String?
+  public let date: Date
+  public var transcriptionText: String
   
-  init(
+  public init(
     fileURL: String? = nil,
     date: Date,
     transcriptionText: String
