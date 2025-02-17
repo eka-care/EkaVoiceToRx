@@ -9,9 +9,9 @@ import Foundation
 
 /// Context Params
 public struct VoiceToRxContextParams: Codable {
-  let doctor: VoiceToRxDoctorProfileInfo?
-  let patient: VoiceToRxPatientProfileInfo?
-  let visitId: String?
+  public let doctor: VoiceToRxDoctorProfileInfo?
+  public let patient: VoiceToRxPatientProfileInfo?
+  public let visitId: String?
   
   enum CodingKeys: String, CodingKey {
     case doctor = "doctor"
@@ -23,8 +23,8 @@ public struct VoiceToRxContextParams: Codable {
 /// Doctor Info
 
 public struct VoiceToRxDoctorProfileInfo: Codable {
-  let id: String?
-  let profile: VoiceToRxDoctorProfile?
+  public let id: String?
+  public let profile: VoiceToRxDoctorProfile?
   
   enum CodingKeys: String, CodingKey {
     case id = "_id"
@@ -33,16 +33,16 @@ public struct VoiceToRxDoctorProfileInfo: Codable {
 }
 
 public struct VoiceToRxDoctorProfile: Codable {
-  let personal: VoiceToRxDoctorPersonal?
+  public let personal: VoiceToRxDoctorPersonal?
 }
 
 public struct VoiceToRxDoctorPersonal: Codable {
-  let name: VoiceToRxDoctorName?
+  public let name: VoiceToRxDoctorName?
 }
 
 public struct VoiceToRxDoctorName: Codable {
-  let lastName: String?
-  let firstName: String?
+  public let lastName: String?
+  public let firstName: String?
   
   enum CodingKeys: String, CodingKey {
     case lastName = "l"
@@ -53,14 +53,14 @@ public struct VoiceToRxDoctorName: Codable {
 /// Patient Info
 
 public struct VoiceToRxPatientProfileInfo: Codable {
-  let id: String?
-  let profile: VoiceToRxPatientProfile?
+  public let id: String?
+  public let profile: VoiceToRxPatientProfile?
 }
 
 public struct VoiceToRxPatientProfile: Codable {
-  let personal: VoiceToRxPatientPersonal?
+  public let personal: VoiceToRxPatientPersonal?
 }
 
 public struct VoiceToRxPatientPersonal: Codable {
-  let name: String?
+  public let name: String?
 }
