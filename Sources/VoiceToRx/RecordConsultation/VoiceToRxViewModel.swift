@@ -10,13 +10,13 @@ import AVFoundation
 import FirebaseFirestore
 import SwiftyJSON
 
-enum RecordConsultationState: Equatable {
+public enum RecordConsultationState: Equatable {
   case startRecording
   case listening(conversationType: VoiceConversationType)
   case processing
   case resultDisplay
   
-  static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
+  public static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
     switch (lhs, rhs) {
     case (.startRecording, .startRecording),
       (.processing, .processing),
@@ -66,7 +66,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Properties
   
-  @Published var screenState: RecordConsultationState = .startRecording
+  @Published public var screenState: RecordConsultationState = .startRecording
   /// Don't add duplicates in the set
   @Published var filesProcessed: Set<String> = []
   @Published var uploadedFiles: Set<String> = []
@@ -95,7 +95,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   var contextParams: VoiceToRxContextParams?
   weak var delegate: VoiceToRxViewModelDelegate?
   
-  init() {
+  public init() {
     setupRecordSession()
     setupDependencies()
   }
