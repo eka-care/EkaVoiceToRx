@@ -10,7 +10,7 @@ import Foundation
 import SwiftData
 
 @Model
-final class VoiceConversationModel {
+public final class VoiceConversationModel {
   @Attribute(.unique) public let id: UUID
   public let fileURL: String?
   public let date: Date
