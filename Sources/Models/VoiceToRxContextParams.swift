@@ -22,7 +22,7 @@ public struct VoiceToRxContextParams: Codable {
 
 /// Doctor Info
 
-struct VoiceToRxDoctorProfileInfo: Codable {
+public struct VoiceToRxDoctorProfileInfo: Codable {
   let id: String?
   let profile: VoiceToRxDoctorProfile?
   
@@ -32,15 +32,15 @@ struct VoiceToRxDoctorProfileInfo: Codable {
   }
 }
 
-struct VoiceToRxDoctorProfile: Codable {
+public struct VoiceToRxDoctorProfile: Codable {
   let personal: VoiceToRxDoctorPersonal?
 }
 
-struct VoiceToRxDoctorPersonal: Codable {
+public struct VoiceToRxDoctorPersonal: Codable {
   let name: VoiceToRxDoctorName?
 }
 
-struct VoiceToRxDoctorName: Codable {
+public struct VoiceToRxDoctorName: Codable {
   let lastName: String?
   let firstName: String?
   
@@ -52,15 +52,15 @@ struct VoiceToRxDoctorName: Codable {
 
 /// Patient Info
 
-struct VoiceToRxPatientProfileInfo: Codable {
+public struct VoiceToRxPatientProfileInfo: Codable {
   let id: String?
   let profile: VoiceToRxPatientProfile?
 }
 
-struct VoiceToRxPatientProfile: Codable {
+public struct VoiceToRxPatientProfile: Codable {
   let personal: VoiceToRxPatientPersonal?
 }
 
-struct VoiceToRxPatientPersonal: Codable {
+public struct VoiceToRxPatientPersonal: Codable {
   let name: String?
 }
