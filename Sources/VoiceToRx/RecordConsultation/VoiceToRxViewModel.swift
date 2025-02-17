@@ -62,7 +62,7 @@ final class RecordingConfiguration {
   }
 }
 
-final class VoiceToRxViewModel: ObservableObject {
+public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Properties
   
