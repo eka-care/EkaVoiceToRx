@@ -68,8 +68,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   @Published public var screenState: RecordConsultationState = .startRecording
   /// Don't add duplicates in the set
-  @Published var filesProcessed: Set<String> = []
-  @Published var uploadedFiles: Set<String> = []
+  @Published public var filesProcessed: Set<String> = []
+  @Published public var uploadedFiles: Set<String> = []
   
   private var docOid: String?
   
