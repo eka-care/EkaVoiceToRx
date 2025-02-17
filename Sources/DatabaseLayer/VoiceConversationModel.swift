@@ -29,7 +29,7 @@ final class VoiceConversationModel {
 }
 
 @ModelActor
-actor VoiceConversationAggregator {
+public actor VoiceConversationAggregator {
   static let shared = VoiceConversationAggregator(modelContainer: V2RxInitConfigurations.shared.modelContainer)
   
   var getAllData: [VoiceConversationModel] {
