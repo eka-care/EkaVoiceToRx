@@ -92,8 +92,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var filesProcessedListenerReference: (any ListenerRegistration)?
   private var listenerReference: (any ListenerRegistration)?
   
-  var contextParams: VoiceToRxContextParams?
-  weak var delegate: VoiceToRxViewModelDelegate?
+  public var contextParams: VoiceToRxContextParams?
+  public weak var delegate: VoiceToRxViewModelDelegate?
   
   public init() {
     setupRecordSession()
@@ -373,7 +373,7 @@ extension VoiceToRxViewModel {
 
 extension VoiceToRxViewModel {
   /// Reinitialize all the values to make sure nothing from previouse session remains
-  func clearSession() {
+  public func clearSession() {
     vadAudioChunker.reset()
     audioChunkUploader.reset()
     pcmBuffersListRaw = []
