@@ -216,6 +216,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         contextData: contextParams,
         fileType: .eof
       )
+      retryIfNeeded()
       /// Listend for structured rx from firebase
       listenForStructuredRx()
     }
@@ -364,7 +365,10 @@ extension VoiceToRxViewModel {
       fileRetryService.retryFilesUpload(
         unuploadedFileUrls: unuploadedFileUrls,
         sessionID: sessionID.uuidString
-      ) {}
+      ) { [weak self] in
+        guard let self else { return }
+        listenForFilesProcessed()
+      }
     }
   }
 }
