@@ -8,7 +8,7 @@
 import Foundation
 
 /// Context Params
-struct VoiceToRxContextParams: Codable {
+public struct VoiceToRxContextParams: Codable {
   let doctor: VoiceToRxDoctorProfileInfo?
   let patient: VoiceToRxPatientProfileInfo?
   let visitId: String?

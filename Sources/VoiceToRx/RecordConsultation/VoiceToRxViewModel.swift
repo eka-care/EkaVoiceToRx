@@ -35,7 +35,7 @@ public enum VoiceConversationType: String {
   case dictation
 }
 
-protocol VoiceToRxViewModelDelegate: AnyObject {
+public protocol VoiceToRxViewModelDelegate: AnyObject {
   func onReceiveStructuredRx(id: UUID, transcriptText: String)
   func errorReceivingPrescription(
     id: UUID,

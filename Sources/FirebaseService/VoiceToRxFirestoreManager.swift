@@ -9,7 +9,7 @@
 import Foundation
 import FirebaseFirestore
 
-enum VoiceToRxErrorCode: Int {
+public enum VoiceToRxErrorCode: Int {
   case noIssues = 1
   case apiError = 2
   case smallTranscript = 3
