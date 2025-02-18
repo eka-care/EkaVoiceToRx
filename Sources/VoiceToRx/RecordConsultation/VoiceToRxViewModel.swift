@@ -384,6 +384,9 @@ extension VoiceToRxViewModel {
         sessionID: sessionID.uuidString
       ) { [weak self] in
         guard let self else { return }
+        /// Update the uploaded files
+        uploadedFiles.formUnion(unuploadedFileUrls.map { $0.lastPathComponent })
+        /// listen for files processed
         listenForFilesProcessed()
         listenForStructuredRx()
       }
