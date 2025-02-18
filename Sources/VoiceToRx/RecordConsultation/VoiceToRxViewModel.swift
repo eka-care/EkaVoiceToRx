@@ -11,6 +11,7 @@ import FirebaseFirestore
 import SwiftyJSON
 
 public enum RecordConsultationState: Equatable {
+  case retry
   case startRecording
   case listening(conversationType: VoiceConversationType)
   case processing
@@ -18,7 +19,9 @@ public enum RecordConsultationState: Equatable {
   
   public static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
     switch (lhs, rhs) {
-    case (.startRecording, .startRecording),
+    case
+      (.retry, .retry),
+      (.startRecording, .startRecording),
       (.processing, .processing),
       (.resultDisplay, .resultDisplay):
       return true
@@ -353,6 +356,17 @@ extension VoiceToRxViewModel {
 // MARK: - Retry
 
 extension VoiceToRxViewModel {
+  public func checkIfRetryNeeded() -> Bool {
+    guard let sessionID else { return false }
+    let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
+    /// If files are present in the directory return true for retry
+    if let _ = FileHelper.getFileURLs(in: directory) {
+      return true
+    }
+    /// If no files present return false
+    return false
+  }
+  
   /// Used to retry file upload if any file was missed
   public func retryIfNeeded() {
     guard let sessionID else { return }
