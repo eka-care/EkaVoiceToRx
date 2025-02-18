@@ -71,4 +71,9 @@ public actor VoiceConversationAggregator {
       print("Failed to Fetch model with id \(id) \(error.localizedDescription)")
     }
   }
+  
+  /// Function to delete all the data in swift data model
+  public func deleteAll() {
+    try? modelContext.delete(model: VoiceConversationModel.self, where: .true, includeSubclasses: true)
+  }
 }
