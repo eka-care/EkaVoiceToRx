@@ -99,7 +99,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   public var contextParams: VoiceToRxContextParams?
   public weak var delegate: VoiceToRxViewModelDelegate?
   
-  public init() {
+  public init(sessionID: UUID? = nil) {
+    setupSessionID(sessionID: sessionID)
     setupRecordSession()
     setupDependencies()
   }
@@ -230,6 +231,12 @@ public final class VoiceToRxViewModel: ObservableObject {
 // MARK: - Helper Functions
 
 extension VoiceToRxViewModel {
+  /// Setup session id from outside if viewModel is init with this
+  private func setupSessionID(sessionID: UUID?) {
+    guard let sessionID else { return }
+    self.sessionID = sessionID
+  }
+  
   private func setupRecordSession() {
     recordingSession = AVAudioSession.sharedInstance()
     /// Form recording configuration using device information
