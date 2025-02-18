@@ -42,6 +42,7 @@ public protocol VoiceToRxViewModelDelegate: AnyObject {
     errorCode: VoiceToRxErrorCode,
     transcriptText: String
   )
+  func updateAppointmentsData(appointmentID: String, voiceToRxID: String)
 }
 
 final class RecordingConfiguration {
@@ -338,8 +339,9 @@ extension VoiceToRxViewModel {
   // TODO: - Once we have appointments context
   /// In Appointments Firebase update the voice to rx id against the appointment id
   private func updateAppointmentIdWithVoiceToRxId() {
-    //    guard let apptId = contextParams?.visitId,
-    //    let sessionIdString = sessionID?.uuidString else { return }
+        guard let apptId = contextParams?.visitId,
+        let sessionIdString = sessionID?.uuidString else { return }
+    delegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
     //    let _ = FireStoreManager.shared.setAppointmentData(
     //      aid: apptId,
     //      fieldsToUpdate: [
