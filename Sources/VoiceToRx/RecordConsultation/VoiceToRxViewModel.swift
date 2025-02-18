@@ -234,7 +234,7 @@ extension VoiceToRxViewModel {
     recordingSession = AVAudioSession.sharedInstance()
     /// Form recording configuration using device information
     do {
-      try recordingSession?.setCategory(.record, mode: .measurement, options: .duckOthers)
+      try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: .duckOthers)
       try recordingSession?.setPreferredSampleRate(Double(RecordingConfiguration.shared.requiredSampleRate))
       //      try recordingSession?.setInputGain(<#T##gain: Float##Float#>)
       try recordingSession?.setActive(true)
