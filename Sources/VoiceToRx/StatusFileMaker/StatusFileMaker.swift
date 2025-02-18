@@ -116,7 +116,6 @@ final class StatusFileMaker {
           switch result {
           case .success:
             /// Remove file from local after successfully uploaded
-            FileHelper.removeFile(at: fileURL)
             debugPrint("Status File uploaded successfully")
           case .failure(let error):
             debugPrint("Error in uploading file -> \(error.localizedDescription)")

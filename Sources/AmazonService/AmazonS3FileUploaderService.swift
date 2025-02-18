@@ -37,6 +37,8 @@ final class AmazonS3FileUploaderService {
       
       switch result {
       case .success(let fileUploadedKey):
+        /// Remove file once uploaded
+        FileHelper.removeFile(at: url)
         completion(.success(fileUploadedKey))
       case .failure(let error):
         if retryCount > 0 {

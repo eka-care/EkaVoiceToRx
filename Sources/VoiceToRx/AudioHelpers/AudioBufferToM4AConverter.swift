@@ -61,6 +61,8 @@ final class AudioBufferToM4AConverter {
       /// Convert the PCM file to M4A
       convertToM4A(sourceURL: outputPCMURL, destinationURL: outputM4AURL, success: { [weak self] in
         guard let self else { return }
+        /// Once converted remove the PCM file
+        FileHelper.removeFile(at: outputPCMURL)
         completion(.success(outputM4AURL))
         urlsStored.append(outputM4AURL)
       }, failure: { error in
@@ -70,18 +72,6 @@ final class AudioBufferToM4AConverter {
       /// Handle the error
       print("Error: \(error.localizedDescription)")
       completion(.failure(error))
-    }
-  }
-  
-  func deleteFiles() {
-    /// If Any of the file urls are present
-    guard !urlsStored.isEmpty || !cafUrlsStored.isEmpty else { return }
-    urlsStored.forEach { url in
-      FileHelper.removeFile(at: url)
-    }
-    
-    cafUrlsStored.forEach { url in
-      FileHelper.removeFile(at: url)
     }
   }
   

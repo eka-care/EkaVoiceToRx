@@ -88,7 +88,6 @@ final class AudioChunkUploader {
           switch result {
           case .success:
             updateUploadSuccessMap(chunkIndex: String(chunkIndex))
-            deleteChunkFileOnceUploaded(at: fileURL)
             debugPrint("Successfully uploaded file")
             completion()
           case .failure(let error):
@@ -117,10 +116,6 @@ final class AudioChunkUploader {
       fileUploadMapper.remove(at: indexOfKey)
     }
     debugPrint("Updated Upload success map is -> \(fileUploadMapper)")
-  }
-  
-  private func deleteChunkFileOnceUploaded(at url: URL) {
-    FileHelper.removeFile(at: url)
   }
   
   func uploadFullAudio(
