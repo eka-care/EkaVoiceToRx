@@ -385,6 +385,7 @@ extension VoiceToRxViewModel {
       ) { [weak self] in
         guard let self else { return }
         listenForFilesProcessed()
+        listenForStructuredRx()
       }
     }
   }
