@@ -397,6 +397,12 @@ extension VoiceToRxViewModel {
 // MARK: - Clear session
 
 extension VoiceToRxViewModel {
+  public func deleteAllData() {
+    Task {
+      await VoiceConversationAggregator.shared.deleteAll()
+    }
+  }
+  
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
     vadAudioChunker.reset()
