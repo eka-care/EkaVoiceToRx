@@ -342,12 +342,6 @@ extension VoiceToRxViewModel {
         guard let apptId = contextParams?.visitId,
         let sessionIdString = sessionID?.uuidString else { return }
     delegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
-    //    let _ = FireStoreManager.shared.setAppointmentData(
-    //      aid: apptId,
-    //      fieldsToUpdate: [
-    //        Appointment.CodingKeys.voiceToRxId.rawValue: sessionIdString
-    //      ]
-    //    )
   }
   
   private func stopListenerReference() {
