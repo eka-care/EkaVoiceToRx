@@ -1,5 +1,5 @@
 //
-//  FloatingButtonController.swift
+//  FloatingVoiceToRxView.swift
 //  EkaVoiceToRx
 //
 //  Created by Arya Vashisht on 03/03/25.
@@ -8,10 +8,10 @@
 import UIKit
 import SwiftUI
 
-public class FloatingButtonController: UIViewController {
+public class FloatingVoiceToRxView: UIViewController {
   private(set) var button: UIView!
   private let window: FloatingButtonWindow = FloatingButtonWindow()
-  static let shared: FloatingButtonController = FloatingButtonController()
+  static let shared: FloatingVoiceToRxView = FloatingVoiceToRxView()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
   
@@ -19,7 +19,7 @@ public class FloatingButtonController: UIViewController {
     fatalError()
   }
   
-  private init() {
+  public init() {
     super.init(nibName: nil, bundle: nil)
   }
   
