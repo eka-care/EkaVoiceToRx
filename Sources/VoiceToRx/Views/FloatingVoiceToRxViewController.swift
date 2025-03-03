@@ -1,5 +1,5 @@
 //
-//  FloatingVoiceToRxView.swift
+//  FloatingVoiceToRxViewController.swift
 //  EkaVoiceToRx
 //
 //  Created by Arya Vashisht on 03/03/25.
@@ -8,10 +8,10 @@
 import UIKit
 import SwiftUI
 
-public class FloatingVoiceToRxView: UIViewController {
+public class FloatingVoiceToRxViewController: UIViewController {
   private(set) var button: UIView!
   private let window: FloatingButtonWindow = FloatingButtonWindow()
-  static let shared: FloatingVoiceToRxView = FloatingVoiceToRxView()
+  static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
   
