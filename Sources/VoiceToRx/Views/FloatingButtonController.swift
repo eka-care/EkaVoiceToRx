@@ -8,7 +8,7 @@
 import UIKit
 import SwiftUI
 
-class FloatingButtonController: UIViewController {
+public class FloatingButtonController: UIViewController {
   private(set) var button: UIView!
   private let window: FloatingButtonWindow = FloatingButtonWindow()
   static let shared: FloatingButtonController = FloatingButtonController()
@@ -175,7 +175,7 @@ class FloatingButtonController: UIViewController {
     return sqrt(xDistance * xDistance + yDistance * yDistance)
   }
   
-  override func viewDidLayoutSubviews() {
+  public override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
   }
 }

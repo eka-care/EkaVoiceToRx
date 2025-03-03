@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct PictureInPictureView: View {
+public struct PictureInPictureView: View {
   
   let voiceToRxViewModel: VoiceToRxViewModel
   let stopVoiceRecording:() -> Void
@@ -21,7 +21,7 @@ struct PictureInPictureView: View {
     self.stopVoiceRecording = stopVoiceRecording
   }
   
-  var body: some View {
+  public var body: some View {
     AudioMessageView(name: "Amit Bharti", voiceToRxViewModel: voiceToRxViewModel, stopVoiceRecording: stopVoiceRecording)
       .frame(width: 200, height: 90)
   }
