@@ -11,7 +11,7 @@ import SwiftUI
 public class FloatingVoiceToRxViewController: UIViewController {
   private(set) var button: UIView!
   private let window: FloatingButtonWindow = FloatingButtonWindow()
-  static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
+  public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
   
