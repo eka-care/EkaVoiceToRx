@@ -61,6 +61,7 @@ final class AudioBufferToM4AConverter {
       /// Convert the PCM file to M4A
       convertToM4A(sourceURL: outputPCMURL, destinationURL: outputM4AURL, success: { [weak self] in
         guard let self else { return }
+        print("Removed file at url \(outputPCMURL)")
         /// Once converted remove the PCM file
         FileHelper.removeFile(at: outputPCMURL)
         completion(.success(outputM4AURL))
