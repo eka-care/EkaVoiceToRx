@@ -28,11 +28,11 @@ public struct PictureInPictureView: View {
     switch voiceToRxViewModel.screenState {
     case .retry, .startRecording:
       EmptyView()
-    case .listening(let conversationType):
+    case .listening:
       FloatingVoiceToRxRecordingView(
         name: title,
         voiceToRxViewModel: voiceToRxViewModel,
-        stopVoiceRecording: {}
+        stopVoiceRecording: stopVoiceRecording
       )
     case .processing:
       FloatingVoiceToRxProcessingView()
