@@ -10,7 +10,7 @@ import SwiftUI
 struct FloatingVoiceToRxRecordingView: View {
   let name: String
   let voiceToRxViewModel: VoiceToRxViewModel
-  let stopVoiceRecording: () -> Void
+  let onTapStop: () -> Void
   
   @State private var elapsedTime: TimeInterval = 0
   @State private var timer: Timer?
@@ -29,8 +29,7 @@ struct FloatingVoiceToRxRecordingView: View {
       Spacer()
       
       Button {
-        stopVoiceRecording()
-        stopTimer()
+        onTapStop()
       } label: {
         Image(systemName: "stop.fill")
           .foregroundStyle(.red)

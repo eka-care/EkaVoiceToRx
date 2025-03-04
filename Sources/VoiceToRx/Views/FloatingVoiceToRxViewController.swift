@@ -45,7 +45,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
       rootView: PictureInPictureView(
         title: "Amit Bharti",
         voiceToRxViewModel: viewModel,
-        stopVoiceRecording: showConfirmationAlert
+        onTapStop: showConfirmationAlert
       )
     ).view else {
       return

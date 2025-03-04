@@ -11,17 +11,17 @@ import SwiftUI
 public struct PictureInPictureView: View {
   
   let title: String
-  let voiceToRxViewModel: VoiceToRxViewModel
-  let stopVoiceRecording: () -> Void
+  @ObservedObject var voiceToRxViewModel: VoiceToRxViewModel
+  let onTapStop: () -> Void
   
   init(
     title: String,
     voiceToRxViewModel: VoiceToRxViewModel,
-    stopVoiceRecording: @escaping () -> Void
+    onTapStop: @escaping () -> Void
   ) {
     self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
-    self.stopVoiceRecording = stopVoiceRecording
+    self.onTapStop = stopVoiceRecording
   }
   
   public var body: some View {
@@ -32,7 +32,7 @@ public struct PictureInPictureView: View {
       FloatingVoiceToRxRecordingView(
         name: title,
         voiceToRxViewModel: voiceToRxViewModel,
-        stopVoiceRecording: stopVoiceRecording
+        onTapStop: onTapStop
       )
     case .processing:
       FloatingVoiceToRxProcessingView()
