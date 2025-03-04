@@ -36,7 +36,7 @@ final class AmazonS3FileUploaderService {
     let lastPathComponent = url.lastPathComponent
     debugPrint("S3 content type Last path component: \(lastPathComponent)")
     
-    if lastPathComponent.hasSuffix(".m4a") {
+    if lastPathComponent.hasSuffix(".m4a") || lastPathComponent.hasSuffix(".m4a_") {
       contentType = "audio/wav"
     } else if lastPathComponent.hasSuffix(".json") {
       contentType = "application/json"
