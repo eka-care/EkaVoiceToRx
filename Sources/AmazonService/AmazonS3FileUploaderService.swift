@@ -20,6 +20,7 @@ final class AmazonS3FileUploaderService {
   
   // MARK: - Properties
   
+  let transferUtility = AWSS3TransferUtility.default()
   let domainName = RecordingS3UploadConfiguration.domain
   let bucketName = RecordingS3UploadConfiguration.bucketName
   let dateFolderName = RecordingS3UploadConfiguration.getDateFolderName()
@@ -59,7 +60,6 @@ final class AmazonS3FileUploaderService {
     contentType: String = "audio/wav",
     completion: @escaping (Result<String, Error>) -> Void
   ) {
-    let transferUtility = AWSS3TransferUtility.register(with: AWSConfiguration.shared.configureAWSS3(credentials: <#T##Credentials#>), transferUtilityConfiguration: <#T##AWSS3TransferUtilityConfiguration?#>, forKey: <#T##String#>)
     debugPrint("Key is \(key)")
     transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: nil) { task, error in
       if let error {
