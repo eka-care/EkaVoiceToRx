@@ -42,8 +42,6 @@ final class AudioBufferToM4AConverter {
     
     /// File URLs
     let outputPCMURL = documentDirectoryURL
-      .appendingPathComponent("TemporaryFiles")
-      .appendingPathComponent(sessionId)
       .appendingPathComponent(pcmFileName)
     let outputM4AURL = documentDirectoryURL
       .appendingPathComponent(sessionId)
