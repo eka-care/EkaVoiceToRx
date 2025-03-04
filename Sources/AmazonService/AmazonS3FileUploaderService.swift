@@ -54,7 +54,7 @@ final class AmazonS3FileUploaderService {
     }
   }
   
-  func uploadFile(
+  private func uploadFile(
     url: URL,
     key: String,
     contentType: String = "audio/wav",

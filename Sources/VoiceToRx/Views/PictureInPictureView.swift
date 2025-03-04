@@ -21,7 +21,7 @@ public struct PictureInPictureView: View {
   ) {
     self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
-    self.onTapStop = stopVoiceRecording
+    self.onTapStop = onTapStop
   }
   
   public var body: some View {
