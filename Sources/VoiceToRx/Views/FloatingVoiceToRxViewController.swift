@@ -42,8 +42,14 @@ public class FloatingVoiceToRxViewController: UIViewController {
     self.viewModel = viewModel
     let view = UIView()
     guard let button = UIHostingController(
-      rootView: PictureInPictureView(voiceToRxViewModel: viewModel, stopVoiceRecording: showConfirmationAlert)
-    ).view else { return }
+      rootView: PictureInPictureView(
+        title: "Amit Bharti",
+        voiceToRxViewModel: viewModel,
+        stopVoiceRecording: showConfirmationAlert
+      )
+    ).view else {
+      return
+    }
     button.frame = CGRect(x: (UIApplication.shared.keyWindow?.frame.width ?? 0), y: (UIApplication.shared.keyWindow?.frame.height)!/4, width: 200, height: 50)
     view.addSubview(button)
     self.view = view

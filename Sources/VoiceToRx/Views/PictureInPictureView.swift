@@ -10,13 +10,16 @@ import SwiftUI
 
 public struct PictureInPictureView: View {
   
+  let title: String
   let voiceToRxViewModel: VoiceToRxViewModel
-  let stopVoiceRecording:() -> Void
+  let stopVoiceRecording: () -> Void
   
   init(
+    title: String,
     voiceToRxViewModel: VoiceToRxViewModel,
     stopVoiceRecording: @escaping () -> Void
   ) {
+    self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
     self.stopVoiceRecording = stopVoiceRecording
   }
@@ -27,7 +30,7 @@ public struct PictureInPictureView: View {
       EmptyView()
     case .listening(let conversationType):
       FloatingVoiceToRxRecordingView(
-        name: "Amit Bhart",
+        name: title,
         voiceToRxViewModel: voiceToRxViewModel,
         stopVoiceRecording: {}
       )
