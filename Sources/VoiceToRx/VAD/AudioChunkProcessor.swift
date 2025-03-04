@@ -96,11 +96,6 @@ final class AudioChunkProcessor {
     guard let bufferPointer else { return nil }
     do {
       let activity = try vadDetector.process(frame: bufferPointer, length: length)
-      if activity == .activeVoice {
-        debugPrint("Voice is active")
-      } else {
-        debugPrint("Voice is not active")
-      }
       return activity
     } catch {
       debugPrint("Error process audio with vad")

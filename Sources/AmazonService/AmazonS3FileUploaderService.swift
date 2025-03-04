@@ -34,7 +34,7 @@ final class AmazonS3FileUploaderService {
     // Make content type
     var contentType = ""
     let lastPathComponent = url.lastPathComponent
-    print("Last path component: \(lastPathComponent)")
+    debugPrint("S3 content type Last path component: \(lastPathComponent)")
     
     if lastPathComponent.hasSuffix(".m4a") {
       contentType = "audio/m4a"
@@ -44,7 +44,7 @@ final class AmazonS3FileUploaderService {
       // Handle other file types or set a default content type
       contentType = "application/json"
     }
-    print("Content type: \(contentType)")
+    debugPrint("S3 content type Content type: \(contentType)")
     
     uploadFile(url: url, key: key, contentType: contentType) { [weak self] result in
       guard let self else { return }
