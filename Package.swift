@@ -28,6 +28,9 @@ let package = Package(
               .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
               .product(name: "SwiftyJSON", package: "SwiftyJSON"),
               .product(name: "libfvad", package: "libfvad")
+            ],
+            resources: [
+              .process("Resources")
             ]
         ),
 
