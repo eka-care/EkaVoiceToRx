@@ -107,12 +107,11 @@ final class StatusFileMaker {
       sessionID: sessionId
     ) { fileURL in
       guard let fileURL else { return }
-      fileUploader
-        .uploadFile(
-          url: fileURL,
-          key: key,
-          contentType: "application/json"
-        ) { result in
+      fileUploader.uploadFileWithRetry(
+        url: fileURL,
+        key: key,
+        contentType: "application/json"
+      ) { result in
           switch result {
           case .success:
             /// Remove file from local after successfully uploaded
