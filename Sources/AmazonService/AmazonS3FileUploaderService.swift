@@ -29,9 +29,17 @@ final class AmazonS3FileUploaderService {
     url: URL,
     key: String,
     retryCount: Int = 3,
-    contentType: String = "audio/wav",
     completion: @escaping (Result<String, Error>) -> Void
   ) {
+    // Make content type
+    
+    var contentType = ""
+    if url.lastPathComponent.hasSuffix(".m4a") {
+      contentType = "audio/m4a"
+    } else if url.lastPathComponent.hasSuffix(".json") {
+      contentType = "application/json"
+    }
+    
     uploadFile(url: url, key: key, contentType: contentType) { [weak self] result in
       guard let self else { return }
       
@@ -45,7 +53,7 @@ final class AmazonS3FileUploaderService {
           let retryDelay = DispatchTime.now() + 2.0 // 2 seconds backoff time
           DispatchQueue.global().asyncAfter(deadline: retryDelay) {
             debugPrint("Retrying upload (\(retryCount) retries left)...")
-            self.uploadFileWithRetry(url: url, key: key, retryCount: retryCount - 1, contentType: contentType, completion: completion)
+            self.uploadFileWithRetry(url: url, key: key, retryCount: retryCount - 1, completion: completion)
           }
         } else {
           completion(.failure(error))

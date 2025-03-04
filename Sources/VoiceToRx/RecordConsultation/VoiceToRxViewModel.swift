@@ -220,7 +220,6 @@ public final class VoiceToRxViewModel: ObservableObject {
         contextData: contextParams,
         fileType: .eof
       )
-      retryIfNeeded()
       /// Listend for structured rx from firebase
       listenForStructuredRx()
     }

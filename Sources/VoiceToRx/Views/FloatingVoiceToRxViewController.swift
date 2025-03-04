@@ -91,7 +91,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
       style: .default,
       handler: { [weak self] _ in
         guard let self else { return }
-        viewModel?.clearSession()
         hideFloatingButton()
       }
     ))
