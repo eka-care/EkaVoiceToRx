@@ -75,24 +75,23 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopRecording()
-        hideFloatingButton()
       }
     ))
     
-    alertController.addAction(UIAlertAction(
-      title: "Not yet",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-      }
-    ))
-    
+//    alertController.addAction(UIAlertAction(
+//      title: "Not yet",
+//      style: .default,
+//      handler: { [weak self] _ in
+//        guard let self else { return }
+//      }
+//    ))
+//    
     alertController.addAction(UIAlertAction(
       title: "Cancel recording",
       style: .default,
       handler: { [weak self] _ in
         guard let self else { return }
-        //      viewModel?.stopRecording()
+        viewModel?.clearSession()
         hideFloatingButton()
       }
     ))
