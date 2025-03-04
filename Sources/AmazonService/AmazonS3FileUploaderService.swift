@@ -32,13 +32,19 @@ final class AmazonS3FileUploaderService {
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     // Make content type
-    
     var contentType = ""
-    if url.lastPathComponent.hasSuffix(".m4a") {
+    let lastPathComponent = url.lastPathComponent
+    print("Last path component: \(lastPathComponent)")
+    
+    if lastPathComponent.hasSuffix(".m4a") {
       contentType = "audio/m4a"
-    } else if url.lastPathComponent.hasSuffix(".json") {
+    } else if lastPathComponent.hasSuffix(".json") {
+      contentType = "application/json"
+    } else {
+      // Handle other file types or set a default content type
       contentType = "application/json"
     }
+    print("Content type: \(contentType)")
     
     uploadFile(url: url, key: key, contentType: contentType) { [weak self] result in
       guard let self else { return }
