@@ -109,8 +109,7 @@ final class StatusFileMaker {
       guard let fileURL else { return }
       fileUploader.uploadFileWithRetry(
         url: fileURL,
-        key: key,
-        contentType: "application/json"
+        key: key
       ) { result in
           switch result {
           case .success:
