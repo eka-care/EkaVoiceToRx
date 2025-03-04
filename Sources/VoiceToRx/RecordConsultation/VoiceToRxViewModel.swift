@@ -83,7 +83,10 @@ public final class VoiceToRxViewModel: ObservableObject {
     delegate: self,
     s3FileUploaderService: s3FileUploader
   )
-  lazy var statusJSONFileMaker = StatusFileMaker(delegate: self)
+  lazy var statusJSONFileMaker = StatusFileMaker(
+    delegate: self,
+    s3FileUploaderService: s3FileUploader
+  )
   let s3FileUploader = AmazonS3FileUploaderService()
   private let fileRetryService = VoiceToRxFileUploadRetry()
   private var sessionID: UUID?

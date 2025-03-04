@@ -57,6 +57,7 @@ final class StatusFileMaker {
   
   weak var delegate: StatusFileDelegate?
   
+  let s3FileUploaderService: AmazonS3FileUploaderService
   var statusFileURLs: [URL] = [] {
     didSet {
       delegate?.statusFileUrlsMapChanged(statusFileUrls: statusFileURLs)
@@ -67,9 +68,11 @@ final class StatusFileMaker {
   
   init(
     delegate: StatusFileDelegate?,
+    s3FileUploaderService: AmazonS3FileUploaderService,
     statusFileURLs: [URL] = []
   ) {
     self.delegate = delegate
+    self.s3FileUploaderService = s3FileUploaderService
     self.statusFileURLs = statusFileURLs
   }
   
@@ -86,7 +89,6 @@ final class StatusFileMaker {
     contextData: VoiceToRxContextParams?,
     fileType: StatusFileType
   ) {
-    let fileUploader = AmazonS3FileUploaderService()
     let statusFileModel = StatusFileModel(
       s3_url: "\(domainName)\(bucketName)/\(dateFolderName)/\(sessionId)",
       uuid: sessionId,
@@ -105,9 +107,9 @@ final class StatusFileMaker {
       fileType: fileType.rawValue,
       data: statusFileModel,
       sessionID: sessionId
-    ) { fileURL in
-      guard let fileURL else { return }
-      fileUploader.uploadFileWithRetry(
+    ) { [weak self] fileURL in
+      guard let self, let fileURL else { return }
+      s3FileUploaderService.uploadFileWithRetry(
         url: fileURL,
         key: key
       ) { result in
