@@ -368,7 +368,8 @@ extension VoiceToRxViewModel {
     guard let sessionID else { return false }
     let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
     /// If files are present in the directory return true for retry
-    if let _ = FileHelper.getFileURLs(in: directory) {
+    if let retryFiles = FileHelper.getFileURLs(in: directory) {
+      print("Retry files present: \(retryFiles)")
       return true
     }
     /// If no files present return false
