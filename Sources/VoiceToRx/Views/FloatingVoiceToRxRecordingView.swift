@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct RecordingView: View {
+struct FloatingVoiceToRxRecordingView: View {
   let name: String
   let voiceToRxViewModel: VoiceToRxViewModel
   let stopVoiceRecording: () -> Void

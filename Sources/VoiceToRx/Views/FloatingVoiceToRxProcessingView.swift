@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FloatingVoiceToRxProcessingView {
+struct FloatingVoiceToRxProcessingView: View {
   var body: some View {
     HStack {
       Image(.colorDocAssist)

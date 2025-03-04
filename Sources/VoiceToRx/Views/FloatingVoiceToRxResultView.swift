@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct SmartNotesView: View {
+struct FloatingVoiceToRxResultView: View {
   
   var success: Bool
   
