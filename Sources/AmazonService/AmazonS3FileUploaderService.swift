@@ -45,6 +45,7 @@ final class AmazonS3FileUploaderService {
       
       switch result {
       case .success(let fileUploadedKey):
+        debugPrint("Successfully uploaded hence removing file at url \(url)")
         /// Remove file once uploaded
         FileHelper.removeFile(at: url)
         completion(.success(fileUploadedKey))
