@@ -8,19 +8,26 @@
 
 import SwiftUI
 
+public protocol PictureInPictureViewDelegate: AnyObject {
+  func onTapResultDisplayView(success: Bool)
+}
+
 public struct PictureInPictureView: View {
   
   let title: String
   @ObservedObject var voiceToRxViewModel: VoiceToRxViewModel
+  weak var delegate: PictureInPictureViewDelegate?
   let onTapStop: () -> Void
   
   init(
     title: String,
     voiceToRxViewModel: VoiceToRxViewModel,
+    delegate: PictureInPictureViewDelegate?,
     onTapStop: @escaping () -> Void
   ) {
     self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
+    self.delegate = delegate
     self.onTapStop = onTapStop
   }
   
@@ -38,6 +45,9 @@ public struct PictureInPictureView: View {
       FloatingVoiceToRxProcessingView()
     case .resultDisplay(let success):
       FloatingVoiceToRxResultView(success: success)
+        .onTapGesture {
+          delegate?.onTapResultDisplayView(success: success)
+        }
     }
   }
 }

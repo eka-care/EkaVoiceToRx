@@ -16,6 +16,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
+  public weak var delegate: PictureInPictureViewDelegate?
   
   required init?(coder aDecoder: NSCoder) {
     fatalError()
@@ -45,6 +46,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
       rootView: PictureInPictureView(
         title: "Amit Bharti",
         voiceToRxViewModel: viewModel,
+        delegate: delegate,
         onTapStop: showConfirmationAlert
       )
     ).view else {
