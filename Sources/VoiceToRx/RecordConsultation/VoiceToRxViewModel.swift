@@ -15,18 +15,19 @@ public enum RecordConsultationState: Equatable {
   case startRecording
   case listening(conversationType: VoiceConversationType)
   case processing
-  case resultDisplay(uuid: UUID, success: Bool)
+  case resultDisplay(success: Bool)
   
   public static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
     switch (lhs, rhs) {
     case
       (.retry, .retry),
       (.startRecording, .startRecording),
-      (.processing, .processing),
-      (.resultDisplay, .resultDisplay):
+      (.processing, .processing):
       return true
     case (.listening(let lhsType), .listening(let rhsType)):
       return lhsType == rhsType
+    case (.resultDisplay(let lhsSuccess), .resultDisplay(let rhsSuccess)):
+      return lhsSuccess == rhsSuccess
     default:
       return false
     }
@@ -349,10 +350,10 @@ extension VoiceToRxViewModel {
       self.listenerReference = listenerReference
       updateAppointmentIdWithVoiceToRxId()
       if let errorStructuredRx, errorStructuredRx == .smallTranscript {
-        screenState = .resultDisplay(uuid: sessionID, success: false)
+        screenState = .resultDisplay(success: false)
         delegate?.errorReceivingPrescription(id: sessionID, errorCode: errorStructuredRx, transcriptText: transcriptionString ?? "")
       } else {
-        screenState = .resultDisplay(uuid: sessionID, success: true)
+        screenState = .resultDisplay(success: true)
         delegate?.onReceiveStructuredRx(id: sessionID, transcriptText: transcriptionString ?? "")
       }
       /// Once we have the parsed text stop listener reference
