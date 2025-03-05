@@ -19,7 +19,7 @@ public struct PictureInPictureView: View {
   weak var delegate: PictureInPictureViewDelegate?
   let onTapStop: () -> Void
   
-  init(
+  public init(
     title: String,
     voiceToRxViewModel: VoiceToRxViewModel,
     delegate: PictureInPictureViewDelegate?,
