@@ -313,7 +313,10 @@ extension VoiceToRxViewModel: AudioChunkUploaderDelegate {
 extension VoiceToRxViewModel: StatusFileDelegate {
   func statusFileUrlsMapChanged(statusFileUrls: [URL]) {
     guard let lastUrlAppended = statusFileUrls.last?.lastPathComponent else { return }
-    uploadedFiles.insert(lastUrlAppended)
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      uploadedFiles.insert(lastUrlAppended)
+    }
   }
 }
 
