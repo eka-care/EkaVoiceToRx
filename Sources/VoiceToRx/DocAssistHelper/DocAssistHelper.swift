@@ -13,7 +13,7 @@ public enum DocAssistV2RxState {
   case retry
 }
 
-public final class DocAssistHelper {
+public final class V2RxDocAssistHelper {
   public static func fetchV2RxState(for sessionID: UUID) async -> DocAssistV2RxState? {
     let fileRetry = VoiceToRxFileUploadRetry()
     let voiceConversationModel = await VoiceConversationAggregator.shared.fetchVoiceConversation(

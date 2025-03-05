@@ -36,7 +36,7 @@ public struct PictureInPictureView: View {
       )
     case .processing:
       FloatingVoiceToRxProcessingView()
-    case .resultDisplay(let success):
+    case .resultDisplay(_, let success):
       FloatingVoiceToRxResultView(success: success)
     }
   }
