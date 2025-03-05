@@ -7,7 +7,7 @@
 
 import Foundation
 
-final class VoiceToRxFileUploadRetry {
+public final class VoiceToRxFileUploadRetry {
   
   // MARK: - Properties
   
@@ -15,7 +15,7 @@ final class VoiceToRxFileUploadRetry {
   
   /// Used to check if retry is needed
   /// - Returns: Bool value indicating if retry is needed
-  public func checkIfRetryNeeded(sessionID: UUID?) -> Bool {
+  public static func checkIfRetryNeeded(sessionID: UUID?) -> Bool {
     guard let sessionID else { return false }
     let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
     /// If files are present in the directory return true for retry

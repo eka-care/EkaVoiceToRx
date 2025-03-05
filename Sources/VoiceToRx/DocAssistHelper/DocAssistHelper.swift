@@ -15,14 +15,13 @@ public enum DocAssistV2RxState {
 
 public final class V2RxDocAssistHelper {
   public static func fetchV2RxState(for sessionID: UUID) async -> DocAssistV2RxState? {
-    let fileRetry = VoiceToRxFileUploadRetry()
     let voiceConversationModel = await VoiceConversationAggregator.shared.fetchVoiceConversation(
       using: QueryHelper.queryForFetch(with: sessionID)
     )
     /// If session has updatedSession ID, then it is saved
     if voiceConversationModel.first?.updatedSessionID != nil {
       return .saved
-    } else if fileRetry.checkIfRetryNeeded(sessionID: sessionID) { /// If session id requires retry then return retry
+    } else if VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) { /// If session id requires retry then return retry
       return .retry
     } else { /// Otherwise its draft, it will be saved once the use clicks save in the rx
       return .draft
