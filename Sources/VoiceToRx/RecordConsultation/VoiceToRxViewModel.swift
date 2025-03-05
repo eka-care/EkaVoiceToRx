@@ -90,7 +90,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   )
   let s3FileUploader = AmazonS3FileUploaderService()
   private let fileRetryService = VoiceToRxFileUploadRetry()
-  private var sessionID: UUID?
+  public var sessionID: UUID?
   /// Raw int bytes accumulated till now
   private var pcmBuffersListRaw: [Int16] = []
   private var lastClipIndex: Int = 0
