@@ -16,6 +16,9 @@ public final class V2RxInitConfigurations {
   /// Bucket name for Amazon S3
   public var awsS3BucketName: String?
   
+  /// Name of the owner
+  public var ownerName: String?
+  
   /// UUID of the owner
   public var ownerUUID: String?
   

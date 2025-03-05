@@ -105,6 +105,23 @@ public final class VoiceToRxViewModel: ObservableObject {
   public init() {
     setupRecordSession()
     setupDependencies()
+    setupContextParams()
+  }
+  
+  private func setupContextParams() {
+    contextParams = VoiceToRxContextParams(
+      doctor: VoiceToRxDoctorProfileInfo(
+        id: V2RxInitConfigurations.shared.ownerOID,
+        profile: VoiceToRxDoctorProfile(
+          personal: VoiceToRxDoctorPersonal(
+            name: VoiceToRxDoctorName(
+              lastName: "",
+              firstName: V2RxInitConfigurations.shared.ownerName
+            )
+          )
+        )
+      )
+    )
   }
   
   private func setupDependencies() {
