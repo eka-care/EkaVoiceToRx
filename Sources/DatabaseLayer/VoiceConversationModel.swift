@@ -9,22 +9,35 @@
 import Foundation
 import SwiftData
 
-@Model
-public final class VoiceConversationModel {
-  @Attribute(.unique) public let id: UUID
-  public let fileURL: String?
-  public let date: Date
-  public var transcriptionText: String
+public typealias VoiceConversationModel = VoiceConversations.VoiceConversationModelV1
+
+public enum VoiceConversations: VersionedSchema {
+  public static var models: [any PersistentModel.Type] {
+    [VoiceConversationModelV1.self]
+  }
   
-  public init(
-    fileURL: String? = nil,
-    date: Date,
-    transcriptionText: String
-  ) {
-    self.id = UUID()
-    self.fileURL = fileURL
-    self.date = date
-    self.transcriptionText = transcriptionText
+  public static var versionIdentifier = Schema.Version(1, 0, 0)
+  
+  @Model
+  public final class VoiceConversationModelV1: Sendable {
+    @Attribute(.unique) public var id: UUID
+    public var fileURL: String?
+    public var date: Date
+    public var transcriptionText: String
+    public var updatedSessionID: UUID?
+    
+    public init(
+      fileURL: String? = nil,
+      date: Date,
+      transcriptionText: String,
+      updatedSessionID: UUID? = nil
+    ) {
+      self.id = UUID()
+      self.fileURL = fileURL
+      self.date = date
+      self.transcriptionText = transcriptionText
+      self.updatedSessionID = updatedSessionID
+    }
   }
 }
 
@@ -46,6 +59,17 @@ public actor VoiceConversationAggregator {
     try modelContext.transaction {
       modelContext.insert(model)
       try modelContext.save()
+    }
+  }
+  
+  public func fetchVoiceConversation(
+    using fetchDescriptor: FetchDescriptor<VoiceConversationModel>
+  ) -> [VoiceConversationModel] {
+    do {
+      return try modelContext.fetch(fetchDescriptor)
+    } catch {
+      print("Failed to fetch voice conversations: \(error.localizedDescription)")
+      return []
     }
   }
   

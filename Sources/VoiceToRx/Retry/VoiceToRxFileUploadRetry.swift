@@ -13,6 +13,20 @@ final class VoiceToRxFileUploadRetry {
   
   let s3FileUploaderService = AmazonS3FileUploaderService()
   
+  /// Used to check if retry is needed
+  /// - Returns: Bool value indicating if retry is needed
+  public func checkIfRetryNeeded(sessionID: UUID?) -> Bool {
+    guard let sessionID else { return false }
+    let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
+    /// If files are present in the directory return true for retry
+    if let retryFiles = FileHelper.getFileURLs(in: directory) {
+      print("Retry files present: \(retryFiles)")
+      return true
+    }
+    /// If no files present return false
+    return false
+  }
+  
   /// Retry files upload
   func retryFilesUpload(
     unuploadedFileUrls: [URL],

@@ -384,18 +384,6 @@ extension VoiceToRxViewModel {
 // MARK: - Retry
 
 extension VoiceToRxViewModel {
-  public func checkIfRetryNeeded() -> Bool {
-    guard let sessionID else { return false }
-    let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
-    /// If files are present in the directory return true for retry
-    if let retryFiles = FileHelper.getFileURLs(in: directory) {
-      print("Retry files present: \(retryFiles)")
-      return true
-    }
-    /// If no files present return false
-    return false
-  }
-  
   /// Used to retry file upload if any file was missed
   public func retryIfNeeded() {
     guard let sessionID else { return }
