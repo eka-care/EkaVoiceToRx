@@ -46,7 +46,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
         title: V2RxInitConfigurations.shared.ownerName ?? "Patient",
         voiceToRxViewModel: viewModel,
         delegate: self,
-        onTapStop: showConfirmationAlert
+        onTapStop: showConfirmationAlert,
+        onTapClose: hideFloatingButton
       )
     ).view else {
       return

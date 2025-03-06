@@ -18,17 +18,20 @@ public struct PictureInPictureView: View {
   @ObservedObject var voiceToRxViewModel: VoiceToRxViewModel
   weak var delegate: PictureInPictureViewDelegate?
   let onTapStop: () -> Void
+  let onTapClose: () -> Void
   
   public init(
     title: String,
     voiceToRxViewModel: VoiceToRxViewModel,
     delegate: PictureInPictureViewDelegate?,
-    onTapStop: @escaping () -> Void
+    onTapStop: @escaping () -> Void,
+    onTapClose: @escaping () -> Void
   ) {
     self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
     self.delegate = delegate
     self.onTapStop = onTapStop
+    self.onTapClose = onTapClose
   }
   
   public var body: some View {
@@ -44,11 +47,14 @@ public struct PictureInPictureView: View {
     case .processing:
       FloatingVoiceToRxProcessingView()
     case .resultDisplay(let success):
-      FloatingVoiceToRxResultView(success: success)
-        .contentShape(Rectangle())
-        .onTapGesture {
-          delegate?.onTapResultDisplayView(success: success)
-        }
+      FloatingVoiceToRxResultView(
+        success: success,
+        onTapClose: onTapClose
+      )
+      .contentShape(Rectangle())
+      .onTapGesture {
+        delegate?.onTapResultDisplayView(success: success)
+      }
     }
   }
 }
