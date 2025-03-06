@@ -135,6 +135,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   }
   
   public func startRecording(conversationType: VoiceConversationType) {
+    /// Clear any previous sessions if present
+    clearSession()
     /// Change the screen state to listening
     screenState = .listening(conversationType: conversationType)
     /// Session id is set here
@@ -358,9 +360,6 @@ extension VoiceToRxViewModel {
       }
       /// Once we have the parsed text stop listener reference
       stopListenerReference()
-      /// Reset all the values
-      /// Clear session has to be here as we need data in processing state as well so we cannot reset before that
-      clearSession()
     }
   }
   
