@@ -45,6 +45,7 @@ public struct PictureInPictureView: View {
       FloatingVoiceToRxProcessingView()
     case .resultDisplay(let success):
       FloatingVoiceToRxResultView(success: success)
+        .contentShape(Rectangle())
         .onTapGesture {
           delegate?.onTapResultDisplayView(success: success)
         }

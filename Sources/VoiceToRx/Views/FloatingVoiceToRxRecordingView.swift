@@ -33,6 +33,7 @@ struct FloatingVoiceToRxRecordingView: View {
       } label: {
         Image(systemName: "stop.fill")
           .foregroundStyle(.red)
+          .frame(width: 20, height: 20)
       }
     }
     .padding()

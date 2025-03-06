@@ -26,9 +26,6 @@ struct FloatingVoiceToRxResultView: View {
         Text(success ? "Tap to View" : "Tap to try again ")
           .font(.system(size: 14, weight: .medium))
           .foregroundColor(.blue)
-          .onTapGesture {
-            // Try again
-          }
       }
       
       Spacer()
