@@ -28,6 +28,11 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
+  public override func viewDidLoad() {
+    super.viewDidLoad()
+    subscribeToScreenStates()
+  }
+  
   public func showFloatingButton(viewModel: VoiceToRxViewModel) {
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
@@ -45,7 +50,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     self.viewModel = viewModel
     guard let button = UIHostingController(
       rootView: PictureInPictureView(
-        title: V2RxInitConfigurations.shared.ownerName ?? "Patient",
+        title: V2RxInitConfigurations.shared.subOwnerName ?? "Patient",
         voiceToRxViewModel: viewModel,
         delegate: self,
         onTapStop: showConfirmationAlert,
