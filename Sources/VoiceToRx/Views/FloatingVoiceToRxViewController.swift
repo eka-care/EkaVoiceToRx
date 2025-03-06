@@ -43,7 +43,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     self.viewModel = viewModel
     guard let button = UIHostingController(
       rootView: PictureInPictureView(
-        title: "Amit Bharti",
+        title: V2RxInitConfigurations.shared.ownerName ?? "Patient",
         voiceToRxViewModel: viewModel,
         delegate: self,
         onTapStop: showConfirmationAlert

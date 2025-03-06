@@ -25,6 +25,9 @@ public final class V2RxInitConfigurations {
   /// Oid of the owner
   public var ownerOID: String?
   
+  /// Name of the subOwner
+  public var subOwnerName: String?
+  
   /// Model container
   public var modelContainer: ModelContainer!
   
