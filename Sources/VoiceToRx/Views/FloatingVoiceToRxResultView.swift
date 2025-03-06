@@ -19,9 +19,8 @@ struct FloatingVoiceToRxResultView: View {
         Button(action: {
           onTapClose()
         }) {
-          Image(systemName: "xmark")
+          Image(systemName: "xmark.circle.fill")
             .foregroundColor(.black)
-            .frame(width: 14, height: 14)
             .padding()
         }
       }
