@@ -85,11 +85,20 @@ public actor VoiceConversationAggregator {
     }
   }
   
-  public func updateVoice(id: UUID, transcriptText: String) {
+  public func updateVoice(
+    id: UUID,
+    transcriptText: String? = nil,
+    updatedSessionID: UUID? = nil,
+    fileURL: URL? = nil
+  ) {
     do {
       let fetchDescriptor = FetchDescriptor<VoiceConversationModel>(predicate: #Predicate { $0.id == id })
-      if let model = try modelContext.fetch(fetchDescriptor).first {
+      guard let model = try modelContext.fetch(fetchDescriptor).first else { return }
+      if let transcriptText {
         model.transcriptionText = transcriptText
+      }
+      if let fileURL {
+        model.fileURL = fileURL.absoluteString
       }
     } catch {
       print("Failed to Fetch model with id \(id) \(error.localizedDescription)")

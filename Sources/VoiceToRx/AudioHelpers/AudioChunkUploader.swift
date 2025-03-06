@@ -139,6 +139,10 @@ final class AudioChunkUploader {
         guard let self = self else { return }
         switch result {
         case .success(let fileURL):
+          Task {
+            /// Add full audio to database
+            await VoiceConversationAggregator.shared.updateVoice(id: sessionID, fileURL: fileURL)
+          }
           let firstFolder: String = s3FileUploaderService.dateFolderName
           let secondFolder = sessionID
           let key = "\(firstFolder)/\(secondFolder)/\(fileURL.lastPathComponent)"
