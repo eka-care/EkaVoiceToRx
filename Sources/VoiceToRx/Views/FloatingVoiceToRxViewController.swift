@@ -16,7 +16,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
   public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
-  public weak var delegate: PictureInPictureViewDelegate?
   
   required init?(coder aDecoder: NSCoder) {
     fatalError()
@@ -41,20 +40,22 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   private func loadView(viewModel: VoiceToRxViewModel) {
     self.viewModel = viewModel
-    let view = UIView()
     guard let button = UIHostingController(
       rootView: PictureInPictureView(
         title: "Amit Bharti",
         voiceToRxViewModel: viewModel,
-        delegate: delegate,
+        delegate: self,
         onTapStop: showConfirmationAlert
       )
     ).view else {
       return
     }
-    button.frame = CGRect(x: (UIApplication.shared.keyWindow?.frame.width ?? 0), y: (UIApplication.shared.keyWindow?.frame.height)!/4, width: 200, height: 50)
+    let keyWindow = UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .flatMap { $0.windows }
+      .first { $0.isKeyWindow }
+    button.frame = CGRect(x: (keyWindow?.frame.width ?? 0), y: (keyWindow?.frame.height ?? 0)/4, width: 200, height: 50)
     view.addSubview(button)
-    self.view = view
     self.button = button
     window.button = button
     
@@ -80,14 +81,14 @@ public class FloatingVoiceToRxViewController: UIViewController {
       }
     ))
     
-//    alertController.addAction(UIAlertAction(
-//      title: "Not yet",
-//      style: .default,
-//      handler: { [weak self] _ in
-//        guard let self else { return }
-//      }
-//    ))
-//    
+    //    alertController.addAction(UIAlertAction(
+    //      title: "Not yet",
+    //      style: .default,
+    //      handler: { [weak self] _ in
+    //        guard let self else { return }
+    //      }
+    //    ))
+    //
     alertController.addAction(UIAlertAction(
       title: "Cancel recording",
       style: .default,
@@ -204,5 +205,26 @@ private class FloatingButtonWindow: UIWindow {
     guard let button = button else { return false }
     let buttonPoint = convert(point, to: button)
     return button.point(inside: buttonPoint, with: event)
+  }
+}
+
+extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
+  // TODO: - Arya Refractor this to have common deepthought handling
+  public func onTapResultDisplayView(success: Bool) {
+//    guard let id = viewModel?.sessionID else { return }
+//    let jsonDict: [String: Any] = [
+//      "care_context_id": "\(id)",
+//      Params.CodingKeys.edit.rawValue: true
+//    ]
+//    guard let stringifiedJSON = JSON(jsonDict).rawString() else { return }
+//    let params = Params(
+//      context: stringifiedJSON,
+//      pageType: "fhir-resource-page"
+//    )
+//    let cta = Cta(
+//      pageID: EkaPageIdentifier.deepthoughtPage.rawValue,
+//      params: params
+//    )
+//    routeToCta(cta: cta)
   }
 }
