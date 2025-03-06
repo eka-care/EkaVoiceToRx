@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import Combine
 
 // TODO: - To refractor this for loading view etc
 
@@ -17,6 +18,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
   public var onTapResultView: (Bool) -> Void = { _ in }
+  var cancellables = Set<AnyCancellable>()
   
   required init?(coder aDecoder: NSCoder) {
     fatalError()
@@ -213,5 +215,28 @@ private class FloatingButtonWindow: UIWindow {
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onTapResultDisplayView(success: Bool) {
     onTapResultView(success)
+  }
+}
+
+extension FloatingVoiceToRxViewController {
+  private func subscribeToScreenStates() {
+    viewModel?.$screenState.sink { [weak self] screenState in
+      guard let self else { return }
+      switch screenState {
+      case .startRecording:
+        debugPrint("")
+      case .listening:
+        debugPrint("")
+      case .processing:
+        debugPrint("")
+      case .resultDisplay:
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+          guard let self else { return }
+          self.hideFloatingButton()
+        }
+      case .retry:
+        debugPrint("")
+      }
+    }.store(in: &cancellables)
   }
 }
