@@ -13,59 +13,47 @@ struct FloatingVoiceToRxResultView: View {
   let onTapClose: () -> Void
   
   var body: some View {
-    VStack {
-      HStack {
-        Spacer()
-        Button(action: {
-          onTapClose()
-        }) {
-          Image(systemName: "xmark.circle.fill")
-            .foregroundColor(.black)
-            .padding()
-        }
-      }
-      HStack(spacing: 10) {
-        Image(success ? .smartReportSuccess :  .smartReportFailure)
-          .resizable()
-          .scaledToFit()
-          .frame(width: 24, height: 24)
+    HStack(spacing: 10) {
+      Image(success ? .smartReportSuccess :  .smartReportFailure)
+        .resizable()
+        .scaledToFit()
+        .frame(width: 24, height: 24)
+      
+      VStack(alignment: .leading, spacing: 2) {
+        Text(success ? "Smart notes are ready!" : "Audio analysis failed.")
+          .font(.system(size: 16, weight: .regular))
+          .foregroundColor(.black)
         
-        VStack(alignment: .leading, spacing: 2) {
-          Text(success ? "Smart notes are ready!" : "Audio analysis failed.")
-            .font(.system(size: 16, weight: .regular))
-            .foregroundColor(.black)
-          
-          Text(success ? "Tap to View" : "Tap to try again ")
-            .font(.system(size: 14, weight: .medium))
-            .foregroundColor(.blue)
-        }
-        
-        Spacer()
+        Text(success ? "Tap to View" : "Tap to try again ")
+          .font(.system(size: 14, weight: .medium))
+          .foregroundColor(.blue)
       }
-      .padding()
-      .frame(width: 250)
-      .background(
-        LinearGradient(
-          gradient: Gradient(
-            colors: [ success ?
-                      Color(
-                        red: 235/255,
-                        green: 250/255,
-                        blue: 240/255
-                      ) : Color(
-                        red: 250/255,
-                        green: 235/255,
-                        blue: 235/255
-                      ),
-                      Color.white
-                    ]
-          ),
-          startPoint: .top,
-          endPoint: .bottom
-        )
-      )
-      .clipShape(RoundedRectangle(cornerRadius: 16))
-      .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+      
+      Spacer()
     }
+    .padding()
+    .frame(width: 250)
+    .background(
+      LinearGradient(
+        gradient: Gradient(
+          colors: [ success ?
+                    Color(
+                      red: 235/255,
+                      green: 250/255,
+                      blue: 240/255
+                    ) : Color(
+                      red: 250/255,
+                      green: 235/255,
+                      blue: 235/255
+                    ),
+                    Color.white
+                  ]
+        ),
+        startPoint: .top,
+        endPoint: .bottom
+      )
+    )
+    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
   }
 }
