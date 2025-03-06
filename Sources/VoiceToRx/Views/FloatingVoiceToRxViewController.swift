@@ -16,6 +16,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
+  public var onTapResultView: (Bool) -> Void = { _ in }
   
   required init?(coder aDecoder: NSCoder) {
     fatalError()
@@ -209,22 +210,7 @@ private class FloatingButtonWindow: UIWindow {
 }
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
-  // TODO: - Arya Refractor this to have common deepthought handling
   public func onTapResultDisplayView(success: Bool) {
-//    guard let id = viewModel?.sessionID else { return }
-//    let jsonDict: [String: Any] = [
-//      "care_context_id": "\(id)",
-//      Params.CodingKeys.edit.rawValue: true
-//    ]
-//    guard let stringifiedJSON = JSON(jsonDict).rawString() else { return }
-//    let params = Params(
-//      context: stringifiedJSON,
-//      pageType: "fhir-resource-page"
-//    )
-//    let cta = Cta(
-//      pageID: EkaPageIdentifier.deepthoughtPage.rawValue,
-//      params: params
-//    )
-//    routeToCta(cta: cta)
+    onTapResultView(success)
   }
 }
