@@ -103,7 +103,9 @@ public final class VoiceToRxViewModel: ObservableObject {
   public var contextParams: VoiceToRxContextParams?
   public weak var delegate: VoiceToRxViewModelDelegate?
   
-  public init() {
+  public init(
+    voiceToRxInitConfig: V2RxInitConfigurations
+  ) {
     deleteAllDataIfDBIsStale()
     setupRecordSession()
     setupDependencies()
@@ -142,7 +144,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   }
   
   public func startRecording(conversationType: VoiceConversationType) {
-    /// Clear any previous sessions if present
+    /// Clear any previous session data if present
     clearSession()
     /// Change the screen state to listening
     screenState = .listening(conversationType: conversationType)
@@ -303,7 +305,7 @@ extension VoiceToRxViewModel {
   
   /// Setup VoiceToRx Model
   private func setupSessionInDatabase() {
-    let model = VoiceConversationModel(fileURL: nil, date: .now, transcriptionText: "")
+    let model = VoiceConversationModel(date: .now, transcriptionText: "")
     sessionID = model.id
     createDirectoryForGivenSessionId(sessionId: model.id.uuidString)
     Task {
