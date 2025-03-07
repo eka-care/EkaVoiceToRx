@@ -139,19 +139,21 @@ final class AudioChunkUploader {
         guard let self = self else { return }
         switch result {
         case .success(let fileURL):
-          Task {
+          Task { [weak self] in
+            guard let self else { return }
             /// Add full audio to database
             await VoiceConversationAggregator.shared.updateVoice(id: sessionID, fileURL: fileURL)
-          }
-          let firstFolder: String = s3FileUploaderService.dateFolderName
-          let secondFolder = sessionID
-          let key = "\(firstFolder)/\(secondFolder)/\(fileURL.lastPathComponent)"
-          s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key) { result in
-            switch result {
-            case .success:
-              debugPrint("Successfully uploaded full audio file")
-            case .failure(let error):
-              debugPrint("Failed uploading with error -> \(error.localizedDescription)")
+            /// Upload full audio to S3
+            let firstFolder: String = s3FileUploaderService.dateFolderName
+            let secondFolder = sessionID
+            let key = "\(firstFolder)/\(secondFolder)/\(fileURL.lastPathComponent)"
+            s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key) { result in
+              switch result {
+              case .success:
+                debugPrint("Successfully uploaded full audio file")
+              case .failure(let error):
+                debugPrint("Failed uploading with error -> \(error.localizedDescription)")
+              }
             }
           }
         case .failure(let error):
