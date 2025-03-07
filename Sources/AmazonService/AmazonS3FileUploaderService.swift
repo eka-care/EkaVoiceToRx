@@ -52,7 +52,7 @@ final class AmazonS3FileUploaderService {
       switch result {
       case .success(let fileUploadedKey):
         debugPrint("Successfully uploaded hence removing file at url \(url)")
-        if url.lastPathComponent != "full_audio.m4a" { /// If its full audio don't remove
+        if url.lastPathComponent != "full_audio.m4a_" { /// If its full audio don't remove
           /// Remove file once uploaded
           FileHelper.removeFile(at: url)
         }
