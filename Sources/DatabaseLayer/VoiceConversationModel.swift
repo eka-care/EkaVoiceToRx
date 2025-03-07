@@ -96,7 +96,7 @@ public actor VoiceConversationAggregator {
         model.transcriptionText = transcriptText
       }
       if let fileURL {
-        model.fileURL = fileURL.absoluteString
+        model.fileURL = fileURL.lastPathComponent
       }
     } catch {
       print("Failed to Fetch model with id \(id) \(error.localizedDescription)")
