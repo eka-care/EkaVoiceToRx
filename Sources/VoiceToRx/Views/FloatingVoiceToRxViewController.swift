@@ -28,16 +28,12 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
-  public override func viewDidLoad() {
-    super.viewDidLoad()
-    subscribeToScreenStates()
-  }
-  
   public func showFloatingButton(viewModel: VoiceToRxViewModel) {
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
     loadView(viewModel: viewModel)
+    subscribeToScreenStates()
   }
   
   public func hideFloatingButton() {
