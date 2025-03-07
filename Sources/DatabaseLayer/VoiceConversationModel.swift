@@ -56,10 +56,8 @@ public actor VoiceConversationAggregator {
   }
   
   public func saveVoice(model: VoiceConversationModel) throws {
-    try modelContext.transaction {
-      modelContext.insert(model)
-      try modelContext.save()
-    }
+    modelContext.insert(model)
+    try modelContext.save()
   }
   
   public func fetchVoiceConversation(

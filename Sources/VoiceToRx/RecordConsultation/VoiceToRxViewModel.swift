@@ -104,9 +104,16 @@ public final class VoiceToRxViewModel: ObservableObject {
   public weak var delegate: VoiceToRxViewModelDelegate?
   
   public init() {
+    deleteAllDataIfDBIsStale()
     setupRecordSession()
     setupDependencies()
     setupContextParams()
+  }
+  
+  private func deleteAllDataIfDBIsStale() {
+    guard UserDefaultsHelper.fetch(valueOfType: Bool.self, usingKey: Constants.voiceToRxIsDBStale) == nil else { return }
+    deleteAllData()
+    UserDefaultsHelper.save(customValue: true, withKey: Constants.voiceToRxIsDBStale)
   }
   
   private func setupContextParams() {
