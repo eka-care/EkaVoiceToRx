@@ -30,6 +30,7 @@ final class AudioBufferToM4AConverter {
     pcmBuffer: AVAudioPCMBuffer,
     fileKey: String,
     sessionId: String,
+    isFullAudio: Bool = false,
     fileExtension: String = AudioFileFormat.m4aFile.extensionString,
     completion: @escaping (Result<URL, Error>) -> Void
   ) {
@@ -43,9 +44,11 @@ final class AudioBufferToM4AConverter {
     /// File URLs
     let outputPCMURL = documentDirectoryURL
       .appendingPathComponent(pcmFileName)
-    let outputM4AURL = documentDirectoryURL
-      .appendingPathComponent(sessionId)
-      .appendingPathComponent(m4aFileName)
+    
+    /// Don't store full audio in session folder
+    let outputM4AURL = isFullAudio ? documentDirectoryURL.appendingPathComponent(m4aFileName) : documentDirectoryURL
+      .appendingPathComponent(sessionId).appendingPathComponent(m4aFileName)
+
     
     cafUrlsStored.append(outputPCMURL)
     

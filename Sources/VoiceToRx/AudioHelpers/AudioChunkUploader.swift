@@ -134,6 +134,7 @@ final class AudioChunkUploader {
         pcmBuffer: audioBuffer,
         fileKey: fullAudioFileKey,
         sessionId: sessionID.uuidString,
+        isFullAudio: true,
         fileExtension: ".m4a_"
       ) { [weak self] result in
         guard let self = self else { return }
