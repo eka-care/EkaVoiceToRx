@@ -32,7 +32,7 @@ public final class V2RxInitConfigurations {
   public var modelContainer: ModelContainer!
   
   /// Voice to rx delegate
-  public var voiceToRxDelegate: FloatingVoiceToRxDelegate?
+  public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   
   // MARK: - Init
   
