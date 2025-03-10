@@ -364,15 +364,20 @@ extension VoiceToRxViewModel {
       guard let self else { return }
       self.listenerReference = listenerReference
       updateAppointmentIdWithVoiceToRxId()
-      if let errorStructuredRx, errorStructuredRx == .smallTranscript {
-        screenState = .resultDisplay(success: false)
-        delegate?.errorReceivingPrescription(id: sessionID, errorCode: errorStructuredRx, transcriptText: transcriptionString ?? "")
-      } else {
-        screenState = .resultDisplay(success: true)
-        delegate?.onReceiveStructuredRx(id: sessionID, transcriptText: transcriptionString ?? "")
+      Task { [weak self] in
+        guard let self else { return }
+        /// Update database with did fetch result
+        await VoiceConversationAggregator.shared.updateVoice(id: sessionID, didFetchResult: true)
+        if let errorStructuredRx, errorStructuredRx == .smallTranscript {
+          screenState = .resultDisplay(success: false)
+          delegate?.errorReceivingPrescription(id: sessionID, errorCode: errorStructuredRx, transcriptText: transcriptionString ?? "")
+        } else {
+          screenState = .resultDisplay(success: true)
+          delegate?.onReceiveStructuredRx(id: sessionID, transcriptText: transcriptionString ?? "")
+        }
+        /// Once we have the parsed text stop listener reference
+        stopListenerReference()
       }
-      /// Once we have the parsed text stop listener reference
-      stopListenerReference()
     }
   }
   

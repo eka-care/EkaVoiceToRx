@@ -16,7 +16,7 @@ public enum VoiceConversations: VersionedSchema {
     [VoiceConversationModelV1.self]
   }
   
-  public static var versionIdentifier = Schema.Version(1, 0, 0)
+  public static var versionIdentifier = Schema.Version(1, 1, 0)
   
   @Model
   public final class VoiceConversationModelV1: Sendable {
@@ -25,18 +25,21 @@ public enum VoiceConversations: VersionedSchema {
     public var date: Date
     public var transcriptionText: String
     public var updatedSessionID: UUID?
+    public var didFetchResult: Bool?
     
     public init(
       fileURL: String? = nil,
       date: Date,
       transcriptionText: String,
-      updatedSessionID: UUID? = nil
+      updatedSessionID: UUID? = nil,
+      didFetchResult: Bool? = nil
     ) {
       self.id = UUID()
       self.fileURL = fileURL
       self.date = date
       self.transcriptionText = transcriptionText
       self.updatedSessionID = updatedSessionID
+      self.didFetchResult = didFetchResult
     }
   }
 }
@@ -87,6 +90,7 @@ public actor VoiceConversationAggregator {
     id: UUID,
     transcriptText: String? = nil,
     updatedSessionID: UUID? = nil,
+    didFetchResult: Bool? = nil,
     fileURL: URL? = nil
   ) {
     do {
@@ -97,6 +101,9 @@ public actor VoiceConversationAggregator {
       }
       if let fileURL {
         model.fileURL = fileURL.lastPathComponent
+      }
+      if let didFetchResult {
+        model.didFetchResult = didFetchResult
       }
     } catch {
       print("Failed to Fetch model with id \(id) \(error.localizedDescription)")
