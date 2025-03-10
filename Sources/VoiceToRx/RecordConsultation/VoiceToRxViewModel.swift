@@ -217,9 +217,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     DispatchQueue.global().async { [weak self] in
       guard let self else { return }
       /// Stop audio engine
-      audioEngine.stop()
-      audioEngine.inputNode.removeTap(onBus: 0)
-      
+      stopAudioRecording()
       /// Process whatever is remaining
       audioChunkProcessor.processAudioChunk(
         audioEngine: audioEngine,
@@ -255,6 +253,12 @@ public final class VoiceToRxViewModel: ObservableObject {
       /// Listend for structured rx from firebase
       listenForStructuredRx()
     }
+  }
+  
+  public func stopAudioRecording() {
+    /// Stop audio engine
+    audioEngine.stop()
+    audioEngine.inputNode.removeTap(onBus: 0)
   }
 }
 
