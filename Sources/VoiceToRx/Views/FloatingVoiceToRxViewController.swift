@@ -44,6 +44,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
+    view.subviews.forEach { $0.removeFromSuperview() }
   }
   
   private func loadView(viewModel: VoiceToRxViewModel) {
