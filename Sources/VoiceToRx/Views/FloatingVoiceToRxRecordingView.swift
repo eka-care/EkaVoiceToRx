@@ -31,7 +31,6 @@ struct FloatingVoiceToRxRecordingView: View {
       Image(systemName: "stop.fill")
         .foregroundStyle(.red)
         .frame(width: 45, height: 45)
-        .background(.yellow)
         .contentShape(Rectangle())
         .onTapGesture {
           onTapStop()
