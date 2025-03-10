@@ -144,6 +144,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   }
   
   public func startRecording(conversationType: VoiceConversationType) {
+    /// Setup record session
+    setupRecordSession()
     /// Clear any previous session data if present
     clearSession()
     /// Change the screen state to listening
