@@ -239,10 +239,10 @@ extension FloatingVoiceToRxViewController {
         debugPrint("Subscribed screen state is -> \(screenState)")
       case .resultDisplay:
         debugPrint("Subscribed screen state is -> \(screenState)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-          guard let self else { return }
-          self.hideFloatingButton()
-        }
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
+//          guard let self else { return }
+//          self.hideFloatingButton()
+//        }
       case .retry:
         debugPrint("Subscribed screen state is -> \(screenState)")
         debugPrint("")
