@@ -105,6 +105,7 @@ public actor VoiceConversationAggregator {
       if let didFetchResult {
         model.didFetchResult = didFetchResult
       }
+      try modelContext.save()
     } catch {
       print("Failed to Fetch model with id \(id) \(error.localizedDescription)")
     }
