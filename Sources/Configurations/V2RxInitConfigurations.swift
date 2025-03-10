@@ -31,6 +31,9 @@ public final class V2RxInitConfigurations {
   /// Model container
   public var modelContainer: ModelContainer!
   
+  /// Voice to rx delegate
+  public var voiceToRxDelegate: FloatingVoiceToRxDelegate?
+  
   // MARK: - Init
   
   private init() {}
