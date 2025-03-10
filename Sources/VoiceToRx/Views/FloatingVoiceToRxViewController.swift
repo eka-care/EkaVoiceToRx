@@ -9,6 +9,10 @@ import UIKit
 import SwiftUI
 import Combine
 
+public protocol FloatingVoiceToRxDelegate: AnyObject {
+  func moveToDeepthoughtPage(id: UUID)
+}
+
 // TODO: - To refractor this for loading view etc
 
 public class FloatingVoiceToRxViewController: UIViewController {
@@ -17,7 +21,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   private var viewModel: VoiceToRxViewModel?
-  public var onTapResultView: (Bool) -> Void = { _ in }
+  public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   var cancellables = Set<AnyCancellable>()
   
   required init?(coder aDecoder: NSCoder) {
@@ -215,7 +219,10 @@ private class FloatingButtonWindow: UIWindow {
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onTapResultDisplayView(success: Bool) {
-    onTapResultView(success)
+    guard let sessionID = viewModel?.sessionID else { return }
+    if success {
+      voiceToRxDelegate?.moveToDeepthoughtPage(id: sessionID)
+    }
   }
 }
 
@@ -232,7 +239,7 @@ extension FloatingVoiceToRxViewController {
         debugPrint("Subscribed screen state is -> \(screenState)")
       case .resultDisplay:
         debugPrint("Subscribed screen state is -> \(screenState)")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
           guard let self else { return }
           self.hideFloatingButton()
         }
