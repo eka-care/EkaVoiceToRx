@@ -20,7 +20,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   private let window: FloatingButtonWindow = FloatingButtonWindow()
   public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
-  private var viewModel: VoiceToRxViewModel?
+  public var viewModel: VoiceToRxViewModel?
   public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   var cancellables = Set<AnyCancellable>()
   
