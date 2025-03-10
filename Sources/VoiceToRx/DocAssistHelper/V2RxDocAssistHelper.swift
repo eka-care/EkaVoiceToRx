@@ -21,7 +21,6 @@ public final class V2RxDocAssistHelper {
     )
     /// Fetch the model
     guard let model = voiceConversationModel.first else { return nil }
-    print("\(model.didFetchResult)")
     if model.didFetchResult == nil || model.didFetchResult == false { /// If didFetchResult is nil or false, then return loading
       return .loading
     } else if model.updatedSessionID != nil { /// If session has updatedSession ID, then it is saved

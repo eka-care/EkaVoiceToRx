@@ -46,8 +46,7 @@ final class AudioBufferToM4AConverter {
       .appendingPathComponent(pcmFileName)
     
     /// Don't store full audio in session folder
-    let outputM4AURL = isFullAudio ? documentDirectoryURL.appendingPathComponent("\(sessionId)-FA").appendingPathComponent("full_audio.m4a_") : documentDirectoryURL
-      .appendingPathComponent(sessionId).appendingPathComponent(m4aFileName)
+    let outputM4AURL = documentDirectoryURL.appendingPathComponent(sessionId).appendingPathComponent(m4aFileName)
     
     cafUrlsStored.append(outputPCMURL)
     
