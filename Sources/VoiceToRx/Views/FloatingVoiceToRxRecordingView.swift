@@ -28,13 +28,14 @@ struct FloatingVoiceToRxRecordingView: View {
       
       Spacer()
       
-      Button {
-        onTapStop()
-      } label: {
-        Image(systemName: "stop.fill")
-          .foregroundStyle(.red)
-          .frame(width: 20, height: 20)
-      }
+      Image(systemName: "stop.fill")
+        .foregroundStyle(.red)
+        .frame(width: 20, height: 20)
+        .background(.yellow)
+        .contentShape(Rectangle())
+        .onTapGesture {
+          onTapStop()
+        }
     }
     .padding()
     .background(
