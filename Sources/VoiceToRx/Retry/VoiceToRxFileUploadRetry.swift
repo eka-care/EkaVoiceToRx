@@ -21,7 +21,10 @@ public final class VoiceToRxFileUploadRetry {
     /// If files are present in the directory return true for retry
     if let retryFiles = FileHelper.getFileURLs(in: directory) {
       /// If retry files has only full audio file return false
-      if retryFiles.count == 1 && retryFiles.first?.lastPathComponent == "full_audio.m4a_" {
+      if retryFiles.count == 1 &&
+         retryFiles.first?.lastPathComponent == "full_audio.m4a_" {
+        return false
+      } else { /// If any other file present return true
         return true
       }
     }
