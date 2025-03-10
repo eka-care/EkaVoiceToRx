@@ -21,15 +21,14 @@ public final class V2RxDocAssistHelper {
     )
     /// Fetch the model
     guard let model = voiceConversationModel.first else { return nil }
-    /// If session has updatedSession ID, then it is saved
-    if model.updatedSessionID != nil {
+    if model.didFetchResult == false {
+      return .loading
+    } else if model.updatedSessionID != nil { /// If session has updatedSession ID, then it is saved
       return .saved
     } else if VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) { /// If session id requires retry then return retry
       return .retry
-    } else if model.didFetchResult == true {
+    } else {
       return .draft
-    } else { /// Otherwise its draft, it will be saved once the use clicks save in the rx
-      return .loading
     }
   }
 }
