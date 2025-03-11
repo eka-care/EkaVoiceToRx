@@ -16,7 +16,7 @@ public enum VoiceConversations: VersionedSchema {
     [VoiceConversationModelV1.self]
   }
   
-  public static var versionIdentifier = Schema.Version(1, 1, 0)
+  public static var versionIdentifier = Schema.Version(2, 0, 0)
   
   @Model
   public final class VoiceConversationModelV1: Sendable {
