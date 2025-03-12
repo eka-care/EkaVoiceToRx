@@ -31,7 +31,7 @@ struct FloatingVoiceToRxRecordingView: View {
       Image(systemName: "stop.circle.fill")
         .resizable()
         .scaledToFit()
-        .frame(width: 30, height: 30)
+        .frame(width: 20, height: 20)
         .symbolRenderingMode(.palette) // Enables multi-color rendering
         .foregroundStyle(.white, .red) // First color is for the main shape, second for the inner part
         .frame(width: 45, height: 45)
