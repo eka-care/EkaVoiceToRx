@@ -41,6 +41,7 @@ struct FloatingVoiceToRxRecordingView: View {
         }
     }
     .padding()
+    .frame(width: 250)
     .background(
       LinearGradient(
         colors: [
@@ -51,8 +52,7 @@ struct FloatingVoiceToRxRecordingView: View {
         endPoint: .trailing
       )
     )
-    .frame(width: 250)
-    .clipShape(RoundedRectangle(cornerRadius: 12))
+    .cornerRadius(20)
     .shadow(color: .black.opacity(0.24), radius: 25, x: 0, y: 8)
     .overlay(
       RoundedRectangle(cornerRadius: 20)
