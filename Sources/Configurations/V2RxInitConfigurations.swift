@@ -36,6 +36,16 @@ public final class V2RxInitConfigurations {
   
   // MARK: - Init
   
-  private init() {}
+  private init() {
+    registerFonts()
+  }
+  
+  private func registerFonts() {
+    do {
+      try Fonts.registerAllFonts()
+    } catch {
+      debugPrint("Failed to fetch fonts")
+    }
+  }
 }
 

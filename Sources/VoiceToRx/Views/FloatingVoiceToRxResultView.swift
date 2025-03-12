@@ -21,12 +21,10 @@ struct FloatingVoiceToRxResultView: View {
       
       VStack(alignment: .leading, spacing: 2) {
         Text(success ? "Smart notes are ready!" : "Audio analysis failed.")
-          .font(.system(size: 16, weight: .regular))
-          .foregroundColor(.black)
+          .textStyle(ekaFont: .calloutRegular, color: .black)
         
         Text(success ? "Tap to View" : "Tap to try again ")
-          .font(.system(size: 14, weight: .medium))
-          .foregroundColor(.blue)
+          .textStyle(ekaFont: .calloutBold, color: UIColor(resource: .primary500))
       }
       
       Spacer()
