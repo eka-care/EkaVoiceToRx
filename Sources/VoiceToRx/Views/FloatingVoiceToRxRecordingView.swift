@@ -34,14 +34,13 @@ struct FloatingVoiceToRxRecordingView: View {
         .frame(width: 20, height: 20)
         .symbolRenderingMode(.palette) // Enables multi-color rendering
         .foregroundStyle(.white, .red) // First color is for the main shape, second for the inner part
-        .frame(width: 45, height: 45)
+        .frame(width: 32, height: 32)
         .contentShape(Rectangle())
         .onTapGesture {
           onTapStop()
         }
     }
     .padding()
-    .frame(width: 250, height: 50)
     .background(
       LinearGradient(
         colors: [
@@ -52,6 +51,7 @@ struct FloatingVoiceToRxRecordingView: View {
         endPoint: .trailing
       )
     )
+    .frame(width: 250)
     .cornerRadius(20)
     .shadow(color: .black.opacity(0.24), radius: 25, x: 0, y: 8)
     .overlay(
