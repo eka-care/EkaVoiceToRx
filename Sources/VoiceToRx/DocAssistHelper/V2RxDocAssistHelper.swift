@@ -12,6 +12,7 @@ public enum DocAssistV2RxState {
   case draft
   case saved
   case retry
+  case deleted
 }
 
 public final class V2RxDocAssistHelper {
@@ -20,7 +21,7 @@ public final class V2RxDocAssistHelper {
       using: QueryHelper.queryForFetch(with: sessionID)
     )
     /// Fetch the model
-    guard let model = voiceConversationModel.first else { return nil }
+    guard let model = voiceConversationModel.first else { return .deleted }
     if model.didFetchResult == nil || model.didFetchResult == false { /// If didFetchResult is nil or false, then return loading
       return .loading
     } else if model.updatedSessionID != nil { /// If session has updatedSession ID, then it is saved

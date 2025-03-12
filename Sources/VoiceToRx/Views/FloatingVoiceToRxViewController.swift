@@ -91,14 +91,14 @@ public class FloatingVoiceToRxViewController: UIViewController {
       }
     ))
     
-    //    alertController.addAction(UIAlertAction(
-    //      title: "Not yet",
-    //      style: .default,
-    //      handler: { [weak self] _ in
-    //        guard let self else { return }
-    //      }
-    //    ))
-    //
+    alertController.addAction(UIAlertAction(
+      title: "Not yet",
+      style: .default,
+      handler: { _ in
+        alertController.dismiss(animated: true)
+      }
+    ))
+    
     alertController.addAction(UIAlertAction(
       title: "Cancel recording",
       style: .default,

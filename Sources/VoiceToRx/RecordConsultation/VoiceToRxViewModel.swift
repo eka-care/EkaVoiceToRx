@@ -262,6 +262,12 @@ public final class VoiceToRxViewModel: ObservableObject {
     audioEngine.stop()
     audioEngine.inputNode.removeTap(onBus: 0)
   }
+  
+  func deleteRecording(id: UUID) {
+    Task {
+      await VoiceConversationAggregator.shared.deleteVoice(id: id) {}
+    }
+  }
 }
 
 // MARK: - Helper Functions
