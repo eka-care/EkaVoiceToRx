@@ -16,13 +16,15 @@ public enum RecordConsultationState: Equatable {
   case listening(conversationType: VoiceConversationType)
   case processing
   case resultDisplay(success: Bool)
+  case deletedRecording
   
   public static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
     switch (lhs, rhs) {
     case
       (.retry, .retry),
       (.startRecording, .startRecording),
-      (.processing, .processing):
+      (.processing, .processing),
+      (.deletedRecording, .deletedRecording):
       return true
     case (.listening(let lhsType), .listening(let rhsType)):
       return lhsType == rhsType
@@ -265,7 +267,12 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   func deleteRecording(id: UUID) {
     Task {
-      await VoiceConversationAggregator.shared.deleteVoice(id: id) {}
+      await VoiceConversationAggregator.shared.deleteVoice(id: id) {
+        DispatchQueue.main.async { [weak self] in
+          guard let self else { return }
+          screenState = .deletedRecording
+        }
+      }
     }
   }
 }

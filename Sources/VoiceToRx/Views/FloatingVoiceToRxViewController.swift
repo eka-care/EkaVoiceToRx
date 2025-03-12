@@ -234,11 +234,7 @@ extension FloatingVoiceToRxViewController {
     viewModel?.$screenState.sink { [weak self] screenState in
       guard let self else { return }
       switch screenState {
-      case .startRecording:
-        debugPrint("Subscribed screen state is -> \(screenState)")
-      case .listening:
-        debugPrint("Subscribed screen state is -> \(screenState)")
-      case .processing:
+      case .startRecording, .listening, .processing, .retry, .deletedRecording:
         debugPrint("Subscribed screen state is -> \(screenState)")
       case .resultDisplay:
         debugPrint("Subscribed screen state is -> \(screenState)")
@@ -246,9 +242,6 @@ extension FloatingVoiceToRxViewController {
           guard let self else { return }
           self.hideFloatingButton()
         }
-      case .retry:
-        debugPrint("Subscribed screen state is -> \(screenState)")
-        debugPrint("")
       }
     }.store(in: &cancellables)
   }
