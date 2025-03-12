@@ -50,6 +50,8 @@ struct FloatingVoiceToRxRecordingView: View {
     )
     .clipShape(RoundedRectangle(cornerRadius: 12))
     .frame(width: 250)
+    .addCircularBorder(color: .white, lineWidth: 1)
+    .shadow(color: .black.opacity(0.24), radius: 25, x: 0, y: 8)
     .onAppear {
       startTimer()
     }

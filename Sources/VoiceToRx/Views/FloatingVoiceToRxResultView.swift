@@ -52,6 +52,7 @@ struct FloatingVoiceToRxResultView: View {
       )
     )
     .clipShape(RoundedRectangle(cornerRadius: 16))
-    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+    .addCircularBorder(color: .white, lineWidth: 1)
+    .shadow(color: .black.opacity(0.24), radius: 25, x: 0, y: 8)
   }
 }
