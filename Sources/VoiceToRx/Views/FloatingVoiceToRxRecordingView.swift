@@ -41,7 +41,7 @@ struct FloatingVoiceToRxRecordingView: View {
         }
     }
     .padding()
-    .frame(width: 250)
+    .frame(width: 250, height: 50)
     .background(
       LinearGradient(
         colors: [
