@@ -105,6 +105,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopAudioRecording()
+        if let sessionID = viewModel?.sessionID {
+          viewModel?.deleteRecording(id: sessionID)
+        }
         hideFloatingButton()
       }
     ))
