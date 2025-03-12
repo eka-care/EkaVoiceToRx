@@ -35,6 +35,5 @@ struct FloatingVoiceToRxProcessingView: View {
         .stroke(.white, lineWidth: 1)
       
     )
-    .blur(radius: 8)
   }
 }
