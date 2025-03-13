@@ -222,45 +222,42 @@ public final class VoiceToRxViewModel: ObservableObject {
       guard let self else { return }
       screenState = .processing
     }
-    DispatchQueue.global().async { [weak self] in
-      guard let self else { return }
-      /// Stop audio engine
-      stopAudioRecording()
-      /// Process whatever is remaining
-      audioChunkProcessor.processAudioChunk(
-        audioEngine: audioEngine,
-        vadAudioChunker: vadAudioChunker,
-        sessionID: sessionID,
-        lastClipIndex: &lastClipIndex,
-        chunkIndex: &chunkIndex,
-        audioChunkUploader: audioChunkUploader,
-        pcmBufferListRaw: &pcmBuffersListRaw
-      )
-      /// Upload full audio
-      audioChunkUploader.uploadFullAudio(
-        pcmBufferListRaw: pcmBuffersListRaw,
-        sessionID: sessionID
-      )
-      
-      /// To be shown for steps in processing
-      listenForFilesProcessed()
-      /// Upload EOF File
-      statusJSONFileMaker.uploadStatusFile(
-        docOid: docOid ?? "",
-        uploadedFilesKeys: audioChunkUploader.uploadedFileKeys,
-        fileUploadMapper: audioChunkUploader.fileUploadMapper,
-        domainName: s3FileUploader.domainName,
-        bucketName: s3FileUploader.bucketName,
-        dateFolderName: s3FileUploader.dateFolderName,
-        sessionId: sessionID.uuidString,
-        conversationType: nil,
-        fileChunksInfo: audioChunkUploader.fileChunksInfo,
-        contextData: contextParams,
-        fileType: .eof
-      )
-      /// Listend for structured rx from firebase
-      listenForStructuredRx()
-    }
+    /// Stop audio engine
+    stopAudioRecording()
+    /// Process whatever is remaining
+    audioChunkProcessor.processAudioChunk(
+      audioEngine: audioEngine,
+      vadAudioChunker: vadAudioChunker,
+      sessionID: sessionID,
+      lastClipIndex: &lastClipIndex,
+      chunkIndex: &chunkIndex,
+      audioChunkUploader: audioChunkUploader,
+      pcmBufferListRaw: &pcmBuffersListRaw
+    )
+    /// Upload full audio
+    audioChunkUploader.uploadFullAudio(
+      pcmBufferListRaw: pcmBuffersListRaw,
+      sessionID: sessionID
+    )
+    
+    /// To be shown for steps in processing
+    listenForFilesProcessed()
+    /// Upload EOF File
+    statusJSONFileMaker.uploadStatusFile(
+      docOid: docOid ?? "",
+      uploadedFilesKeys: audioChunkUploader.uploadedFileKeys,
+      fileUploadMapper: audioChunkUploader.fileUploadMapper,
+      domainName: s3FileUploader.domainName,
+      bucketName: s3FileUploader.bucketName,
+      dateFolderName: s3FileUploader.dateFolderName,
+      sessionId: sessionID.uuidString,
+      conversationType: nil,
+      fileChunksInfo: audioChunkUploader.fileChunksInfo,
+      contextData: contextParams,
+      fileType: .eof
+    )
+    /// Listend for structured rx from firebase
+    listenForStructuredRx()
   }
   
   /// Pauses the audio engine without removing the tap from the input node.
