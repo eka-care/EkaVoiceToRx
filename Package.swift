@@ -18,7 +18,7 @@ let package = Package(
       .package(url: "https://github.com/aws-amplify/aws-sdk-ios-spm.git", .upToNextMajor(from: "2.36.6")),
       .package(url: "https://github.com/firebase/firebase-ios-sdk.git", .upToNextMajor(from: "10.0.1")),
       .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", .upToNextMajor(from: "5.0.0")),
-      .package(url: "https://github.com/gfreezy/libfvad.git", branch: "main")
+      .package(url: "https://github.com/gfreezy/libfvad.git", .upToNextMajor(from: "1.0.0"))
     ],
     targets: [
         .target(
