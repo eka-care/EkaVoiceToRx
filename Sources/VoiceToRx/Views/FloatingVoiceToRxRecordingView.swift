@@ -42,7 +42,9 @@ struct FloatingVoiceToRxRecordingView: View {
           .resizable()
           .frame(width: 20, height: 20)
           .onTapGesture {
-            voiceToRxViewModel.resumeRecording()
+            Task {
+              try await voiceToRxViewModel.resumeRecording()
+            }
           }
       }
       
