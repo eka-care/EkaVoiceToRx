@@ -14,6 +14,7 @@ public enum RecordConsultationState: Equatable {
   case retry
   case startRecording
   case listening(conversationType: VoiceConversationType)
+  case paused
   case processing
   case resultDisplay(success: Bool)
   case deletedRecording
@@ -24,7 +25,8 @@ public enum RecordConsultationState: Equatable {
       (.retry, .retry),
       (.startRecording, .startRecording),
       (.processing, .processing),
-      (.deletedRecording, .deletedRecording):
+      (.deletedRecording, .deletedRecording),
+      (.paused, .paused):
       return true
     case (.listening(let lhsType), .listening(let rhsType)):
       return lhsType == rhsType
@@ -104,6 +106,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   public var contextParams: VoiceToRxContextParams?
   public weak var delegate: VoiceToRxViewModelDelegate?
+  public var voiceConversationType: VoiceConversationType?
   
   public init(
     voiceToRxInitConfig: V2RxInitConfigurations
@@ -146,6 +149,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   }
   
   public func startRecording(conversationType: VoiceConversationType) {
+    voiceConversationType = conversationType
     /// Setup record session
     setupRecordSession()
     /// Clear any previous session data if present
@@ -257,6 +261,20 @@ public final class VoiceToRxViewModel: ObservableObject {
       /// Listend for structured rx from firebase
       listenForStructuredRx()
     }
+  }
+  
+  /// Pauses the audio engine without removing the tap from the input node.
+  public func pauseRecording() {
+    screenState = .paused
+    audioEngine.pause()
+  }
+  
+  /// Resumes the audio engine and continues the tap on the input node.
+  public func resumeRecording() async throws {
+    guard let voiceConversationType else { return }
+    screenState = .listening(conversationType: voiceConversationType)
+    audioEngine.prepare()
+    try audioEngine.start()
   }
   
   public func stopAudioRecording() {
