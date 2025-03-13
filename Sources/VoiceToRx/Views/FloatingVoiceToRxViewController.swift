@@ -237,7 +237,7 @@ extension FloatingVoiceToRxViewController {
     viewModel?.$screenState.sink { [weak self] screenState in
       guard let self else { return }
       switch screenState {
-      case .startRecording, .listening, .processing, .retry, .deletedRecording:
+      case .startRecording, .listening, .processing, .retry, .deletedRecording, .paused:
         debugPrint("Subscribed screen state is -> \(screenState)")
       case .resultDisplay:
         debugPrint("Subscribed screen state is -> \(screenState)")

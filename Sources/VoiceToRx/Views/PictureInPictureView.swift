@@ -38,7 +38,7 @@ public struct PictureInPictureView: View {
     switch voiceToRxViewModel.screenState {
     case .retry, .startRecording, .deletedRecording:
       EmptyView()
-    case .listening:
+    case .listening, .paused:
       FloatingVoiceToRxRecordingView(
         name: title,
         voiceToRxViewModel: voiceToRxViewModel,
