@@ -105,9 +105,9 @@ struct FloatingVoiceToRxRecordingView: View {
     .onChange(of: voiceToRxViewModel.screenState) { oldValue, newValue in
       /// Start timer when the screen state changes to listening
       if let conversationType = voiceToRxViewModel.voiceConversationType,
-         voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
+         newValue == .listening(conversationType: conversationType) {
         startOrResumeTimer()
-      } else if voiceToRxViewModel.screenState == .paused {
+      } else if newValue== .paused {
         /// Stop timer when the screen state changes to paused
         pauseTimer()
       }
