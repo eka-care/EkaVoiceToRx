@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FloatingVoiceToRxRecordingView: View {
   let name: String
-  let voiceToRxViewModel: VoiceToRxViewModel
+  @ObservedObject var voiceToRxViewModel: VoiceToRxViewModel
   let onTapStop: () -> Void
   
   @State private var elapsedTime: TimeInterval = 0
