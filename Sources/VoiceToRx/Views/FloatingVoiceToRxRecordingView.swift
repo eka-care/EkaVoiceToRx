@@ -107,7 +107,7 @@ struct FloatingVoiceToRxRecordingView: View {
       if let conversationType = voiceToRxViewModel.voiceConversationType,
          newValue == .listening(conversationType: conversationType) {
         startOrResumeTimer()
-      } else if newValue== .paused {
+      } else if newValue == .paused {
         /// Stop timer when the screen state changes to paused
         pauseTimer()
       }
