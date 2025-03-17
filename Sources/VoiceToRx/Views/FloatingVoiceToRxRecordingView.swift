@@ -48,7 +48,7 @@ struct FloatingVoiceToRxRecordingView: View {
         Image(systemName: "pause.fill")
           .resizable()
           .scaledToFit()
-          .frame(width: 16, height: 16)
+          .frame(width: 20, height: 20)
           .onTapGesture {
             voiceToRxViewModel.pauseRecording()
           }
@@ -56,8 +56,8 @@ struct FloatingVoiceToRxRecordingView: View {
         Image(systemName: "play.circle")
           .resizable()
           .scaledToFit()
-          .font(.system(size: 16))
-          .frame(width: 16, height: 16)
+          .fontWeight(.bold)
+          .frame(width: 20, height: 20)
           .onTapGesture {
             do {
               try voiceToRxViewModel.resumeRecording()
