@@ -135,7 +135,6 @@ struct FloatingVoiceToRxRecordingView: View {
   
   func pauseTimer() {
     timer?.invalidate()
-    timer = nil
   }
   
   func resumeTimer() {
