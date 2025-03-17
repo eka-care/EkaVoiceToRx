@@ -136,9 +136,10 @@ struct FloatingVoiceToRxRecordingView: View {
   }
   
   func resumeTimer() {
-    timer = Timer.scheduledTimer(withTimeInterval: elapsedTime, repeats: true) { _ in
+    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
       elapsedTime += 1
     }
+    timer?.fireDate = Date().addingTimeInterval(elapsedTime)
   }
   
   func formatTime(_ time: TimeInterval) -> String {
