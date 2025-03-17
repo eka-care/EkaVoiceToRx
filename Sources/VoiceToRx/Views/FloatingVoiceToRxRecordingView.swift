@@ -49,14 +49,6 @@ struct FloatingVoiceToRxRecordingView: View {
           .resizable()
           .scaledToFit()
           .frame(width: 16, height: 16)
-          .onAppear {
-            /// Start time if its nil
-            if timer == nil {
-              startTimer()
-            } else { /// Else resume
-              resumeTimer()
-            }
-          }
           .onTapGesture {
             voiceToRxViewModel.pauseRecording()
           }
@@ -66,9 +58,6 @@ struct FloatingVoiceToRxRecordingView: View {
           .scaledToFit()
           .font(.system(size: 16))
           .frame(width: 16, height: 16)
-          .onAppear {
-            pauseTimer()
-          }
           .onTapGesture {
             do {
               try voiceToRxViewModel.resumeRecording()
@@ -117,11 +106,20 @@ struct FloatingVoiceToRxRecordingView: View {
       /// Start timer when the screen state changes to listening
       if let conversationType = voiceToRxViewModel.voiceConversationType,
          voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
-        startTimer()
+        startOrResumeTimer()
       } else if voiceToRxViewModel.screenState == .paused {
         /// Stop timer when the screen state changes to paused
         pauseTimer()
       }
+    }
+  }
+  
+  func startOrResumeTimer() {
+    /// Start time if its nil
+    if timer == nil {
+      startTimer()
+    } else { /// Else resume
+      resumeTimer()
     }
   }
   
@@ -138,7 +136,7 @@ struct FloatingVoiceToRxRecordingView: View {
   }
   
   func resumeTimer() {
-    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+    timer = Timer.scheduledTimer(withTimeInterval: elapsedTime, repeats: true) { _ in
       elapsedTime += 1
     }
   }
