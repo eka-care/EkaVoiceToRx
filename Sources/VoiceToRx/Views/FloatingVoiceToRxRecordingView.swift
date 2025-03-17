@@ -32,15 +32,16 @@ struct FloatingVoiceToRxRecordingView: View {
          voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
         Image(systemName: "pause.fill")
           .resizable()
-          .frame(width: 20, height: 20)
+          .scaledToFit()
+          .frame(width: 16, height: 16)
           .onTapGesture {
             voiceToRxViewModel.pauseRecording()
           }
-      } else if let conversationType = voiceToRxViewModel.voiceConversationType,
-                voiceToRxViewModel.screenState == .paused {
-        Image(systemName: "play.fill")
+      } else if voiceToRxViewModel.screenState == .paused {
+        Image(systemName: "play.circle")
           .resizable()
-          .frame(width: 20, height: 20)
+          .scaledToFit()
+          .frame(width: 16, height: 16)
           .onTapGesture {
             Task {
               try await voiceToRxViewModel.resumeRecording()

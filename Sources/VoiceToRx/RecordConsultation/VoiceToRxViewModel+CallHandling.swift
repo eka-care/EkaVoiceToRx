@@ -32,15 +32,16 @@ extension VoiceToRxViewModel {
       /// Interruption began, pause the recording
       pauseRecording()
     case .ended:
-      /// Interruption ended, check if it should resume
-      guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
-      let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
-      if options.contains(.shouldResume) {
-        // Resume the recording
-        Task {
-          try? await resumeRecording()
-        }
-      }
+      break
+      /// Interruption ended, we can resume if required but currently we will let user do this
+//      guard let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt else { return }
+//      let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+//      if options.contains(.shouldResume) {
+//        // Resume the recording
+//        Task {
+//          try? await resumeRecording()
+//        }
+//      }
     default:
       break
     }
