@@ -177,14 +177,14 @@ public final class VoiceToRxViewModel: ObservableObject {
           fileType: .som
         )
         /// To be uncommented if not testing
-        try await setupAudioEngineAsync(sessionID: sessionID)
+        try setupAudioEngineAsync(sessionID: sessionID)
       } catch {
         debugPrint("Audio Engine did not start \(error)")
       }
     }
   }
   
-  private func setupAudioEngineAsync(sessionID: UUID) async throws {
+  private func setupAudioEngineAsync(sessionID: UUID) throws {
     let inputNode = audioEngine.inputNode
     let inputNodeOutputFormat = inputNode.outputFormat(forBus: 0)
     let deviceSampleRate = inputNodeOutputFormat.sampleRate
@@ -287,8 +287,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   // MARK: - Resume
   
   /// Resumes the audio engine and continues the tap on the input node.
-  @MainActor
-  public func resumeRecording() async throws {
+  public func resumeRecording() throws {
     guard let voiceConversationType else { return }
     screenState = .listening(conversationType: voiceConversationType)
     audioEngine.prepare()
