@@ -21,9 +21,24 @@ struct FloatingVoiceToRxRecordingView: View {
         Text(name)
           .font(.system(size: 16, weight: .semibold))
         
-        Text(formatTime(elapsedTime))
-          .font(.system(size: 14))
-          .foregroundColor(.gray)
+        HStack {
+          Text(formatTime(elapsedTime))
+            .textStyle(
+              ekaFont: .calloutRegular,
+              color: UIColor(
+                resource: .neutrals600
+              )
+            )
+          if voiceToRxViewModel.screenState == .paused {
+            Text("(paused)")
+              .textStyle(
+                ekaFont: .calloutRegular,
+                color: UIColor(
+                  resource: .neutrals600
+                )
+              )
+          }
+        }
       }
       
       Spacer()
@@ -41,6 +56,7 @@ struct FloatingVoiceToRxRecordingView: View {
         Image(systemName: "play.circle")
           .resizable()
           .scaledToFit()
+          .font(.system(size: 16))
           .frame(width: 16, height: 16)
           .onTapGesture {
             Task {
@@ -83,6 +99,16 @@ struct FloatingVoiceToRxRecordingView: View {
     )
     .onAppear {
       startTimer()
+    }
+    .onChange(of: voiceToRxViewModel.screenState) { oldValue, newValue in
+      /// Start timer when the screen state changes to listening
+      if let conversationType = voiceToRxViewModel.voiceConversationType,
+         voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
+        startTimer()
+      } else if voiceToRxViewModel.screenState == .paused {
+        /// Stop timer when the screen state changes to paused
+        stopTimer()
+      }
     }
   }
   

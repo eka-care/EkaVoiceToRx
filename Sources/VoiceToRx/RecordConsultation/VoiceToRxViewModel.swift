@@ -287,6 +287,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   // MARK: - Resume
   
   /// Resumes the audio engine and continues the tap on the input node.
+  @MainActor
   public func resumeRecording() async throws {
     guard let voiceConversationType else { return }
     screenState = .listening(conversationType: voiceConversationType)
@@ -315,7 +316,6 @@ extension VoiceToRxViewModel {
     do {
       try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth, .defaultToSpeaker])
       try recordingSession?.setPreferredSampleRate(Double(RecordingConfiguration.shared.requiredSampleRate))
-      //      try recordingSession?.setInputGain(<#T##gain: Float##Float#>)
       try recordingSession?.setActive(true)
     } catch {
       print("Failed to set up recording session: \(error.localizedDescription)")
