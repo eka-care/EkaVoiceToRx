@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FloatingVoiceToRxRecordingView: View {
   let name: String
-  let voiceToRxViewModel: VoiceToRxViewModel
+  @ObservedObject var voiceToRxViewModel: VoiceToRxViewModel
   let onTapStop: () -> Void
   
   @State private var elapsedTime: TimeInterval = 0
@@ -21,9 +21,24 @@ struct FloatingVoiceToRxRecordingView: View {
         Text(name)
           .font(.system(size: 16, weight: .semibold))
         
-        Text(formatTime(elapsedTime))
-          .font(.system(size: 14))
-          .foregroundColor(.gray)
+        HStack {
+          Text(formatTime(elapsedTime))
+            .textStyle(
+              ekaFont: .calloutRegular,
+              color: UIColor(
+                resource: .neutrals600
+              )
+            )
+          if voiceToRxViewModel.screenState == .paused {
+            Text("(paused)")
+              .textStyle(
+                ekaFont: .calloutRegular,
+                color: UIColor(
+                  resource: .neutrals600
+                )
+              )
+          }
+        }
       }
       
       Spacer()
@@ -32,18 +47,22 @@ struct FloatingVoiceToRxRecordingView: View {
          voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
         Image(systemName: "pause.fill")
           .resizable()
+          .scaledToFit()
           .frame(width: 20, height: 20)
           .onTapGesture {
             voiceToRxViewModel.pauseRecording()
           }
-      } else if let conversationType = voiceToRxViewModel.voiceConversationType,
-                voiceToRxViewModel.screenState == .paused {
-        Image(systemName: "play.fill")
+      } else if voiceToRxViewModel.screenState == .paused {
+        Image(systemName: "play.circle")
           .resizable()
+          .scaledToFit()
+          .fontWeight(.bold)
           .frame(width: 20, height: 20)
           .onTapGesture {
-            Task {
-              try await voiceToRxViewModel.resumeRecording()
+            do {
+              try voiceToRxViewModel.resumeRecording()
+            } catch {
+              debugPrint("Error while resuming recording")
             }
           }
       }
@@ -81,7 +100,26 @@ struct FloatingVoiceToRxRecordingView: View {
       
     )
     .onAppear {
+      startOrResumeTimer()
+    }
+    .onChange(of: voiceToRxViewModel.screenState) { oldValue, newValue in
+      /// Start timer when the screen state changes to listening
+      if let conversationType = voiceToRxViewModel.voiceConversationType,
+         newValue == .listening(conversationType: conversationType) {
+        startOrResumeTimer()
+      } else if newValue == .paused {
+        /// Stop timer when the screen state changes to paused
+        pauseTimer()
+      }
+    }
+  }
+  
+  func startOrResumeTimer() {
+    /// Start time if its nil
+    if timer == nil {
       startTimer()
+    } else { /// Else resume
+      resumeTimer()
     }
   }
   
@@ -93,10 +131,15 @@ struct FloatingVoiceToRxRecordingView: View {
     }
   }
   
-  func stopTimer() {
+  func pauseTimer() {
     timer?.invalidate()
-    timer = nil
-    elapsedTime = 0
+  }
+  
+  func resumeTimer() {
+    // Create a new timer that continues incrementing from the current elapsedTime
+    timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+      elapsedTime += 1
+    }
   }
   
   func formatTime(_ time: TimeInterval) -> String {

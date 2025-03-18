@@ -108,6 +108,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   public weak var delegate: VoiceToRxViewModelDelegate?
   public var voiceConversationType: VoiceConversationType?
   
+  // MARK: - Init
+  
   public init(
     voiceToRxInitConfig: V2RxInitConfigurations
   ) {
@@ -115,6 +117,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     setupRecordSession()
     setupDependencies()
     setupContextParams()
+    addInterruptionObserver()
   }
   
   private func deleteAllDataIfDBIsStale() {
@@ -143,10 +146,15 @@ public final class VoiceToRxViewModel: ObservableObject {
     docOid = V2RxInitConfigurations.shared.ownerOID
   }
   
+  // MARK: - De-Init
+  
   deinit {
     filesProcessedListenerReference?.remove()
     listenerReference?.remove()
+    removeInterruptionObserver()
   }
+  
+  // MARK: - Start Recording
   
   public func startRecording(conversationType: VoiceConversationType) {
     voiceConversationType = conversationType
@@ -169,14 +177,14 @@ public final class VoiceToRxViewModel: ObservableObject {
           fileType: .som
         )
         /// To be uncommented if not testing
-        try await setupAudioEngineAsync(sessionID: sessionID)
+        try setupAudioEngineAsync(sessionID: sessionID)
       } catch {
         debugPrint("Audio Engine did not start \(error)")
       }
     }
   }
   
-  private func setupAudioEngineAsync(sessionID: UUID) async throws {
+  private func setupAudioEngineAsync(sessionID: UUID) throws {
     let inputNode = audioEngine.inputNode
     let inputNodeOutputFormat = inputNode.outputFormat(forBus: 0)
     let deviceSampleRate = inputNodeOutputFormat.sampleRate
@@ -214,6 +222,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     audioEngine.prepare()
     try audioEngine.start()
   }
+  
+  // MARK: - Stop Recording
   
   public func stopRecording() {
     guard let sessionID else { return }
@@ -260,24 +270,28 @@ public final class VoiceToRxViewModel: ObservableObject {
     listenForStructuredRx()
   }
   
+  public func stopAudioRecording() {
+    /// Stop audio engine
+    audioEngine.stop()
+    audioEngine.inputNode.removeTap(onBus: 0)
+  }
+  
+  // MARK: - Pause
+  
   /// Pauses the audio engine without removing the tap from the input node.
   public func pauseRecording() {
     screenState = .paused
     audioEngine.pause()
   }
   
+  // MARK: - Resume
+  
   /// Resumes the audio engine and continues the tap on the input node.
-  public func resumeRecording() async throws {
+  public func resumeRecording() throws {
     guard let voiceConversationType else { return }
     screenState = .listening(conversationType: voiceConversationType)
     audioEngine.prepare()
     try audioEngine.start()
-  }
-  
-  public func stopAudioRecording() {
-    /// Stop audio engine
-    audioEngine.stop()
-    audioEngine.inputNode.removeTap(onBus: 0)
   }
   
   func deleteRecording(id: UUID) {
@@ -301,7 +315,6 @@ extension VoiceToRxViewModel {
     do {
       try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth, .defaultToSpeaker])
       try recordingSession?.setPreferredSampleRate(Double(RecordingConfiguration.shared.requiredSampleRate))
-      //      try recordingSession?.setInputGain(<#T##gain: Float##Float#>)
       try recordingSession?.setActive(true)
     } catch {
       print("Failed to set up recording session: \(error.localizedDescription)")
