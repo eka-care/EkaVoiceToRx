@@ -100,7 +100,7 @@ struct FloatingVoiceToRxRecordingView: View {
       
     )
     .onAppear {
-      startTimer()
+      startOrResumeTimer()
     }
     .onChange(of: voiceToRxViewModel.screenState) { oldValue, newValue in
       /// Start timer when the screen state changes to listening
@@ -136,10 +136,10 @@ struct FloatingVoiceToRxRecordingView: View {
   }
   
   func resumeTimer() {
+    // Create a new timer that continues incrementing from the current elapsedTime
     timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
       elapsedTime += 1
     }
-    timer?.fireDate = Date().addingTimeInterval(elapsedTime)
   }
   
   func formatTime(_ time: TimeInterval) -> String {
