@@ -139,7 +139,14 @@ public final class VoiceToRxViewModel: ObservableObject {
           )
         )
       ),
-      patient: VoiceToRxPatientProfileInfo(id: V2RxInitConfigurations.shared.subOwnerOID, profile: nil),
+      patient: VoiceToRxPatientProfileInfo(
+        id: V2RxInitConfigurations.shared.subOwnerOID,
+        profile: VoiceToRxPatientProfile(
+          personal: VoiceToRxPatientPersonal(
+            name: V2RxInitConfigurations.shared.subOwnerName
+          )
+        )
+      ),
       visitId: V2RxInitConfigurations.shared.appointmentID
     )
   }
