@@ -28,8 +28,14 @@ public final class V2RxInitConfigurations {
   /// Name of the subOwner
   public var subOwnerName: String?
   
+  /// Oid of the subOwner
+  public var subOwnerOID: String?
+  
   /// Model container
   public var modelContainer: ModelContainer!
+  
+  /// Caller id
+  public var appointmentID: String?
   
   /// Voice to rx delegate
   public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
