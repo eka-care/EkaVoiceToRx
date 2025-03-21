@@ -95,7 +95,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var listenerReference: (any ListenerRegistration)?
   
   public var contextParams: VoiceToRxContextParams?
-  public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
+  weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?
   
   // MARK: - Init
