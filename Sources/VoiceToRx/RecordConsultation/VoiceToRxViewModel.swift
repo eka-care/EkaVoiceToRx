@@ -43,16 +43,6 @@ public enum VoiceConversationType: String {
   case dictation
 }
 
-public protocol VoiceToRxViewModelDelegate: AnyObject {
-  func onReceiveStructuredRx(id: UUID, transcriptText: String)
-  func errorReceivingPrescription(
-    id: UUID,
-    errorCode: VoiceToRxErrorCode,
-    transcriptText: String
-  )
-  func updateAppointmentsData(appointmentID: String, voiceToRxID: String)
-}
-
 final class RecordingConfiguration {
   
   static let shared = RecordingConfiguration()
@@ -105,14 +95,16 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var listenerReference: (any ListenerRegistration)?
   
   public var contextParams: VoiceToRxContextParams?
-  public weak var delegate: VoiceToRxViewModelDelegate?
+  public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?
   
   // MARK: - Init
   
   public init(
-    voiceToRxInitConfig: V2RxInitConfigurations
+    voiceToRxInitConfig: V2RxInitConfigurations,
+    voiceToRxDelegate: FloatingVoiceToRxDelegate?
   ) {
+    self.voiceToRxDelegate = voiceToRxDelegate
     deleteAllDataIfDBIsStale()
     setupRecordSession()
     setupDependencies()
@@ -412,7 +404,11 @@ extension VoiceToRxViewModel {
     /// Listen for structured rx
     VoiceToRxFirestoreManager.shared.listenForStructuredRx(
       sessionId: sessionID.uuidString
-    ) { [weak self] transcriptionString, prescriptionString, errorStructuredRx, listenerReference in
+    ) {
+      [weak self] transcriptionString,
+      prescriptionString,
+      errorStructuredRx,
+      listenerReference in
       guard let self else { return }
       self.listenerReference = listenerReference
       updateAppointmentIdWithVoiceToRxId()
@@ -422,12 +418,17 @@ extension VoiceToRxViewModel {
         await VoiceConversationAggregator.shared.updateVoice(id: sessionID, didFetchResult: true)
         DispatchQueue.main.async { [weak self] in
           guard let self else { return }
-          if let errorStructuredRx, errorStructuredRx == .smallTranscript {
+          if let errorStructuredRx,
+             errorStructuredRx == .smallTranscript {
             screenState = .resultDisplay(success: false)
-            delegate?.errorReceivingPrescription(id: sessionID, errorCode: errorStructuredRx, transcriptText: transcriptionString ?? "")
+            voiceToRxDelegate?
+              .errorReceivingPrescription(
+                id: sessionID,
+                errorCode: errorStructuredRx,
+                transcriptText: transcriptionString ?? ""
+              )
           } else {
             screenState = .resultDisplay(success: true)
-            delegate?.onReceiveStructuredRx(id: sessionID, transcriptText: transcriptionString ?? "")
           }
         }
         /// Once we have the parsed text stop listener reference
@@ -441,7 +442,7 @@ extension VoiceToRxViewModel {
   private func updateAppointmentIdWithVoiceToRxId() {
         guard let apptId = contextParams?.visitId,
         let sessionIdString = sessionID?.uuidString else { return }
-    delegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
+    voiceToRxDelegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
   }
   
   private func stopListenerReference() {

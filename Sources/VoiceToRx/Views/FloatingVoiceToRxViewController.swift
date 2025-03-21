@@ -11,6 +11,12 @@ import Combine
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
   func moveToDeepthoughtPage(id: UUID)
+  func errorReceivingPrescription(
+    id: UUID,
+    errorCode: VoiceToRxErrorCode,
+    transcriptText: String
+  )
+  func updateAppointmentsData(appointmentID: String, voiceToRxID: String)
 }
 
 // TODO: - To refractor this for loading view etc
@@ -23,6 +29,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
   public var viewModel: VoiceToRxViewModel?
   public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   var cancellables = Set<AnyCancellable>()
+  let keyWindow = UIApplication.shared.connectedScenes
+    .compactMap({ $0 as? UIWindowScene })
+    .flatMap({ $0.windows })
+    .first(where: { $0.isKeyWindow })
   
   required init?(coder aDecoder: NSCoder) {
     fatalError()
@@ -112,7 +122,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
       }
     ))
     
-    let controller = UIApplication.shared.windows.first?.rootViewController
+    let controller = keyWindow?.rootViewController
     controller?.present(alertController, animated: true)
   }
   
@@ -173,7 +183,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     
     var targetPoint = buttonView.center
     
-    if let keyWindow = UIApplication.shared.windows.first {
+    if let keyWindow {
       let safeAreaInsets = keyWindow.safeAreaInsets
       
       if minDistance == distanceToLeftEdge {
