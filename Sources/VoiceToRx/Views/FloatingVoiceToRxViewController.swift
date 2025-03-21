@@ -237,7 +237,7 @@ extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
     guard let sessionID = viewModel?.sessionID else { return }
     if success {
       hideFloatingButton()
-      voiceToRxDelegate?.moveToDeepthoughtPage(id: sessionID)
+      viewModel?.voiceToRxDelegate?.moveToDeepthoughtPage(id: sessionID)
     }
   }
 }

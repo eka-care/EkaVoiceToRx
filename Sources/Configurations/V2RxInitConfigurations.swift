@@ -37,9 +37,6 @@ public final class V2RxInitConfigurations {
   /// Caller id
   public var appointmentID: String?
   
-  /// Voice to rx delegate
-  public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
-  
   // MARK: - Init
   
   private init() {
