@@ -12,6 +12,7 @@ extension Date {
   func toString(withFormat format: String = "YYYY-MM-dd") -> String {
     let dateFormatter = DateFormatter()
     dateFormatter.dateFormat = format
+    dateFormatter.timeZone = .current
     return dateFormatter.string(from: self)
   }
   
