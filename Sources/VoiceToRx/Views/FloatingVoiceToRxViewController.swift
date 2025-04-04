@@ -48,7 +48,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
-  public func showFloatingButton(viewModel: VoiceToRxViewModel) {
+  public func showFloatingButton(viewModel: VoiceToRxViewModel, liveActivityDelegate: LiveActivityDelegate?) {
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
