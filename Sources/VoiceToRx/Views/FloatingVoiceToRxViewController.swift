@@ -54,8 +54,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.rootViewController = self
     loadView(viewModel: viewModel)
     subscribeToScreenStates()
+    self.liveActivityDelegate = liveActivityDelegate
     Task {
-      await liveActivityDelegate?.startLiveActivity(patientName: "amit")
+      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
     }
   }
   
@@ -110,6 +111,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopRecording()
+        Task {
+          await self.liveActivityDelegate?.endLiveActivity()
+        }
       }
     ))
     
@@ -127,6 +131,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopAudioRecording()
+        Task {
+          await self.liveActivityDelegate?.endLiveActivity()
+        }
         if let sessionID = viewModel?.sessionID {
           viewModel?.deleteRecording(id: sessionID)
         }
