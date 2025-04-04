@@ -19,6 +19,11 @@ public protocol FloatingVoiceToRxDelegate: AnyObject {
   func updateAppointmentsData(appointmentID: String, voiceToRxID: String)
 }
 
+public protocol LiveActivityDelegate: AnyObject {
+  func startLiveActivity(patientName: String) async
+  func endLiveActivity() async
+}
+
 // TODO: - To refractor this for loading view etc
 
 public class FloatingVoiceToRxViewController: UIViewController {
@@ -28,6 +33,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   private var initialButtonCenter: CGPoint?
   public var viewModel: VoiceToRxViewModel?
   public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
+  public weak var liveActivityDelegate: LiveActivityDelegate?
   var cancellables = Set<AnyCancellable>()
   let keyWindow = UIApplication.shared.connectedScenes
     .compactMap({ $0 as? UIWindowScene })
@@ -42,12 +48,16 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
-  public func showFloatingButton(viewModel: VoiceToRxViewModel) {
+  public func showFloatingButton(viewModel: VoiceToRxViewModel, liveActivityDelegate: LiveActivityDelegate?) {
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
     loadView(viewModel: viewModel)
     subscribeToScreenStates()
+    self.liveActivityDelegate = liveActivityDelegate
+    Task {
+      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+    }
   }
   
   public func hideFloatingButton() {
@@ -55,6 +65,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.isHidden = true
     window.rootViewController = self
     view.subviews.forEach { $0.removeFromSuperview() }
+    Task {
+      await liveActivityDelegate?.endLiveActivity()
+    }
   }
   
   private func loadView(viewModel: VoiceToRxViewModel) {
@@ -98,6 +111,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopRecording()
+        Task {
+          await self.liveActivityDelegate?.endLiveActivity()
+        }
       }
     ))
     
@@ -115,6 +131,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopAudioRecording()
+        Task {
+          await self.liveActivityDelegate?.endLiveActivity()
+        }
         if let sessionID = viewModel?.sessionID {
           viewModel?.deleteRecording(id: sessionID)
         }
