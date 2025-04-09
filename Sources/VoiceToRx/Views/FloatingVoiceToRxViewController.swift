@@ -55,9 +55,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
     loadView(viewModel: viewModel)
     subscribeToScreenStates()
     self.liveActivityDelegate = liveActivityDelegate
-    Task {
-      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
-    }
+//    Task {
+//      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+//    }
   }
   
   public func hideFloatingButton() {
@@ -65,9 +65,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.isHidden = true
     window.rootViewController = self
     view.subviews.forEach { $0.removeFromSuperview() }
-    Task {
-      await liveActivityDelegate?.endLiveActivity()
-    }
+//    Task {
+//      await liveActivityDelegate?.endLiveActivity()
+//    }
   }
   
   private func loadView(viewModel: VoiceToRxViewModel) {
@@ -111,9 +111,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
-        }
+//        Task {
+//          await self.liveActivityDelegate?.endLiveActivity()
+//        }
       }
     ))
     
@@ -131,9 +131,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
       handler: { [weak self] _ in
         guard let self else { return }
         viewModel?.stopAudioRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
-        }
+//        Task {
+//          await self.liveActivityDelegate?.endLiveActivity()
+//        }
         if let sessionID = viewModel?.sessionID {
           viewModel?.deleteRecording(id: sessionID)
         }
