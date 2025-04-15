@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
+  func makeDocAssistEntry(id: UUID)
   func moveToDeepthoughtPage(id: UUID)
   func errorReceivingPrescription(
     id: UUID,
