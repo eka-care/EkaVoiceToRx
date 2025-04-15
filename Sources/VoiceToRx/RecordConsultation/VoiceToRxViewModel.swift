@@ -358,7 +358,7 @@ extension VoiceToRxViewModel {
     createDirectoryForGivenSessionId(sessionId: model.id.uuidString)
     Task {
       try await VoiceConversationAggregator.shared.saveVoice(model: model)
-      voiceToRxDelegate?.makeDocAssistEntry(id: model.id)
+      voiceToRxDelegate?.onCreateVoiceToRxSession(id: model.id)
     }
   }
 }
