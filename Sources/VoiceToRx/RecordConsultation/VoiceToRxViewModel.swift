@@ -269,7 +269,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       fileType: .eof
     )
     /// Listend for structured rx from firebase
-    listenForStructuredRx()
+//    listenForStructuredRx()
     /// Start s3 polling
     startS3Polling()
   }
