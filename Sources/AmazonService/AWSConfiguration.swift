@@ -14,6 +14,7 @@ enum RecordingS3UploadConfiguration {
   static let bucketName = "m-prod-voice2rx"
   static let domain = "s3://"
   static let transferUtilKey = "S3TransferUtility"
+  static let s3ClientKey = "s3Client"
   
   static func getDateFolderName() -> String {
     return Date().toString(withFormat: "yyMMdd")
@@ -50,6 +51,11 @@ final class AWSConfiguration {
       with: clientConfiguration!,
       transferUtilityConfiguration: transferUtilityConfiguration,
       forKey: RecordingS3UploadConfiguration.transferUtilKey
+    )
+    
+    AWSS3.register(
+      with: clientConfiguration!,
+      forKey: RecordingS3UploadConfiguration.s3ClientKey
     )
   }
 }
