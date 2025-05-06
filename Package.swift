@@ -20,7 +20,7 @@ let package = Package(
       .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", .upToNextMajor(from: "5.0.0")),
       .package(url: "https://github.com/gfreezy/libfvad.git", .upToNextMajor(from: "1.0.0")),
       .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.10.2")),
-      .package(url: "https://github.com/apple/swift-protobuf.git", .upToNextMajor(from: "1.29.0"))
+      .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0")
     ],
     targets: [
         .target(
