@@ -47,6 +47,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   public init() {
     super.init(nibName: nil, bundle: nil)
+    getAmazonCredentials()
   }
   
   public func showFloatingButton(viewModel: VoiceToRxViewModel, liveActivityDelegate: LiveActivityDelegate?) {
@@ -285,5 +286,11 @@ extension FloatingVoiceToRxViewController {
     viewModel?.screenState == .listening(conversationType: .conversation) ||
     viewModel?.screenState == .listening(conversationType: .dictation) ||
     viewModel?.screenState == .processing
+  }
+}
+
+extension FloatingVoiceToRxViewController {
+  private func getAmazonCredentials() {
+    viewModel?.getAmazonCredentials()
   }
 }

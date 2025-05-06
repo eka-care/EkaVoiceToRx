@@ -501,3 +501,20 @@ extension VoiceToRxViewModel {
     sessionID = nil
   }
 }
+
+// MARK: - Amazon Credentials
+
+extension VoiceToRxViewModel {
+  func getAmazonCredentials() {
+    let cognitoService = CognitoApiService()
+    cognitoService.getAmazonCredentials { result, statusCode in
+      switch result {
+      case .success(let response):
+        guard let credentials = response.credentials else { return }
+        AWSConfiguration.shared.configureAWSS3(credentials: credentials)
+      case .failure(let error):
+        print("Error in fetching aws credentials -> \(error.localizedDescription)")
+      }
+    }
+  }
+}

@@ -7,20 +7,10 @@
 
 import AWSS3
 
-enum RecordingS3UploadConfiguration {
-  static let bucketName = "m-prod-voice2rx"
-  static let domain = "s3://"
-  
-  static func getDateFolderName() -> String {
-    return Date().toString(withFormat: "yyMMdd")
-  }
-}
-
 final class AmazonS3FileUploaderService {
   
   // MARK: - Properties
   
-  let transferUtility = AWSS3TransferUtility.default()
   let domainName = RecordingS3UploadConfiguration.domain
   let bucketName = RecordingS3UploadConfiguration.bucketName
   let dateFolderName = RecordingS3UploadConfiguration.getDateFolderName()
@@ -78,6 +68,10 @@ final class AmazonS3FileUploaderService {
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     debugPrint("Key is \(key)")
+    guard let transferUtility = AWSS3TransferUtility.s3TransferUtility(forKey: RecordingS3UploadConfiguration.transferUtilKey) else {
+      print("Transfer Utility could not be formed")
+      return
+    }
     transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: nil) { task, error in
       if let error {
         debugPrint("Error is -> \(error.localizedDescription)")
