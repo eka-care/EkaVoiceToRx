@@ -127,7 +127,7 @@ final class AWSS3Listener {
           if error.domain == AWSS3ErrorDomain && error.code == AWSS3ErrorType.noSuchKey.rawValue {
             continuation.resume(returning: false)
           } else {
-            continuation.resume(throwing: error)
+            continuation.resume(throwing: false)
           }
         } else {
           continuation.resume(returning: true)
