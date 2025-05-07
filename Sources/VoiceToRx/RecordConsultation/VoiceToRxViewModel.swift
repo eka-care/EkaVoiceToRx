@@ -530,12 +530,14 @@ extension VoiceToRxViewModel {
     Task {
       do {
         if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID, timeout: 600) {
-          print("Fetched transcript and Rx successfully")
+          screenState = .resultDisplay(success: true)
+          let (transcript, structuredRx) = result
+          await VoiceConversationAggregator.shared.updateVoice(id: sessionID, transcriptText: transcript)
         } else {
-          print("Timeout: Transcript or Rx not available")
+          screenState = .resultDisplay(success: false)
         }
       } catch {
-        print("Polling failed with error: \(error)")
+        screenState = .resultDisplay(success: false)
       }
     }
   }
