@@ -18,6 +18,7 @@ extension CognitoEndpoints: RequestProvider {
       return AF.request(
         "\(DomainConfigurations.cogUrl)/credentials",
         method: .get,
+        headers: HTTPHeaders([.contentType(HTTPHeader.contentTypeJson.rawValue)]),
         interceptor: NetworkRequestInterceptor()
       )
       .validate()

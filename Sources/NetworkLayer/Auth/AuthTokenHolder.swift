@@ -10,15 +10,13 @@
  This is set on app launch and removed on app termination.
  */
 
-final class AuthTokenHolder {
+public final class AuthTokenHolder {
   
   // MARK: - Properties
   
-  static let shared = AuthTokenHolder()
-  var authToken: String?
-  var refreshToken: String?
+  public static let shared = AuthTokenHolder()
   
-  // MARK: - Init
-  
-  private init() {}
+  public init() {}
+  public var authToken: String?
+  public var refreshToken: String?
 }
