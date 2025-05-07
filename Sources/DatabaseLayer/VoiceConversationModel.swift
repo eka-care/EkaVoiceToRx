@@ -48,7 +48,7 @@ public enum VoiceConversations: VersionedSchema {
     public static func getFolderPath(model: VoiceConversationModel) -> String {
       let date = model.date.toString(withFormat: "yyMMdd")
       let session = model.id.uuidString
-      return date + session
+      return "\(date)/\(session)"
     }
   }
 }
