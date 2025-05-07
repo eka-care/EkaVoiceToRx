@@ -41,6 +41,15 @@ public enum VoiceConversations: VersionedSchema {
       self.updatedSessionID = updatedSessionID
       self.didFetchResult = didFetchResult
     }
+    
+    /// Gives folder path of the session
+    /// - Parameter model: VoiceConversationModel
+    /// - Returns: folder path
+    public static func getFolderPath(model: VoiceConversationModel) -> String {
+      let date = model.date.toString(withFormat: "yyMMdd")
+      let session = model.id.uuidString
+      return date + session
+    }
   }
 }
 

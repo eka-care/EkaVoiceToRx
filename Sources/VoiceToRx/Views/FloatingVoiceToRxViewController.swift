@@ -55,6 +55,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.rootViewController = self
     loadView(viewModel: viewModel)
     subscribeToScreenStates()
+    getAmazonCredentials()
     self.liveActivityDelegate = liveActivityDelegate
     Task {
       await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
@@ -285,5 +286,11 @@ extension FloatingVoiceToRxViewController {
     viewModel?.screenState == .listening(conversationType: .conversation) ||
     viewModel?.screenState == .listening(conversationType: .dictation) ||
     viewModel?.screenState == .processing
+  }
+}
+
+extension FloatingVoiceToRxViewController {
+  private func getAmazonCredentials() {
+    viewModel?.getAmazonCredentials()
   }
 }

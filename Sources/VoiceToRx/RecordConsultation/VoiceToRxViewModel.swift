@@ -83,6 +83,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     s3FileUploaderService: s3FileUploader
   )
   let s3FileUploader = AmazonS3FileUploaderService()
+  let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
   public var sessionID: UUID?
   /// Raw int bytes accumulated till now
@@ -268,7 +269,9 @@ public final class VoiceToRxViewModel: ObservableObject {
       fileType: .eof
     )
     /// Listend for structured rx from firebase
-    listenForStructuredRx()
+//    listenForStructuredRx()
+    /// Start s3 polling
+    startS3Polling()
   }
   
   public func stopAudioRecording() {
@@ -499,5 +502,41 @@ extension VoiceToRxViewModel {
     lastClipIndex = 0
     chunkIndex = 1
     sessionID = nil
+  }
+}
+
+// MARK: - Amazon Credentials
+
+extension VoiceToRxViewModel {
+  func getAmazonCredentials() {
+    let cognitoService = CognitoApiService()
+    cognitoService.getAmazonCredentials { result, statusCode in
+      switch result {
+      case .success(let response):
+        guard let credentials = response.credentials else { return }
+        AWSConfiguration.shared.configureAWSS3(credentials: credentials)
+      case .failure(let error):
+        print("Error in fetching aws credentials -> \(error.localizedDescription)")
+      }
+    }
+  }
+}
+
+// MARK: - Amazon polling
+
+extension VoiceToRxViewModel {
+  func startS3Polling() {
+    guard let sessionID else { return }
+    Task {
+      do {
+        if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID, timeout: 600) {
+          print("Fetched transcript and Rx successfully")
+        } else {
+          print("Timeout: Transcript or Rx not available")
+        }
+      } catch {
+        print("Polling failed with error: \(error)")
+      }
+    }
   }
 }
