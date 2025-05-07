@@ -65,11 +65,17 @@ final class AmazonS3FileUploaderService {
     url: URL,
     key: String,
     contentType: String = "audio/wav",
+    retryCount: Int = 3,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     debugPrint("Key is \(key)")
     guard let transferUtility = AWSS3TransferUtility.s3TransferUtility(forKey: RecordingS3UploadConfiguration.transferUtilKey) else {
       print("Transfer Utility could not be formed")
+      let retryDelay = DispatchTime.now() + 2.0 // 2 seconds backoff time
+      DispatchQueue.global().asyncAfter(deadline: retryDelay) { [weak self] in
+        guard let self else { return }
+        uploadFileWithRetry(url: url, key: key) {_ in}
+      }
       return
     }
     transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: nil) { task, error in
