@@ -529,7 +529,7 @@ extension VoiceToRxViewModel {
     guard let sessionID else { return }
     Task {
       do {
-        if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID) {
+        if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID, timeout: 600) {
           print("Fetched transcript and Rx successfully")
         } else {
           print("Timeout: Transcript or Rx not available")

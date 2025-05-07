@@ -24,7 +24,7 @@ final class AWSS3Listener {
     timeout: TimeInterval = 60
   ) async throws -> (transcript: String, structuredRx: String)? {
     let startTime = Date()
-    
+    print("Poll transcript is called")
     while Date().timeIntervalSince(startTime) < timeout {
       if let result = try await readTranscriptAndStructuredRx(sessionID: sessionID),
          let transcript = result.transcript,
@@ -44,6 +44,7 @@ final class AWSS3Listener {
   /// - Returns: A tuple containing optional transcript and structuredRx strings if found, or `nil` if neither file exists.
   /// - Throws: An error if reading or checking either file fails.
   func readTranscriptAndStructuredRx(sessionID: UUID) async throws -> (transcript: String?, structuredRx: String?)? {
+    print("Read transcript is called")
     guard let model = await VoiceConversationAggregator.shared
       .fetchVoiceConversation(using: QueryHelper.queryForFetch(with: sessionID))
       .first else {
@@ -83,6 +84,7 @@ final class AWSS3Listener {
   /// - Returns: The file content as a string.
   /// - Throws: An error if the file cannot be read or decoded.
   private func readS3File(bucket: String, key: String) async throws -> String {
+    print("Read s3 is called")
     let s3 = AWSS3.s3(forKey: RecordingS3UploadConfiguration.s3ClientKey)
     
     let request = AWSS3GetObjectRequest()!
@@ -112,6 +114,7 @@ final class AWSS3Listener {
   /// - Returns: A Boolean indicating whether the file exists.
   /// - Throws: An error if the S3 request fails (other than file-not-found).
   private func checkS3FileExists(bucket: String, key: String) async throws -> Bool {
+    print("Check s3 files is called")
     let s3 = AWSS3.s3(forKey: RecordingS3UploadConfiguration.s3ClientKey)
     
     let request = AWSS3HeadObjectRequest()!
