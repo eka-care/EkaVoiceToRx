@@ -47,7 +47,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   public init() {
     super.init(nibName: nil, bundle: nil)
-    getAmazonCredentials()
   }
   
   public func showFloatingButton(viewModel: VoiceToRxViewModel, liveActivityDelegate: LiveActivityDelegate?) {
@@ -56,6 +55,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.rootViewController = self
     loadView(viewModel: viewModel)
     subscribeToScreenStates()
+    getAmazonCredentials()
     self.liveActivityDelegate = liveActivityDelegate
     Task {
       await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
