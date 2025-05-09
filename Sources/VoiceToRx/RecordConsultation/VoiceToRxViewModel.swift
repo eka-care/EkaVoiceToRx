@@ -536,12 +536,18 @@ extension VoiceToRxViewModel {
             transcriptText: transcript,
             didFetchResult: true
           )
-          screenState = .resultDisplay(success: true)
+          await MainActor.run {
+            screenState = .resultDisplay(success: true)
+          }
         } else {
-          screenState = .resultDisplay(success: false)
+          await MainActor.run {
+            screenState = .resultDisplay(success: false)
+          }
         }
       } catch {
-        screenState = .resultDisplay(success: false)
+        await MainActor.run {
+          screenState = .resultDisplay(success: false)
+        }
       }
     }
   }
