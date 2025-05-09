@@ -530,13 +530,13 @@ extension VoiceToRxViewModel {
     Task {
       do {
         if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID, timeout: 600) {
-          screenState = .resultDisplay(success: true)
           let (transcript, structuredRx) = result
           await VoiceConversationAggregator.shared.updateVoice(
             id: sessionID,
             transcriptText: transcript,
             didFetchResult: true
           )
+          screenState = .resultDisplay(success: true)
         } else {
           screenState = .resultDisplay(success: false)
         }
