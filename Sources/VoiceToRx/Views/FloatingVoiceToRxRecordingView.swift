@@ -73,7 +73,7 @@ struct FloatingVoiceToRxRecordingView: View {
         .frame(width: 20, height: 20)
         .symbolRenderingMode(.palette) // Enables multi-color rendering
         .foregroundStyle(.white, .red) // First color is for the main shape, second for the inner part
-        .frame(width: 32, height: 32)
+        .frame(width: 40, height: 40)
         .contentShape(Rectangle())
         .onTapGesture {
           onTapStop()
