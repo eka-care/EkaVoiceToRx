@@ -83,6 +83,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     s3FileUploaderService: s3FileUploader
   )
   let s3FileUploader = AmazonS3FileUploaderService()
+  let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
   public var sessionID: UUID?
   /// Raw int bytes accumulated till now
@@ -269,6 +270,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     )
     /// Listend for structured rx from firebase
     listenForStructuredRx()
+    /// Start s3 polling
+//    startS3Polling()
   }
   
   public func stopAudioRecording() {
@@ -499,5 +502,53 @@ extension VoiceToRxViewModel {
     lastClipIndex = 0
     chunkIndex = 1
     sessionID = nil
+  }
+}
+
+// MARK: - Amazon Credentials
+
+extension VoiceToRxViewModel {
+  func getAmazonCredentials() {
+    let cognitoService = CognitoApiService()
+    cognitoService.getAmazonCredentials { result, statusCode in
+      switch result {
+      case .success(let response):
+        guard let credentials = response.credentials else { return }
+        AWSConfiguration.shared.configureAWSS3(credentials: credentials)
+      case .failure(let error):
+        print("Error in fetching aws credentials -> \(error.localizedDescription)")
+      }
+    }
+  }
+}
+
+// MARK: - Amazon polling
+
+extension VoiceToRxViewModel {
+  func startS3Polling() {
+    guard let sessionID else { return }
+    Task {
+      do {
+        if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID, timeout: 600) {
+          let (transcript, structuredRx) = result
+          await VoiceConversationAggregator.shared.updateVoice(
+            id: sessionID,
+            transcriptText: transcript,
+            didFetchResult: true
+          )
+          await MainActor.run {
+            screenState = .resultDisplay(success: true)
+          }
+        } else {
+          await MainActor.run {
+            screenState = .resultDisplay(success: false)
+          }
+        }
+      } catch {
+        await MainActor.run {
+          screenState = .resultDisplay(success: false)
+        }
+      }
+    }
   }
 }

@@ -18,7 +18,9 @@ let package = Package(
       .package(url: "https://github.com/aws-amplify/aws-sdk-ios-spm.git", .upToNextMajor(from: "2.36.6")),
       .package(url: "https://github.com/firebase/firebase-ios-sdk.git", .upToNextMajor(from: "10.0.1")),
       .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", .upToNextMajor(from: "5.0.0")),
-      .package(url: "https://github.com/gfreezy/libfvad.git", .upToNextMajor(from: "1.0.0"))
+      .package(url: "https://github.com/gfreezy/libfvad.git", .upToNextMajor(from: "1.0.0")),
+      .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.10.2")),
+      .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0")
     ],
     targets: [
         .target(
@@ -27,7 +29,9 @@ let package = Package(
               .product(name: "AWSS3", package: "aws-sdk-ios-spm"),
               .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
               .product(name: "SwiftyJSON", package: "SwiftyJSON"),
-              .product(name: "libfvad", package: "libfvad")
+              .product(name: "libfvad", package: "libfvad"),
+              .product(name: "Alamofire", package: "Alamofire"),
+              .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ],
             resources: [
               .process("Resources")
