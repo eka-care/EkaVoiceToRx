@@ -82,6 +82,8 @@ final class AudioBufferToM4AConverter {
     success: (() -> Void)?,
     failure: ((Error?) -> Void)?
   ) {
+    print("Source url is -> \(sourceURL)")
+    print("Destination url is -> \(destinationURL)")
     let asset = AVURLAsset(url: sourceURL)
     guard let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
       failure?(NSError(domain: "AudioConversionError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetExportSession."]))
