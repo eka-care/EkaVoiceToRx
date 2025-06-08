@@ -38,7 +38,8 @@ final class VoiceToRxRepo {
         mode: conversationMode.rawValue,
         inputLanguage: [],
         s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
-        outputFormatTemplate: []
+        outputFormatTemplate: [],
+        transfer: "vaded"
       )
     ) { result, statusCode in }
     return voice
