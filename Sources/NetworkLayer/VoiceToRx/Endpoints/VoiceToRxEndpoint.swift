@@ -24,7 +24,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       /// Init
     case .initVoiceToRx(let request, let sessionID):
       AF.request(
-        "\(DomainConfigurations.apiEkaCareUrl)/api/v2/transaction/init/\(sessionID)",
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/transaction/init/\(sessionID)",
         method: .post,
         parameters: request,
         encoder: JSONParameterEncoder.default,
