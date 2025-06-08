@@ -15,6 +15,8 @@ final class VoiceConversationDatabaseManager {
   
   // MARK: - Properties
   
+  static let shared = VoiceConversationDatabaseManager()
+  
   /// Container init
   public var container: NSPersistentContainer = {
     /// Loading model from package resources
@@ -133,13 +135,16 @@ extension VoiceConversationDatabaseManager {
   /// - Parameter conversationArguement: model containing the arguments for the database.
   func addVoiceConversation(
     conversationArguement: VoiceConversationArguementModel
-  ) {
-    let newRecord = VoiceConversation(context: container.viewContext)
-    newRecord.update(from: conversationArguement)
+  ) async -> VoiceConversation? {
+    let voice = VoiceConversation(context: container.viewContext)
+    voice.sessionID = UUID()
+    voice.update(from: conversationArguement)
     do {
       try container.viewContext.save()
+      return voice
     } catch {
       print("Failed to save voice conversation: \(error.localizedDescription)")
+      return nil
     }
   }
 }

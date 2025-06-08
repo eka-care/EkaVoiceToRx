@@ -14,19 +14,22 @@ struct VoiceConversationArguementModel {
   var transcription: String? // Transcription text of the conversation
   var stage: VoiceConversationAPIStage? // Raw value of VoiceConversationAPIStage
   var updatedSessionID: String? // Updated session id of the conversation done from BE "PP" addition
+  let sessionData: VoiceToRxContextParams? // Additional session data for init like doc ID etc
   
   init(
     createdAt: Date? = nil,
     fileURL: String? = nil,
     transcription: String? = nil,
     stage: VoiceConversationAPIStage? = nil,
-    updatedSessionID: String? = nil
+    updatedSessionID: String? = nil,
+    sessionData: VoiceToRxContextParams? = nil
   ) {
     self.createdAt = createdAt
     self.fileURL = fileURL
     self.transcription = transcription
     self.stage = stage
     self.updatedSessionID = updatedSessionID
+    self.sessionData = sessionData
   }
 }
 

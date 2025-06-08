@@ -85,7 +85,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   let s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
-  public var sessionID: UUID?
+  private let voiceToRxRepo = VoiceToRxRepo()
   /// Raw int bytes accumulated till now
   private var pcmBuffersListRaw: [Int16] = []
   private var lastClipIndex: Int = 0
@@ -94,6 +94,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var audioEngine = AVAudioEngine()
   private var filesProcessedListenerReference: (any ListenerRegistration)?
   private var listenerReference: (any ListenerRegistration)?
+  private var voiceModel: VoiceConversation?
   
   public var contextParams: VoiceToRxContextParams?
   weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
@@ -166,27 +167,19 @@ public final class VoiceToRxViewModel: ObservableObject {
     clearSession()
     /// Change the screen state to listening
     screenState = .listening(conversationType: conversationType)
-    /// Session id is set here
-    setupSessionInDatabase()
-    
-    guard let sessionID else { return }
-    /// Setup Audio Engine asynchronously
+    /// Create session
     Task {
+      let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
       do {
-        uploadStatusOfMessageFile(
-          conversationType: conversationType,
-          sessionID: sessionID,
-          fileType: .som
-        )
-        /// To be uncommented if not testing
-        try setupAudioEngineAsync(sessionID: sessionID)
+        try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
       } catch {
         debugPrint("Audio Engine did not start \(error)")
       }
     }
   }
   
-  private func setupAudioEngineAsync(sessionID: UUID) throws {
+  private func setupAudioEngineAsync(sessionID: UUID?) throws {
+    guard let sessionID else { return }
     let inputNode = audioEngine.inputNode
     let inputNodeOutputFormat = inputNode.outputFormat(forBus: 0)
     let deviceSampleRate = inputNodeOutputFormat.sampleRate
@@ -207,7 +200,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         buffer: buffer,
         inputNodeOutputFormat: inputNodeOutputFormat
       ) else { return }
-      
+
       /// VAD processing
       audioChunkProcessor.processAudioChunk(
         audioEngine: audioEngine,
@@ -228,7 +221,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   // MARK: - Stop Recording
   
   public func stopRecording() {
-    guard let sessionID else { return }
+    guard let sessionID = voiceModel?.sessionID else { return }
     /// Change screen state to processing
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
@@ -251,25 +244,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       pcmBufferListRaw: pcmBuffersListRaw,
       sessionID: sessionID
     )
-    
-    /// To be shown for steps in processing
-    listenForFilesProcessed()
-    /// Upload EOF File
-    statusJSONFileMaker.uploadStatusFile(
-      docOid: docOid ?? "",
-      uploadedFilesKeys: audioChunkUploader.uploadedFileKeys,
-      fileUploadMapper: audioChunkUploader.fileUploadMapper,
-      domainName: s3FileUploader.domainName,
-      bucketName: s3FileUploader.bucketName,
-      dateFolderName: s3FileUploader.dateFolderName,
-      sessionId: sessionID.uuidString,
-      conversationType: nil,
-      fileChunksInfo: audioChunkUploader.fileChunksInfo,
-      contextData: contextParams,
-      fileType: .eof
-    )
-    /// Listend for structured rx from firebase
-    listenForStructuredRx()
+    voiceToRxRepo.stopVoiceToRxSession(voiceModel: voiceModel)
     /// Start s3 polling
 //    startS3Polling()
   }
@@ -353,17 +328,6 @@ extension VoiceToRxViewModel {
       fileType: fileType
     )
   }
-  
-  /// Setup VoiceToRx Model
-  private func setupSessionInDatabase() {
-    let model = VoiceConversationModel(date: .now, transcriptionText: "")
-    sessionID = model.id
-    createDirectoryForGivenSessionId(sessionId: model.id.uuidString)
-    Task {
-      try await VoiceConversationAggregator.shared.saveVoice(model: model)
-      voiceToRxDelegate?.onCreateVoiceToRxSession(id: model.id, params: contextParams)
-    }
-  }
 }
 
 // MARK: - AudioChunkUploaderDelegate
@@ -387,65 +351,11 @@ extension VoiceToRxViewModel: StatusFileDelegate {
 // MARK: - Listener
 
 extension VoiceToRxViewModel {
-  private func listenForFilesProcessed() {
-    guard let sessionID else { return }
-    VoiceToRxFirestoreManager.shared.listenForFilesProcessed(
-      sessionID: sessionID.uuidString
-    ) { [weak self] documentsProcessed, listenerReference in
-      guard let self else { return }
-      filesProcessedListenerReference = listenerReference
-      /// UI changes in main thread
-      DispatchQueue.main.async { [weak self] in
-        guard let self else { return }
-        filesProcessed = documentsProcessed
-        uploadedFiles = uploadedFiles.union(audioChunkUploader.uploadedFileKeys)
-      }
-    }
-  }
-  
-  func listenForStructuredRx() {
-    guard let sessionID else { return }
-    /// Listen for structured rx
-    VoiceToRxFirestoreManager.shared.listenForStructuredRx(
-      sessionId: sessionID.uuidString
-    ) {
-      [weak self] transcriptionString,
-      prescriptionString,
-      errorStructuredRx,
-      listenerReference in
-      guard let self else { return }
-      self.listenerReference = listenerReference
-      updateAppointmentIdWithVoiceToRxId()
-      Task { [weak self] in
-        guard let self else { return }
-        /// Update database with did fetch result
-        await VoiceConversationAggregator.shared.updateVoice(id: sessionID, didFetchResult: true)
-        DispatchQueue.main.async { [weak self] in
-          guard let self else { return }
-          if let errorStructuredRx,
-             errorStructuredRx == .smallTranscript {
-            screenState = .resultDisplay(success: false)
-            voiceToRxDelegate?
-              .errorReceivingPrescription(
-                id: sessionID,
-                errorCode: errorStructuredRx,
-                transcriptText: transcriptionString ?? ""
-              )
-          } else {
-            screenState = .resultDisplay(success: true)
-          }
-        }
-        /// Once we have the parsed text stop listener reference
-        stopListenerReference()
-      }
-    }
-  }
-  
   // TODO: - Once we have appointments context
   /// In Appointments Firebase update the voice to rx id against the appointment id
   private func updateAppointmentIdWithVoiceToRxId() {
         guard let apptId = contextParams?.visitId,
-        let sessionIdString = sessionID?.uuidString else { return }
+              let sessionIdString = voiceModel?.sessionID?.uuidString else { return }
     voiceToRxDelegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
   }
   
@@ -455,19 +365,12 @@ extension VoiceToRxViewModel {
   }
 }
 
-extension VoiceToRxViewModel {
-  /// Used to setup session id
-  public func setupSessionID(sessionID: UUID?) {
-    self.sessionID = sessionID
-  }
-}
-
 // MARK: - Retry
 
 extension VoiceToRxViewModel {
   /// Used to retry file upload if any file was missed
   public func retryIfNeeded() {
-    guard let sessionID else { return }
+    guard let sessionID = voiceModel?.sessionID else { return }
     let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
     if let unuploadedFileUrls = FileHelper.getFileURLs(in: directory) {
       fileRetryService.retryFilesUpload(
@@ -477,9 +380,8 @@ extension VoiceToRxViewModel {
         guard let self else { return }
         /// Update the uploaded files
         uploadedFiles.formUnion(unuploadedFileUrls.map { $0.lastPathComponent })
-        /// listen for files processed
-        listenForFilesProcessed()
-        listenForStructuredRx()
+        /// Listen for file status
+        
       }
     }
   }
@@ -501,7 +403,6 @@ extension VoiceToRxViewModel {
     pcmBuffersListRaw = []
     lastClipIndex = 0
     chunkIndex = 1
-    sessionID = nil
   }
 }
 
@@ -525,30 +426,7 @@ extension VoiceToRxViewModel {
 // MARK: - Amazon polling
 
 extension VoiceToRxViewModel {
-  func startS3Polling() {
-    guard let sessionID else { return }
-    Task {
-      do {
-        if let result = try await s3Listener.pollTranscriptAndRx(sessionID: sessionID, timeout: 600) {
-          let (transcript, structuredRx) = result
-          await VoiceConversationAggregator.shared.updateVoice(
-            id: sessionID,
-            transcriptText: transcript,
-            didFetchResult: true
-          )
-          await MainActor.run {
-            screenState = .resultDisplay(success: true)
-          }
-        } else {
-          await MainActor.run {
-            screenState = .resultDisplay(success: false)
-          }
-        }
-      } catch {
-        await MainActor.run {
-          screenState = .resultDisplay(success: false)
-        }
-      }
-    }
+  func startStatusPolling() {
+    
   }
 }

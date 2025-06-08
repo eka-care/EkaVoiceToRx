@@ -16,8 +16,28 @@ enum VoiceConversationAPIStage: String {
 
 extension VoiceConversation {
   func update(from conversation: VoiceConversationArguementModel) {
-    createdAt = conversation.createdAt
-    transcription = conversation.transcription
-    stage = conversation.stage?.rawValue
+    if let createdAt = conversation.createdAt {
+      self.createdAt = createdAt
+    }
+    if let transcription = conversation.transcription {
+      self.transcription = transcription
+    }
+    if let stage = conversation.stage {
+      self.stage = stage.rawValue
+    }
+    if let sessionData = conversation.sessionData {
+      self.sessionData = convertToBinaryData(sessionData)
+    }
+  }
+  
+  private func convertToBinaryData(_ contextParams: VoiceToRxContextParams) -> Data? {
+    let encoder = JSONEncoder()
+    do {
+      let data = try encoder.encode(contextParams)
+      return data
+    } catch {
+      print("Failed to encode VoiceToRxContextParams: \(error)")
+      return nil
+    }
   }
 }

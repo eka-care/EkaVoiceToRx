@@ -19,6 +19,10 @@ enum RecordingS3UploadConfiguration {
   static func getDateFolderName() -> String {
     return Date().toString(withFormat: "yyMMdd")
   }
+  
+  static func getS3Url(sessionID: UUID) -> String {
+    "\(domain)\(bucketName)/\(getDateFolderName())/\(sessionID.uuidString)"
+  }
 }
 
 final class AWSConfiguration {
