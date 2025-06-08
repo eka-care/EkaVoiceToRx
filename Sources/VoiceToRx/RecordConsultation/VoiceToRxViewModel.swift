@@ -94,8 +94,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var audioEngine = AVAudioEngine()
   private var filesProcessedListenerReference: (any ListenerRegistration)?
   private var listenerReference: (any ListenerRegistration)?
-  private var voiceModel: VoiceConversation?
   
+  public var voiceModel: VoiceConversation?
   public var contextParams: VoiceToRxContextParams?
   weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?

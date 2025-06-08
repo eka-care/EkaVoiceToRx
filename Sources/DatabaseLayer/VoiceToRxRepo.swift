@@ -50,7 +50,6 @@ final class VoiceToRxRepo {
     guard let voiceModel, let sessionID = voiceModel.sessionID?.uuidString else { return }
     /// Get audio file names from one to one relationship
     let fileNames = (voiceModel.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
-    let audioFiles = voiceModel.toVoiceChunkInfo
     service.stopVoiceToRx(
       sessionID: sessionID,
       request: VoiceToRxStopRequest(
@@ -68,7 +67,6 @@ final class VoiceToRxRepo {
     guard let voiceModel, let sessionID = voiceModel.sessionID?.uuidString else { return }
     /// Get audio file names from one to one relationship
     let fileNames = (voiceModel.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
-    let audioFiles = voiceModel.toVoiceChunkInfo
     service.commitVoiceToRx(
       sessionID: sessionID,
       request: VoiceToRxCommitRequest(
