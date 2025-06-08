@@ -75,13 +75,13 @@ final class AudioChunkProcessor {
     pcmBufferListRaw.withUnsafeBufferPointer { pointerAudioBuffer in
       // Chunking and uploading to S3
       if isClipFrame && (endIndex>0) {
-        audioChunkUploader.uploadChunkToS3(
+        audioChunkUploader.createChunkM4AFileAndUploadToS3(
           startingFrame: startIndex,
           endingFrame: endIndex,
           chunkIndex: chunkIndex,
-          sessionId: sessionID.uuidString,
+          sessionId: sessionID,
           audioBuffer: pointerAudioBuffer
-        ) {}
+        )
         
         lastClipIndex = endIndex
         chunkIndex += 1

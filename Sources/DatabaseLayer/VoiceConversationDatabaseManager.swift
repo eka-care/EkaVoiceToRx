@@ -49,6 +49,8 @@ final class VoiceConversationDatabaseManager {
   private var notificationToken: NSObjectProtocol?
   /// A peristent history token used for fetching transactions from the store.
   private var lastToken: NSPersistentHistoryToken?
+  /// To get upload completion callbacks
+  private var uploadCompletionCallbacks: [UUID: () -> Void] = [:]
     
   // MARK: - Init
   
@@ -191,6 +193,23 @@ extension VoiceConversationDatabaseManager {
     } else {
       let newChunk = VoiceChunkInfo(context: container.viewContext)
       newChunk.update(from: chunkArguement)
+    }
+  }
+}
+
+// MARK: - Check upload status
+
+extension VoiceConversationDatabaseManager {
+  func checkUploadStatus(for sessionID: UUID) async {
+    await backgroundContext.perform {
+      let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
+      guard let voice = try? self.backgroundContext.fetch(fetchRequest).first,
+            let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> else { return }
+      
+      if chunks.allSatisfy({ $0.isFileUploaded }),
+         let callback = self.uploadCompletionCallbacks.removeValue(forKey: sessionID) {
+        DispatchQueue.main.async { callback() }
+      }
     }
   }
 }

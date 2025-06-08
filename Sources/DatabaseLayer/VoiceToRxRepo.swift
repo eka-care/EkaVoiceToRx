@@ -45,6 +45,22 @@ final class VoiceToRxRepo {
     return voice
   }
   
+  // MARK: - Update
+  
+  /// Used to update voice to rx chunk info
+  /// - Parameters:
+  ///   - sessionID: session id of the given voice to rx session
+  ///   - chunkInfo: model for passing voice chunk info that is to be updated
+  public func updateVoiceToRxChunkInfo(
+    sessionID: UUID,
+    chunkInfo: VoiceChunkInfoArguementModel
+  ) {
+    databaseManager.updateVoiceConversation(
+      sessionID: sessionID,
+      conversationArguement: chunkInfo
+    )
+  }
+  
   // MARK: - Stop
   
   public func stopVoiceToRxSession(voiceModel: VoiceConversation?) {
