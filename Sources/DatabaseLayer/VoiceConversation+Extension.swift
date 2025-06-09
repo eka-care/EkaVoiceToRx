@@ -52,19 +52,22 @@ extension VoiceConversation {
   }
   
   /// Used to get file chunk info from the voice entry
-  /// - Returns: File chunk info against the file name
-  func getFileChunkInfo() -> [String: FileChunkInfo] {
-    var filesChunkInfo: [String: FileChunkInfo] = [:]
+  /// - Returns: An array of file chunk info dictionaries, each containing one file name as the key
+  func getChunksInfo() -> [[String: ChunkInfo]] {
+    var chunkInfoList: [[String: ChunkInfo]] = []
     
     (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.forEach {
       if let fileName = $0.fileName {
-        filesChunkInfo[fileName] = FileChunkInfo(
-          startingTime: $0.startTime ?? "",
-          endingTime: $0.endTime ?? ""
-        )
+        let fileChunkInfo: [String: ChunkInfo] = [
+          fileName: ChunkInfo(
+            st: $0.startTime ?? "",
+            et: $0.endTime ?? ""
+          )
+        ]
+        chunkInfoList.append(fileChunkInfo)
       }
     }
     
-    return filesChunkInfo
+    return chunkInfoList
   }
 }

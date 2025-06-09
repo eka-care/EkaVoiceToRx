@@ -76,13 +76,13 @@ final class VoiceToRxRepo {
     guard let sessionID,
     let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
     let fileNames = model.getFileNames()
-    let filesChunkInfo = model.getFileChunkInfo()
+    let chunksInfo = model.getChunksInfo()
     
     service.stopVoiceToRx(
       sessionID: sessionID.uuidString,
       request: VoiceToRxStopRequest(
         audioFiles: fileNames,
-        fileChunksInfo: filesChunkInfo
+        chunkInfo: chunksInfo
       )
     ) { result, statusCode in
       
@@ -95,13 +95,13 @@ final class VoiceToRxRepo {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
     let fileNames = model.getFileNames()
-    let filesChunkInfo = model.getFileChunkInfo()
+    let filesChunkInfo = model.getChunksInfo()
 
     service.commitVoiceToRx(
       sessionID: sessionID.uuidString,
       request: VoiceToRxCommitRequest(
         audioFiles: fileNames,
-        fileChunksInfo: filesChunkInfo
+        chunkInfo: filesChunkInfo
       )
     ) { result, statusCode in
       

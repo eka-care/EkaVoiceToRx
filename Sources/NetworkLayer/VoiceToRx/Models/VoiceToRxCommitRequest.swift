@@ -7,10 +7,10 @@
 
 struct VoiceToRxCommitRequest: Codable {
   let audioFiles: [String]
-  let fileChunksInfo: [String: FileChunkInfo]?
+  let chunkInfo: [[String: ChunkInfo]]
   
   enum CodingKeys: String, CodingKey {
     case audioFiles = "audio_files"
-    case fileChunksInfo = "chunk_info"
+    case chunkInfo = "chunk_info"
   }
 }
