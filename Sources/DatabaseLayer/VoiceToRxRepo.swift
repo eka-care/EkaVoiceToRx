@@ -75,13 +75,14 @@ final class VoiceToRxRepo {
   public func stopVoiceToRxSession(sessionID: UUID?) {
     guard let sessionID,
     let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
-    let fileNames = (model.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+    let fileNames = model.getFileNames()
+    let filesChunkInfo = model.getFileChunkInfo()
     
     service.stopVoiceToRx(
       sessionID: sessionID.uuidString,
       request: VoiceToRxStopRequest(
         audioFiles: fileNames,
-        fileChunksInfo: [:]
+        fileChunksInfo: filesChunkInfo
       )
     ) { result, statusCode in
       

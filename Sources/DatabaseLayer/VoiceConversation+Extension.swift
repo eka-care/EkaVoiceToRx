@@ -41,3 +41,30 @@ extension VoiceConversation {
     }
   }
 }
+
+// MARK: - Helper functions
+
+extension VoiceConversation {
+  /// Used to get all the file names from a voice entry
+  /// - Returns: Array of the file names
+  func getFileNames() -> [String] {
+    (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+  }
+  
+  /// Used to get file chunk info from the voice entry
+  /// - Returns: File chunk info against the file name
+  func getFileChunkInfo() -> [String: FileChunkInfo] {
+    var filesChunkInfo: [String: FileChunkInfo] = [:]
+    
+    (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.forEach {
+      if let fileName = $0.fileName {
+        filesChunkInfo[fileName] = FileChunkInfo(
+          startingTime: $0.startTime ?? "",
+          endingTime: $0.endTime ?? ""
+        )
+      }
+    }
+    
+    return filesChunkInfo
+  }
+}
