@@ -193,6 +193,7 @@ extension VoiceConversationDatabaseManager {
     } else {
       let newChunk = VoiceChunkInfo(context: container.viewContext)
       newChunk.update(from: chunkArguement)
+      voice.addToToVoiceChunkInfo(newChunk)
     }
   }
 }
