@@ -197,6 +197,20 @@ extension VoiceConversationDatabaseManager {
   }
 }
 
+// MARK: - Read
+
+extension VoiceConversationDatabaseManager {
+  func getVoice(fetchRequest: NSFetchRequest<VoiceConversation>) -> VoiceConversation? {
+    do {
+      let results = try container.viewContext.fetch(fetchRequest)
+      return results.first
+    } catch {
+      print("Fetch error: \(error)")
+    }
+    return nil
+  }
+}
+
 // MARK: - Check upload status
 
 extension VoiceConversationDatabaseManager {

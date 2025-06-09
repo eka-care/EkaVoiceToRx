@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreData
 
 final class VoiceToRxRepo {
   
@@ -61,14 +62,23 @@ final class VoiceToRxRepo {
     )
   }
   
+  // MARK: - Read
+  
+  public func fetchVoiceConversation(
+    fetchRequest: NSFetchRequest<VoiceConversation>
+  ) -> VoiceConversation? {
+    databaseManager.getVoice(fetchRequest: fetchRequest)
+  }
+  
   // MARK: - Stop
   
-  public func stopVoiceToRxSession(voiceModel: VoiceConversation?) {
-    guard let voiceModel, let sessionID = voiceModel.sessionID?.uuidString else { return }
-    /// Get audio file names from one to one relationship
-    let fileNames = (voiceModel.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+  public func stopVoiceToRxSession(sessionID: UUID?) {
+    guard let sessionID,
+    let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
+    let fileNames = (model.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+    
     service.stopVoiceToRx(
-      sessionID: sessionID,
+      sessionID: sessionID.uuidString,
       request: VoiceToRxStopRequest(
         audioFiles: fileNames,
         fileChunksInfo: [:]

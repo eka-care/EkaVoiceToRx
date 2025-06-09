@@ -136,7 +136,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         Task {
           await self.liveActivityDelegate?.endLiveActivity()
         }
-        if let sessionID = viewModel?.voiceModel?.sessionID {
+        if let sessionID = viewModel?.sessionID {
           viewModel?.deleteRecording(id: sessionID)
         }
         hideFloatingButton()
@@ -255,7 +255,7 @@ private class FloatingButtonWindow: UIWindow {
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onTapResultDisplayView(success: Bool) {
-    guard let sessionID = viewModel?.voiceModel?.sessionID else { return }
+    guard let sessionID = viewModel?.sessionID else { return }
     if success {
       hideFloatingButton()
       viewModel?.voiceToRxDelegate?.moveToDeepthoughtPage(id: sessionID)

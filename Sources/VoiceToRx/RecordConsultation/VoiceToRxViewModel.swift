@@ -95,7 +95,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var filesProcessedListenerReference: (any ListenerRegistration)?
   private var listenerReference: (any ListenerRegistration)?
   
-  public var voiceModel: VoiceConversation?
+  public var sessionID: UUID?
   public var contextParams: VoiceToRxContextParams?
   weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?
@@ -170,7 +170,9 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Create session
     Task { [weak self] in
       guard let self else { return }
-      voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+      let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+      /// Setup sessionID in view model
+      sessionID = voiceModel?.sessionID
       do {
         try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
       } catch {
@@ -222,7 +224,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   // MARK: - Stop Recording
   
   public func stopRecording() {
-    guard let sessionID = voiceModel?.sessionID else { return }
+    guard let sessionID else { return }
     /// Change screen state to processing
     DispatchQueue.main.async { [weak self] in
       guard let self else { return }
@@ -245,7 +247,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       pcmBufferListRaw: pcmBuffersListRaw,
       sessionID: sessionID
     )
-    voiceToRxRepo.stopVoiceToRxSession(voiceModel: voiceModel)
+    voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID)
     /// Start s3 polling
 //    startS3Polling()
   }
@@ -356,7 +358,7 @@ extension VoiceToRxViewModel {
   /// In Appointments Firebase update the voice to rx id against the appointment id
   private func updateAppointmentIdWithVoiceToRxId() {
         guard let apptId = contextParams?.visitId,
-              let sessionIdString = voiceModel?.sessionID?.uuidString else { return }
+              let sessionIdString = sessionID?.uuidString else { return }
     voiceToRxDelegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
   }
   
@@ -371,7 +373,7 @@ extension VoiceToRxViewModel {
 extension VoiceToRxViewModel {
   /// Used to retry file upload if any file was missed
   public func retryIfNeeded() {
-    guard let sessionID = voiceModel?.sessionID else { return }
+    guard let sessionID else { return }
     let directory = FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionID.uuidString)
     if let unuploadedFileUrls = FileHelper.getFileURLs(in: directory) {
       fileRetryService.retryFilesUpload(
