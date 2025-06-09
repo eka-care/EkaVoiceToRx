@@ -91,15 +91,17 @@ final class VoiceToRxRepo {
   
   // MARK: - Commit
   
-  public func commitVoiceToRxSession(voiceModel: VoiceConversation?) {
-    guard let voiceModel, let sessionID = voiceModel.sessionID?.uuidString else { return }
-    /// Get audio file names from one to one relationship
-    let fileNames = (voiceModel.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+  public func commitVoiceToRxSession(sessionID: UUID?) {
+    guard let sessionID,
+          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
+    let fileNames = model.getFileNames()
+    let filesChunkInfo = model.getFileChunkInfo()
+
     service.commitVoiceToRx(
-      sessionID: sessionID,
+      sessionID: sessionID.uuidString,
       request: VoiceToRxCommitRequest(
         audioFiles: fileNames,
-        fileChunksInfo: [:]
+        fileChunksInfo: filesChunkInfo
       )
     ) { result, statusCode in
       
@@ -108,8 +110,8 @@ final class VoiceToRxRepo {
   
   // MARK: - Status
   
-  public func fetchVoiceToRxSessionStatus(voiceModel: VoiceConversation?) {
-    guard let voiceModel, let sessionID = voiceModel.sessionID?.uuidString else { return }
-    service.getVoiceToRxStatus(sessionID: sessionID) { result, statusCode in }
+  public func fetchVoiceToRxSessionStatus(sessionID: UUID?) {
+    guard let sessionID else { return }
+    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { result, statusCode in }
   }
 }
