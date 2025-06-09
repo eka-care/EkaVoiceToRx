@@ -55,9 +55,9 @@ final class VoiceToRxRepo {
     sessionID: UUID,
     chunkInfo: VoiceChunkInfoArguementModel
   ) {
-    databaseManager.updateVoiceConversation(
+    databaseManager.updateVoiceChunk(
       sessionID: sessionID,
-      conversationArguement: chunkInfo
+      chunkArguement: chunkInfo
     )
   }
   
