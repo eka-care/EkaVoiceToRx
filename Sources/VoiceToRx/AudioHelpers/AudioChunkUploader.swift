@@ -50,13 +50,20 @@ final class AudioChunkUploader {
     endingFrame: Int,
     chunkIndex: Int,
     sessionId: UUID,
-    audioBuffer: UnsafeBufferPointer<Int16>
-  ) {
-    let currentSegment = audioBuffer.baseAddress! + startingFrame
+    audioBuffer: [Int16]
+  ) async throws {
+    // Validate frame indices
+    guard startingFrame < endingFrame && startingFrame >= 0 && endingFrame <= audioBuffer.count else {
+      return
+    }
+    
+    // Extract the segment from the audio buffer
     let segmentLength = endingFrame - startingFrame
-    /// Used to create a single out of buffers collected till this frame
+    let audioSegment = Array(audioBuffer[startingFrame..<endingFrame])
+    
+    /// Used to create a single buffer out of the segment
     guard let singleBuffer = AudioHelper.shared.createBuffer(
-      from: currentSegment,
+      from: audioSegment,
       format: audioFormat,
       frameCount: AVAudioFrameCount(segmentLength),
       channels: AVAudioChannelCount(channelCount),
@@ -75,37 +82,38 @@ final class AudioChunkUploader {
     /// Add the key into the upload checker array
     fileChunksInfo[fileChunkName] = fileChunkInfo
     debugPrint("Starting frame is \(startingFrame) and Ending frame is \(endingFrame)")
-    Task {
-      /// Create chunk
-      let m4aUrl = try await audioBufferToM4AConverter.writePCMBufferToM4A(
-        pcmBuffer: singleBuffer,
-        fileKey: String(chunkIndex),
-        sessionId: sessionId.uuidString
-      )
-      /// Update chunk info in databse with initial values.
-      /// Note: - Here we don't pass isFileUploaded as it has not been uploaded yet
+    
+    /// Create chunk
+    let m4aUrl = try await audioBufferToM4AConverter.writePCMBufferToM4A(
+      pcmBuffer: singleBuffer,
+      fileKey: String(chunkIndex),
+      sessionId: sessionId.uuidString
+    )
+    
+    /// Update chunk info in database with initial values.
+    /// Note: - Here we don't pass isFileUploaded as it has not been uploaded yet
+    updateChunkInfoInDatabse(
+      sessionId: sessionId,
+      fileName: m4aUrl.lastPathComponent,
+      fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
+      fileChunkInfo: fileChunkInfo
+    )
+    
+    /// Upload Chunk to s3
+    uploadChunkToS3(
+      sessionId: sessionId.uuidString,
+      fileURL: m4aUrl,
+      lastPathComponent: m4aUrl.lastPathComponent
+    ) { [weak self] in
+      guard let self else { return }
+      /// Update chunk info to make uploaded true
       updateChunkInfoInDatabse(
         sessionId: sessionId,
         fileName: m4aUrl.lastPathComponent,
         fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
-        fileChunkInfo: fileChunkInfo
+        fileChunkInfo: fileChunkInfo,
+        isFileUploaded: true
       )
-      /// Upload Chunk to s3
-      uploadChunkToS3(
-        sessionId: sessionId.uuidString,
-        fileURL: m4aUrl,
-        lastPathComponent: m4aUrl.lastPathComponent
-      ) { [weak self] in
-        guard let self else { return }
-        /// Update chunk info to make uploaded true
-        updateChunkInfoInDatabse(
-          sessionId: sessionId,
-          fileName: m4aUrl.lastPathComponent,
-          fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
-          fileChunkInfo: fileChunkInfo,
-          isFileUploaded: true
-        )
-      }
     }
   }
   

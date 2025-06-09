@@ -112,9 +112,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
       style: .default,
       handler: { [weak self] _ in
         guard let self else { return }
-        viewModel?.stopRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
+        Task { [weak self] in
+          guard let self else { return }
+          await viewModel?.stopRecording()
+          await liveActivityDelegate?.endLiveActivity()
         }
       }
     ))

@@ -205,16 +205,19 @@ public final class VoiceToRxViewModel: ObservableObject {
       ) else { return }
 
       /// VAD processing
-      audioChunkProcessor.processAudioChunk(
-        audioEngine: audioEngine,
-        buffer: pcmBuffer,
-        vadAudioChunker: vadAudioChunker,
-        sessionID: sessionID,
-        lastClipIndex: &lastClipIndex,
-        chunkIndex: &chunkIndex,
-        audioChunkUploader: audioChunkUploader,
-        pcmBufferListRaw: &pcmBuffersListRaw
-      )
+      Task { [weak self] in
+        guard let self else { return }
+        try await audioChunkProcessor.processAudioChunk(
+          audioEngine: audioEngine,
+          buffer: pcmBuffer,
+          vadAudioChunker: vadAudioChunker,
+          sessionID: sessionID,
+          lastClipIndex: &lastClipIndex,
+          chunkIndex: &chunkIndex,
+          audioChunkUploader: audioChunkUploader,
+          pcmBufferListRaw: &pcmBuffersListRaw
+        )
+      }
     }
     
     audioEngine.prepare()
@@ -223,7 +226,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Stop Recording
   
-  public func stopRecording() {
+  public func stopRecording() async {
     guard let sessionID else { return }
     /// Change screen state to processing
     DispatchQueue.main.async { [weak self] in
@@ -233,7 +236,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Stop audio engine
     stopAudioRecording()
     /// Process whatever is remaining
-    audioChunkProcessor.processAudioChunk(
+    do {
+      try await audioChunkProcessor.processAudioChunk(
       audioEngine: audioEngine,
       vadAudioChunker: vadAudioChunker,
       sessionID: sessionID,
@@ -242,14 +246,17 @@ public final class VoiceToRxViewModel: ObservableObject {
       audioChunkUploader: audioChunkUploader,
       pcmBufferListRaw: &pcmBuffersListRaw
     )
-    /// Upload full audio
-    audioChunkUploader.uploadFullAudio(
-      pcmBufferListRaw: pcmBuffersListRaw,
-      sessionID: sessionID
-    )
-    voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID)
-    /// Start s3 polling
-//    startS3Polling()
+      /// Upload full audio
+      audioChunkUploader.uploadFullAudio(
+        pcmBufferListRaw: pcmBuffersListRaw,
+        sessionID: sessionID
+      )
+      voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID)
+      /// Start s3 polling
+      //    startS3Polling()
+    } catch {
+      debugPrint("Error in processing last audio chunk \(error.localizedDescription)")
+    }
   }
   
   public func stopAudioRecording() {
