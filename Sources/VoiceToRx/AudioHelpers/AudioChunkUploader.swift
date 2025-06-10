@@ -127,7 +127,12 @@ final class AudioChunkUploader {
     let secondFolder = sessionId
     let lastPathComponent = fileURL.lastPathComponent
     let key = "\(firstFolder)/\(secondFolder)/\(lastPathComponent)"
-    s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key) { result in
+    s3FileUploaderService.uploadFileWithRetry(
+      url: fileURL,
+      key: key,
+      sessionID: sessionId,
+      bid: AuthTokenHolder.shared.bid
+    ) { result in
       switch result {
       case .success:
         debugPrint("Successfully uploaded file")

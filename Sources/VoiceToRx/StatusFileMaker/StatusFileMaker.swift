@@ -109,18 +109,18 @@ final class StatusFileMaker {
       sessionID: sessionId
     ) { [weak self] fileURL in
       guard let self, let fileURL else { return }
-      s3FileUploaderService.uploadFileWithRetry(
-        url: fileURL,
-        key: key
-      ) { result in
-          switch result {
-          case .success:
-            /// Remove file from local after successfully uploaded
-            debugPrint("Status File uploaded successfully")
-          case .failure(let error):
-            debugPrint("Error in uploading file -> \(error.localizedDescription)")
-          }
-        }
+//      s3FileUploaderService.uploadFileWithRetry(
+//        url: fileURL,
+//        key: key
+//      ) { result in
+//          switch result {
+//          case .success:
+//            /// Remove file from local after successfully uploaded
+//            debugPrint("Status File uploaded successfully")
+//          case .failure(let error):
+//            debugPrint("Error in uploading file -> \(error.localizedDescription)")
+//          }
+//        }
     }
   }
   

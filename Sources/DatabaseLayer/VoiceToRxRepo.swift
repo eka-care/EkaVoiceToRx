@@ -63,7 +63,7 @@ final class VoiceToRxRepo {
           )
         )
       case .failure(let error):
-        debugPrint("Error in init voice to rx")
+        debugPrint("Error in init voice to rx \(error.localizedDescription)")
       }
     }
     return voice
@@ -140,6 +140,9 @@ final class VoiceToRxRepo {
         )
         completion()
       case .failure(let error):
+        if retryCount < 3 {
+          stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
+        }
         debugPrint("Error in stop voice to rx \(error.localizedDescription)")
       }
     }
@@ -149,14 +152,15 @@ final class VoiceToRxRepo {
   
   public func commitVoiceToRxSession(
     sessionID: UUID?,
-    retryCount: Int = 0
+    retryCount: Int = 0,
+    completion: @escaping () -> Void
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .stop
     else {
       if retryCount < 3 {
-        commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1)
+        commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1, completion: completion)
       }
       return
     }
@@ -180,7 +184,11 @@ final class VoiceToRxRepo {
             stage: .commit
           )
         )
+        completion()
       case .failure(let error):
+        if retryCount < 3 {
+          commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1, completion: completion)
+        }
         debugPrint("Error in commit voice to rx \(error.localizedDescription)")
       }
     }

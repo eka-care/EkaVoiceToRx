@@ -19,6 +19,8 @@ final class AmazonS3FileUploaderService {
     url: URL,
     key: String,
     retryCount: Int = 3,
+    sessionID: String?,
+    bid: String?,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     // Make content type
@@ -36,7 +38,7 @@ final class AmazonS3FileUploaderService {
     }
     debugPrint("S3 content type Content type: \(contentType)")
     
-    uploadFile(url: url, key: key, contentType: contentType) { [weak self] result in
+    uploadFile(url: url, key: key, contentType: contentType, sessionID: sessionID, bid: bid) { [weak self] result in
       guard let self else { return }
       
       switch result {
@@ -52,7 +54,14 @@ final class AmazonS3FileUploaderService {
           let retryDelay = DispatchTime.now() + 2.0 // 2 seconds backoff time
           DispatchQueue.global().asyncAfter(deadline: retryDelay) {
             debugPrint("Retrying upload (\(retryCount) retries left)...")
-            self.uploadFileWithRetry(url: url, key: key, retryCount: retryCount - 1, completion: completion)
+            self.uploadFileWithRetry(
+              url: url,
+              key: key,
+              retryCount: retryCount - 1,
+              sessionID: sessionID,
+              bid: bid,
+              completion: completion
+            )
           }
         } else {
           completion(.failure(error))
@@ -66,6 +75,8 @@ final class AmazonS3FileUploaderService {
     key: String,
     contentType: String = "audio/wav",
     retryCount: Int = 3,
+    sessionID: String?,
+    bid: String?,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     debugPrint("Key is \(key)")
@@ -74,9 +85,20 @@ final class AmazonS3FileUploaderService {
       let retryDelay = DispatchTime.now() + 2.0 // 2 seconds backoff time
       DispatchQueue.global().asyncAfter(deadline: retryDelay) { [weak self] in
         guard let self else { return }
-        uploadFileWithRetry(url: url, key: key) {_ in}
+        uploadFileWithRetry(url: url, key: key, sessionID: sessionID, bid: bid) {_ in}
       }
       return
+    }
+    let expression = AWSS3TransferUtilityUploadExpression()
+    
+    // Add comprehensive metadata
+    let metadata = [
+      "x-amz-meta-bid": bid,
+      "x-amz-meta-txnid": sessionID,
+    ]
+    
+    for (key, value) in metadata {
+      expression.setValue(value, forRequestHeader: key)
     }
     transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: nil) { task, error in
       if let error {

@@ -19,4 +19,5 @@ public final class AuthTokenHolder {
   public init() {}
   public var authToken: String?
   public var refreshToken: String?
+  public var bid: String?
 }

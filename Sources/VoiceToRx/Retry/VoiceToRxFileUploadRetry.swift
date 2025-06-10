@@ -62,13 +62,14 @@ public final class VoiceToRxFileUploadRetry {
     completion: @escaping () -> Void
   ) {
     guard let sessionUUID = UUID(uuidString: sessionID) else { return}
+    let bid = AuthTokenHolder.shared.bid
     Task {
       guard let sessionModel = await VoiceConversationAggregator.shared.fetchVoiceConversation(using: QueryHelper.queryForFetch(with: sessionUUID)).first else { return }
       let firstFolder: String = sessionModel.date.toString(withFormat: "yyMMdd")
       let secondFolder = sessionID
       let lastPathComponent = fileURL.lastPathComponent
       let key = "\(firstFolder)/\(secondFolder)/\(lastPathComponent)"
-      s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key) { result in
+      s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key, sessionID: sessionID, bid: bid) { result in
         switch result {
         case .success(_):
           // Handle success if needed

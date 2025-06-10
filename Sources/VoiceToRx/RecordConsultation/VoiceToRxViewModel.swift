@@ -268,9 +268,11 @@ public final class VoiceToRxViewModel: ObservableObject {
     voiceToRxRepo.observeUploadStatusChangesFor(sessionID: sessionID) { [weak self] in
       guard let self else { return }
       /// Call commit api
-      voiceToRxRepo.commitVoiceToRxSession(sessionID: sessionID)
-      /// Start polling status api
-      startStatusPolling()
+      voiceToRxRepo.commitVoiceToRxSession(sessionID: sessionID) { [weak self] in
+        guard let self else { return }
+        /// Start polling status api
+        startStatusPolling()
+      }
     }
   }
   
@@ -405,8 +407,6 @@ extension VoiceToRxViewModel {
         guard let self else { return }
         /// Update the uploaded files
         uploadedFiles.formUnion(unuploadedFileUrls.map { $0.lastPathComponent })
-        /// Listen for file status
-        
       }
     }
   }
