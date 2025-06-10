@@ -241,10 +241,9 @@ extension VoiceConversationDatabaseManager {
       guard let voice = try? context.fetch(fetchRequest).first,
             let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> else { return }
       
-      if chunks.allSatisfy({
-        print("Chunks upload status is -> \($0.isFileUploaded)")
-        $0.isFileUploaded
-      }),
+      let isFileUploadStatus = chunks.compactMap { $0.isFileUploaded }
+      print("File upload status of files -> \(isFileUploadStatus)")
+      if chunks.allSatisfy({$0.isFileUploaded}),
          let callback = self.uploadCompletionCallbacks.removeValue(forKey: sessionID) {
         callback()
       }
