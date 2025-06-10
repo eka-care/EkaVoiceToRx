@@ -51,6 +51,8 @@ final class VoiceConversationDatabaseManager {
   private var lastToken: NSPersistentHistoryToken?
   /// To get upload completion callbacks
   private var uploadCompletionCallbacks: [UUID: () -> Void] = [:]
+  /// Session ids which are being listened to for is file uploaded changes
+  private var watchedSessionIDs: Set<UUID> = []
     
   // MARK: - Init
   
@@ -59,8 +61,12 @@ final class VoiceConversationDatabaseManager {
     notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { [weak self] note in
       guard let self else { return }
       debugPrint("Received a persistent store remote change notification.")
-      Task {
+      Task { [weak self] in
+        guard let self else { return }
         await self.fetchPersistentHistory()
+        for sessionID in self.watchedSessionIDs {
+          await self.checkUploadStatus(for: sessionID)
+        }
       }
     }
   }
@@ -127,6 +133,11 @@ extension VoiceConversationDatabaseManager {
         self.lastToken = transaction.token
       }
     }
+  }
+  
+  func observeUploadStatus(for sessionID: UUID, completion: @escaping () -> Void) {
+    uploadCompletionCallbacks[sessionID] = completion
+    watchedSessionIDs.insert(sessionID)
   }
 }
 

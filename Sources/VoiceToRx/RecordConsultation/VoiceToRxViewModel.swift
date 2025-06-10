@@ -252,10 +252,19 @@ public final class VoiceToRxViewModel: ObservableObject {
         sessionID: sessionID
       )
       voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID)
+      addListenerOnUploadStatus(sessionID: sessionID)
       /// Start s3 polling
       //    startS3Polling()
     } catch {
       debugPrint("Error in processing last audio chunk \(error.localizedDescription)")
+    }
+  }
+  
+  private func addListenerOnUploadStatus(sessionID: UUID) {
+    voiceToRxRepo.observeUploadStatusChangesFor(sessionID: sessionID) { [weak self] in
+      guard let self else { return }
+      /// Call commit api
+      voiceToRxRepo.commitVoiceToRxSession(sessionID: sessionID)
     }
   }
   

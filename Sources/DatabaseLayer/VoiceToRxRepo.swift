@@ -70,11 +70,20 @@ final class VoiceToRxRepo {
     databaseManager.getVoice(fetchRequest: fetchRequest)
   }
   
+  /// Used to observe upload status changes for a session id
+  /// - Parameters:
+  ///   - sessionID: sessionID of the voice session for which changes are to be observed
+  ///   - completion: operation to be done on upload of all documents
+  public func observeUploadStatusChangesFor(sessionID: UUID?, completion: @escaping () -> Void) {
+    guard let sessionID else { return }
+    databaseManager.observeUploadStatus(for: sessionID, completion: completion)
+  }
+  
   // MARK: - Stop
   
   public func stopVoiceToRxSession(sessionID: UUID?) {
     guard let sessionID,
-    let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
+          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
     let fileNames = model.getFileNames()
     let chunksInfo = model.getChunksInfo()
     
@@ -96,7 +105,7 @@ final class VoiceToRxRepo {
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
     let fileNames = model.getFileNames()
     let filesChunkInfo = model.getChunksInfo()
-
+    
     service.commitVoiceToRx(
       sessionID: sessionID.uuidString,
       request: VoiceToRxCommitRequest(
