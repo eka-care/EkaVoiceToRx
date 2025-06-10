@@ -233,15 +233,17 @@ extension VoiceConversationDatabaseManager {
 // MARK: - Check upload status
 
 extension VoiceConversationDatabaseManager {
-  func checkUploadStatus(for sessionID: UUID) async {
-    await backgroundContext.perform {
+  func checkUploadStatus(for sessionID: UUID) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self else { return }
+      let context = container.viewContext
       let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
-      guard let voice = try? self.backgroundContext.fetch(fetchRequest).first,
+      guard let voice = try? context.fetch(fetchRequest).first,
             let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> else { return }
       
       if chunks.allSatisfy({ $0.isFileUploaded }),
          let callback = self.uploadCompletionCallbacks.removeValue(forKey: sessionID) {
-        DispatchQueue.main.async { callback() }
+        callback()
       }
     }
   }
