@@ -21,7 +21,8 @@ final class VoiceToRxRepo {
   /// Used to create a new voice to rx session
   public func createVoiceToRxSession(
     contextParams: VoiceToRxContextParams?,
-    conversationMode: VoiceConversationType
+    conversationMode: VoiceConversationType,
+    retryCount: Int = 0
   ) async -> VoiceConversation? {
     guard let contextParams else { return nil }
     /// Add Voice to rx session in database
@@ -31,7 +32,12 @@ final class VoiceToRxRepo {
         sessionData: contextParams
       )
     )
-    guard let voice, let sessionID = voice.sessionID else { return nil }
+    guard let voice, let sessionID = voice.sessionID else {
+      if retryCount < 3 {
+        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1)
+      }
+      return nil
+    }
     /// Call the init api
     service.initVoiceToRx(
       sessionID: sessionID.uuidString,
@@ -100,12 +106,18 @@ final class VoiceToRxRepo {
   
   public func stopVoiceToRxSession(
     sessionID: UUID?,
-    completion: @escaping () -> Void
+    completion: @escaping () -> Void,
+    retryCount: Int = 0
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .initialise /// Init should have been done
-    else { return }
+    else {
+      if retryCount < 3 {
+        stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
+      }
+      return
+    }
     let fileNames = model.getFileNames()
     let chunksInfo = model.getChunksInfo()
     
@@ -135,11 +147,19 @@ final class VoiceToRxRepo {
   
   // MARK: - Commit
   
-  public func commitVoiceToRxSession(sessionID: UUID?) {
+  public func commitVoiceToRxSession(
+    sessionID: UUID?,
+    retryCount: Int = 0
+  ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .stop
-    else { return }
+    else {
+      if retryCount < 3 {
+        commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1)
+      }
+      return
+    }
     let fileNames = model.getFileNames()
     let filesChunkInfo = model.getChunksInfo()
     
@@ -170,12 +190,18 @@ final class VoiceToRxRepo {
   
   public func fetchVoiceToRxSessionStatus(
     sessionID: UUID?,
-    completion: @escaping (Bool) -> Void
+    completion: @escaping (Bool) -> Void,
+    retryCount: Int = 0
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
     VoiceConversationAPIStage(rawValue: model.stage ?? "") == .commit
-    else { return }
+    else {
+      if retryCount < 3 {
+        fetchVoiceToRxSessionStatus(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
+      }
+      return
+    }
     service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { result, statusCode in
       switch result {
       case .success(let response):
