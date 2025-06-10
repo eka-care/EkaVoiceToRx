@@ -100,7 +100,8 @@ final class AmazonS3FileUploaderService {
     for (key, value) in metadata {
       expression.setValue(value, forRequestHeader: key)
     }
-    transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: nil) { task, error in
+    
+    transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: expression) { task, error in
       if let error {
         debugPrint("Error is -> \(error.localizedDescription)")
         completion(.failure(error))
