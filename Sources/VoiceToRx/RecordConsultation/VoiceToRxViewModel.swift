@@ -445,7 +445,7 @@ extension VoiceToRxViewModel {
   }
 }
 
-// MARK: - Amazon polling
+// MARK: - Status polling
 
 extension VoiceToRxViewModel {
   func startStatusPolling() {
