@@ -14,6 +14,7 @@ final class VoiceToRxRepo {
   
   private let databaseManager = VoiceConversationDatabaseManager.shared
   let service = VoiceToRxApiService()
+  let maxRetries = 3
   
   // MARK: - Create
   
@@ -47,7 +48,7 @@ final class VoiceToRxRepo {
     ) { [weak self] result, statusCode in
       guard let self else { return }
       switch result {
-      case .success(let response):
+      case .success:
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
@@ -97,7 +98,10 @@ final class VoiceToRxRepo {
   
   // MARK: - Stop
   
-  public func stopVoiceToRxSession(sessionID: UUID?) {
+  public func stopVoiceToRxSession(
+    sessionID: UUID?,
+    completion: @escaping () -> Void
+  ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .initialise /// Init should have been done
@@ -114,7 +118,7 @@ final class VoiceToRxRepo {
     ) { [weak self] result, statusCode in
       guard let self else { return }
       switch result {
-      case .success(let response):
+      case .success:
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
@@ -122,6 +126,7 @@ final class VoiceToRxRepo {
             stage: .stop
           )
         )
+        completion()
       case .failure(let error):
         debugPrint("Error in stop voice to rx \(error.localizedDescription)")
       }
@@ -147,7 +152,7 @@ final class VoiceToRxRepo {
     ) { [weak self] result, statusCode in
       guard let self else { return }
       switch result {
-      case .success(let response):
+      case .success:
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,

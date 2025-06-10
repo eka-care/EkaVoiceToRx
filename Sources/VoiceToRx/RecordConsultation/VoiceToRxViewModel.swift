@@ -252,8 +252,11 @@ public final class VoiceToRxViewModel: ObservableObject {
         pcmBufferListRaw: pcmBuffersListRaw,
         sessionID: sessionID
       )
-      voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID)
-      addListenerOnUploadStatus(sessionID: sessionID)
+      voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
+        guard let self else { return }
+        /// Add listener after stop api
+        addListenerOnUploadStatus(sessionID: sessionID)
+      }
       /// Start s3 polling
       //    startS3Polling()
     } catch {
