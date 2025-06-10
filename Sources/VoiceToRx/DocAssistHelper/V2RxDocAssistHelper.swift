@@ -32,5 +32,12 @@ public final class V2RxDocAssistHelper {
 //      return .draft
 //    }
     let voiceConversation = VoiceToRxRepo().fetchVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: sessionID))
+    if voiceConversation?.updatedSessionID != nil {
+      return .saved
+    } else if let stage = voiceConversation?.stage, VoiceConversationAPIStage(rawValue: stage) == .result {
+      return .draft
+    } else {
+      return .loading
+    }
   }
 }
