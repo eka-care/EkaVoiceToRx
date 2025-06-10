@@ -64,6 +64,12 @@ final class VoiceConversationDatabaseManager {
       Task { [weak self] in
         guard let self else { return }
         await self.fetchPersistentHistory()
+      }
+    }
+    
+    NotificationCenter.default.addObserver(forName: .NSManagedObjectContextObjectsDidChange, object: nil, queue: nil) { [weak self] notification in
+      guard let self else { return }
+      Task {
         for sessionID in self.watchedSessionIDs {
           await self.checkUploadStatus(for: sessionID)
         }
@@ -75,6 +81,7 @@ final class VoiceConversationDatabaseManager {
     if let observer = notificationToken {
       NotificationCenter.default.removeObserver(observer)
     }
+    NotificationCenter.default.removeObserver(self, name: .NSManagedObjectContextObjectsDidChange, object: nil)
   }
 }
 
