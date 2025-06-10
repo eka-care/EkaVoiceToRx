@@ -452,12 +452,21 @@ extension VoiceToRxViewModel {
     pollingTimer?.invalidate() // Cancel if any existing polling
     pollingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
       guard let self else { return }
-      voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { isComplete in
+      voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] isComplete in
+        guard let self else { return }
         if isComplete {
           timer.invalidate()
           self.pollingTimer = nil
           print("✅ Polling complete. All templates have status = success.")
-          // Do any further processing here
+          DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            screenState = .resultDisplay(success: true)
+          }
+        } else {
+          DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            screenState = .resultDisplay(success: true)
+          }
         }
       }
     }
