@@ -25,17 +25,19 @@ final class AudioChunkUploader {
   }
   let fullAudioFileKey = "full_audio"
   let channelCount: Int = 1
-  let voiceToRxRepo = VoiceToRxRepo()
+  let voiceToRxRepo: VoiceToRxRepo
   var fileChunksInfo: [String: FileChunkInfo] = [:]
   var uploadedFileKeys: [String] = []
   weak var delegate: AudioChunkUploaderDelegate?
   
   init(
     delegate: AudioChunkUploaderDelegate?,
-    s3FileUploaderService: AmazonS3FileUploaderService
+    s3FileUploaderService: AmazonS3FileUploaderService,
+    voiceToRxRepo: VoiceToRxRepo
   ) {
     self.delegate = delegate
     self.s3FileUploaderService = s3FileUploaderService
+    self.voiceToRxRepo = voiceToRxRepo
   }
   
   func reset() {

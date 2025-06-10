@@ -76,7 +76,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   private let vadAudioChunker = VADAudioChunker()
   lazy var audioChunkUploader = AudioChunkUploader(
     delegate: self,
-    s3FileUploaderService: s3FileUploader
+    s3FileUploaderService: s3FileUploader,
+    voiceToRxRepo: voiceToRxRepo
   )
   lazy var statusJSONFileMaker = StatusFileMaker(
     delegate: self,
@@ -204,7 +205,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         buffer: buffer,
         inputNodeOutputFormat: inputNodeOutputFormat
       ) else { return }
-
+      
       /// VAD processing
       Task { [weak self] in
         guard let self else { return }
@@ -239,14 +240,14 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Process whatever is remaining
     do {
       try await audioChunkProcessor.processAudioChunk(
-      audioEngine: audioEngine,
-      vadAudioChunker: vadAudioChunker,
-      sessionID: sessionID,
-      lastClipIndex: &lastClipIndex,
-      chunkIndex: &chunkIndex,
-      audioChunkUploader: audioChunkUploader,
-      pcmBufferListRaw: &pcmBuffersListRaw
-    )
+        audioEngine: audioEngine,
+        vadAudioChunker: vadAudioChunker,
+        sessionID: sessionID,
+        lastClipIndex: &lastClipIndex,
+        chunkIndex: &chunkIndex,
+        audioChunkUploader: audioChunkUploader,
+        pcmBufferListRaw: &pcmBuffersListRaw
+      )
       /// Upload full audio
       audioChunkUploader.uploadFullAudio(
         pcmBufferListRaw: pcmBuffersListRaw,
@@ -381,8 +382,8 @@ extension VoiceToRxViewModel {
   // TODO: - Once we have appointments context
   /// In Appointments Firebase update the voice to rx id against the appointment id
   private func updateAppointmentIdWithVoiceToRxId() {
-        guard let apptId = contextParams?.visitId,
-              let sessionIdString = sessionID?.uuidString else { return }
+    guard let apptId = contextParams?.visitId,
+          let sessionIdString = sessionID?.uuidString else { return }
     voiceToRxDelegate?.updateAppointmentsData(appointmentID: apptId, voiceToRxID: sessionIdString)
   }
   
