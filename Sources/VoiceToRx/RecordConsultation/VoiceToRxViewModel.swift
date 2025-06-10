@@ -94,6 +94,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var audioEngine = AVAudioEngine()
   private var filesProcessedListenerReference: (any ListenerRegistration)?
   private var listenerReference: (any ListenerRegistration)?
+  private var pollingTimer: Timer?
   
   public var sessionID: UUID?
   public var contextParams: VoiceToRxContextParams?
@@ -265,6 +266,8 @@ public final class VoiceToRxViewModel: ObservableObject {
       guard let self else { return }
       /// Call commit api
       voiceToRxRepo.commitVoiceToRxSession(sessionID: sessionID)
+      /// Start polling status api
+      startStatusPolling()
     }
   }
   
@@ -446,6 +449,17 @@ extension VoiceToRxViewModel {
 
 extension VoiceToRxViewModel {
   func startStatusPolling() {
-    
+    pollingTimer?.invalidate() // Cancel if any existing polling
+    pollingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] timer in
+      guard let self else { return }
+      voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { isComplete in
+        if isComplete {
+          timer.invalidate()
+          self.pollingTimer = nil
+          print("✅ Polling complete. All templates have status = success.")
+          // Do any further processing here
+        }
+      }
+    }
   }
 }

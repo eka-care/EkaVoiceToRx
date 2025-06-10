@@ -39,7 +39,9 @@ final class VoiceToRxRepo {
         mode: conversationMode.rawValue,
         inputLanguage: [],
         s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
-        outputFormatTemplate: [],
+        outputFormatTemplate: [
+          OutputFormatTemplate(templateID: "eka_emr_to_fhir_template")
+        ],
         transfer: "vaded"
       )
     ) { result, statusCode in }
@@ -119,8 +121,26 @@ final class VoiceToRxRepo {
   
   // MARK: - Status
   
-  public func fetchVoiceToRxSessionStatus(sessionID: UUID?) {
+  public func fetchVoiceToRxSessionStatus(
+    sessionID: UUID?,
+    completion: @escaping (Bool) -> Void
+  ) {
     guard let sessionID else { return }
-    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { result, statusCode in }
+    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { [weak self] result, statusCode in
+      guard let self else { return }
+      switch result {
+      case .success(let response):
+        guard let outputs = response.data?.output else {
+          print("❌ No output in response")
+          completion(false)
+          return
+        }
+        let allSuccessful = outputs.allSatisfy { $0.status == "success" }
+        completion(allSuccessful)
+      case .failure(let error):
+        debugPrint("Error in getting voice to rx status -> \(error)")
+        completion(false)
+      }
+    }
   }
 }
