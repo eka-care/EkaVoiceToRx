@@ -454,7 +454,7 @@ extension VoiceToRxViewModel {
 extension VoiceToRxViewModel {
   func startStatusPolling() {
     pollingTimer?.invalidate() // Cancel if any existing polling
-    pollingTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] timer in
+    pollingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] timer in
       guard let self else { return }
       voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] isComplete in
         guard let self else { return }
