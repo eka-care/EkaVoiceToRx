@@ -44,7 +44,21 @@ final class VoiceToRxRepo {
         ],
         transfer: "vaded"
       )
-    ) { result, statusCode in }
+    ) { [weak self] result, statusCode in
+      guard let self else { return }
+      switch result {
+      case .success(let response):
+        /// Update voice conversation model to a stage
+        databaseManager.updateVoiceConversation(
+          sessionID: sessionID,
+          conversationArguement: VoiceConversationArguementModel(
+            stage: .initialise
+          )
+        )
+      case .failure(let error):
+        debugPrint("Error in init voice to rx")
+      }
+    }
     return voice
   }
   
@@ -85,7 +99,9 @@ final class VoiceToRxRepo {
   
   public func stopVoiceToRxSession(sessionID: UUID?) {
     guard let sessionID,
-          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
+          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
+          VoiceConversationAPIStage(rawValue: model.stage ?? "") == .initialise /// Init should have been done
+    else { return }
     let fileNames = model.getFileNames()
     let chunksInfo = model.getChunksInfo()
     
@@ -95,8 +111,20 @@ final class VoiceToRxRepo {
         audioFiles: fileNames,
         chunkInfo: chunksInfo
       )
-    ) { result, statusCode in
-      
+    ) { [weak self] result, statusCode in
+      guard let self else { return }
+      switch result {
+      case .success(let response):
+        /// Update voice conversation model to a stage
+        databaseManager.updateVoiceConversation(
+          sessionID: sessionID,
+          conversationArguement: VoiceConversationArguementModel(
+            stage: .stop
+          )
+        )
+      case .failure(let error):
+        debugPrint("Error in stop voice to rx \(error.localizedDescription)")
+      }
     }
   }
   
@@ -104,7 +132,9 @@ final class VoiceToRxRepo {
   
   public func commitVoiceToRxSession(sessionID: UUID?) {
     guard let sessionID,
-          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else { return }
+          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
+          VoiceConversationAPIStage(rawValue: model.stage ?? "") == .stop
+    else { return }
     let fileNames = model.getFileNames()
     let filesChunkInfo = model.getChunksInfo()
     
@@ -114,8 +144,20 @@ final class VoiceToRxRepo {
         audioFiles: fileNames,
         chunkInfo: filesChunkInfo
       )
-    ) { result, statusCode in
-      
+    ) { [weak self] result, statusCode in
+      guard let self else { return }
+      switch result {
+      case .success(let response):
+        /// Update voice conversation model to a stage
+        databaseManager.updateVoiceConversation(
+          sessionID: sessionID,
+          conversationArguement: VoiceConversationArguementModel(
+            stage: .commit
+          )
+        )
+      case .failure(let error):
+        debugPrint("Error in commit voice to rx \(error.localizedDescription)")
+      }
     }
   }
   
@@ -125,12 +167,14 @@ final class VoiceToRxRepo {
     sessionID: UUID?,
     completion: @escaping (Bool) -> Void
   ) {
-    guard let sessionID else { return }
-    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { [weak self] result, statusCode in
-      guard let self else { return }
+    guard let sessionID,
+          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
+    VoiceConversationAPIStage(rawValue: model.stage ?? "") == .commit
+    else { return }
+    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { result, statusCode in
       switch result {
       case .success(let response):
-        guard let outputs = response.data?.output else {
+        guard let outputs = response.data?.output, !outputs.isEmpty else {
           print("❌ No output in response")
           completion(false)
           return
