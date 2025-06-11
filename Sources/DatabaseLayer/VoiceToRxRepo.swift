@@ -92,7 +92,7 @@ public final class VoiceToRxRepo {
   /// - Parameters:
   ///   - sessionID: session id of the given voice to rx session
   ///   - voiceInfo: voice to rx session info that is to be updated
-  public func updateVoiceToRxChunkInfo(
+  public func updateVoiceToRxSessionData(
     sessionID: UUID,
     voiceInfo: VoiceConversationArguementModel
   ) {
