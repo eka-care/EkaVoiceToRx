@@ -161,7 +161,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: VoiceConversationType) {
+  public func startRecording(conversationType: VoiceConversationType) async {
     voiceConversationType = conversationType
     /// Setup record session
     setupRecordSession()
@@ -170,16 +170,13 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Change the screen state to listening
     screenState = .listening(conversationType: conversationType)
     /// Create session
-    Task { [weak self] in
-      guard let self else { return }
-      let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
-      /// Setup sessionID in view model
-      sessionID = voiceModel?.sessionID
-      do {
-        try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
-      } catch {
-        debugPrint("Audio Engine did not start \(error)")
-      }
+    let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    /// Setup sessionID in view model
+    sessionID = voiceModel?.sessionID
+    do {
+      try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
+    } catch {
+      debugPrint("Audio Engine did not start \(error)")
     }
   }
   
