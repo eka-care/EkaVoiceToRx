@@ -49,17 +49,23 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
-  public func showFloatingButton(viewModel: VoiceToRxViewModel, liveActivityDelegate: LiveActivityDelegate?) {
+  public func showFloatingButton(
+    viewModel: VoiceToRxViewModel,
+    conversationType: VoiceConversationType,
+    liveActivityDelegate: LiveActivityDelegate?
+  ) async {
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
     loadView(viewModel: viewModel)
-    subscribeToScreenStates()
-    getAmazonCredentials()
-    self.liveActivityDelegate = liveActivityDelegate
-    Task {
-      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+    await MainActor.run { [weak self] in
+      guard let self else { return }
+      subscribeToScreenStates()
+      self.liveActivityDelegate = liveActivityDelegate
     }
+    getAmazonCredentials()
+    await viewModel.startRecording(conversationType: conversationType)
+    await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
   }
   
   public func hideFloatingButton() {
