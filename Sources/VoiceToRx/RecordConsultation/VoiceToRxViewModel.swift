@@ -461,11 +461,6 @@ extension VoiceToRxViewModel {
             guard let self else { return }
             screenState = .resultDisplay(success: true)
           }
-        } else {
-          DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            screenState = .resultDisplay(success: true)
-          }
         }
       }
     }

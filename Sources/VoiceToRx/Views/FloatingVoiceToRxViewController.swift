@@ -280,14 +280,6 @@ extension FloatingVoiceToRxViewController {
       }
     }.store(in: &cancellables)
   }
-  
-  /// Used to check if voice to rx is active
-  /// - Returns: Bool that tells if voice to rx is active at present
-  public func isTakingVoiceToRx() -> Bool {
-    viewModel?.screenState == .listening(conversationType: .conversation) ||
-    viewModel?.screenState == .listening(conversationType: .dictation) ||
-    viewModel?.screenState == .processing
-  }
 }
 
 extension FloatingVoiceToRxViewController {
