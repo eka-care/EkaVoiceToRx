@@ -44,7 +44,7 @@ final class VoiceToRxRepo {
       request: VoiceToRxInitRequest(
         additionalData: contextParams,
         mode: conversationMode.rawValue,
-        inputLanguage: [],
+        inputLanguage: ["en-IN"],
         s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
         outputFormatTemplate: [
           OutputFormatTemplate(templateID: "eka_emr_to_fhir_template")
