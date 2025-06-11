@@ -16,7 +16,7 @@ public enum DocAssistV2RxState {
 }
 
 public final class V2RxDocAssistHelper {
-  public static func fetchV2RxState(for sessionID: UUID) async -> DocAssistV2RxState? {
+  public static func fetchV2RxState(for sessionID: UUID) -> DocAssistV2RxState? {
 //    let voiceConversationModel = await VoiceConversationAggregator.shared.fetchVoiceConversation(
 //      using: QueryHelper.queryForFetch(with: sessionID)
 //    )
