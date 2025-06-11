@@ -173,6 +173,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     }
     /// Create session
     let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    /// Delegate to publish everywhere that a session was created
+    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel?.sessionID, params: contextParams)
     /// Setup sessionID in view model
     await MainActor.run {
       sessionID = voiceModel?.sessionID

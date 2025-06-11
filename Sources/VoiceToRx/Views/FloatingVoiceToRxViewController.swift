@@ -65,7 +65,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
     }
     getAmazonCredentials()
     await viewModel.startRecording(conversationType: conversationType)
-    voiceToRxDelegate?.onCreateVoiceToRxSession(id: viewModel.sessionID, params: viewModel.contextParams)
     Task {
       await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
     }
