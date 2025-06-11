@@ -12,6 +12,7 @@ public final class VoiceToRxFileUploadRetry {
   // MARK: - Properties
   
   let s3FileUploaderService = AmazonS3FileUploaderService()
+  let voiceToRxRepo = VoiceToRxRepo()
   
   /// Used to check if retry is needed
   /// - Returns: Bool value indicating if retry is needed
@@ -63,21 +64,20 @@ public final class VoiceToRxFileUploadRetry {
   ) {
     guard let sessionUUID = UUID(uuidString: sessionID) else { return}
     let bid = AuthTokenHolder.shared.bid
-    Task {
-      guard let sessionModel = await VoiceConversationAggregator.shared.fetchVoiceConversation(using: QueryHelper.queryForFetch(with: sessionUUID)).first else { return }
-      let firstFolder: String = sessionModel.date.toString(withFormat: "yyMMdd")
-      let secondFolder = sessionID
-      let lastPathComponent = fileURL.lastPathComponent
-      let key = "\(firstFolder)/\(secondFolder)/\(lastPathComponent)"
-      s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key, sessionID: sessionID, bid: bid) { result in
-        switch result {
-        case .success(_):
-          // Handle success if needed
-          completion()
-        case .failure(_):
-          // Handle failure if needed
-          completion()
-        }
+    guard let voice = voiceToRxRepo.fetchVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: sessionUUID)),
+          let createdAt = voice.createdAt else { return }
+    let firstFolder: String = createdAt.toString(withFormat: "yyMMdd")
+    let secondFolder = sessionID
+    let lastPathComponent = fileURL.lastPathComponent
+    let key = "\(firstFolder)/\(secondFolder)/\(lastPathComponent)"
+    s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key, sessionID: sessionID, bid: bid) { result in
+      switch result {
+      case .success(_):
+        // Handle success if needed
+        completion()
+      case .failure(_):
+        // Handle failure if needed
+        completion()
       }
     }
   }

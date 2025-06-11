@@ -112,10 +112,17 @@ public final class VoiceToRxRepo {
   
   // MARK: - Delete
   
+  /// Used to delete a specific voice conversation
+  /// - Parameter fetchRequest: fetch request to delete a voice conversation
   public func deleteVoiceConversation(
     fetchRequest: NSFetchRequest<VoiceConversation>
   ) {
     databaseManager.deleteVoice(fetchRequest: fetchRequest)
+  }
+  
+  /// Used to delete all the voices
+  public func deleteAllVoices() {
+    databaseManager.deleteAllVoices()
   }
   
   /// Used to observe upload status changes for a session id

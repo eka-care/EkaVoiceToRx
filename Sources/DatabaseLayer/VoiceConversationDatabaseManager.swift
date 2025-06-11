@@ -233,6 +233,8 @@ extension VoiceConversationDatabaseManager {
 // MARK: - Delete
 
 extension VoiceConversationDatabaseManager {
+  /// Used to delete a single conversation
+  /// - Parameter fetchRequest: fetch request of the record to be deleted
   func deleteVoice(fetchRequest: NSFetchRequest<VoiceConversation>) {
     do {
       let results = try container.viewContext.fetch(fetchRequest)
@@ -242,6 +244,19 @@ extension VoiceConversationDatabaseManager {
       }
     } catch {
       print("Delete error: \(error)")
+    }
+  }
+  
+  /// Delete all the voices data
+  func deleteAllVoices() {
+    let fetchRequest: NSFetchRequest<NSFetchRequestResult> = VoiceConversation.fetchRequest()
+    let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+    
+    do {
+      try container.viewContext.execute(deleteRequest)
+      try container.viewContext.save()
+    } catch {
+      print("Failed to delete all VoiceConversations: \(error)")
     }
   }
 }
