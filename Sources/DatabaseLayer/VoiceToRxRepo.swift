@@ -214,7 +214,8 @@ public final class VoiceToRxRepo {
       }
       return
     }
-    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { result, statusCode in
+    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { [weak self] result, statusCode in
+      guard let self else { return }
       switch result {
       case .success(let response):
         guard let outputs = response.data?.output, !outputs.isEmpty else {
@@ -223,6 +224,13 @@ public final class VoiceToRxRepo {
           return
         }
         let allSuccessful = outputs.allSatisfy { $0.status == "success" }
+        /// Update voice conversation model to a stage
+        databaseManager.updateVoiceConversation(
+          sessionID: sessionID,
+          conversationArguement: VoiceConversationArguementModel(
+            stage: .result
+          )
+        )
         completion(allSuccessful)
       case .failure(let error):
         debugPrint("Error in getting voice to rx status -> \(error)")
