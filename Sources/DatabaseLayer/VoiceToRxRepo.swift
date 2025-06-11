@@ -16,6 +16,10 @@ public final class VoiceToRxRepo {
   let service = VoiceToRxApiService()
   let maxRetries = 3
   
+  // MARK: - Init
+  
+  public init() {}
+  
   // MARK: - Create
   
   /// Used to create a new voice to rx session
