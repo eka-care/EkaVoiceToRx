@@ -303,14 +303,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   }
   
   func deleteRecording(id: UUID) {
-    Task {
-      await VoiceConversationAggregator.shared.deleteVoice(id: id) {
-        DispatchQueue.main.async { [weak self] in
-          guard let self else { return }
-          screenState = .deletedRecording
-        }
-      }
-    }
+    voiceToRxRepo.deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: id))
   }
 }
 
