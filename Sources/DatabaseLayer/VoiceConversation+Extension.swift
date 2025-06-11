@@ -7,7 +7,7 @@
 
 import CoreData
 
-enum VoiceConversationAPIStage: String {
+public enum VoiceConversationAPIStage: String {
   case initialise /// Once init is done
   case stop /// Once stop is done
   case commit /// Once commit is done

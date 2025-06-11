@@ -8,7 +8,7 @@
 import Foundation
 
 /// Used to pass the arguments to any core data model
-struct VoiceConversationArguementModel {
+public struct VoiceConversationArguementModel {
   let createdAt: Date? // Conversation created at date
   let fileURL: String? // URI of the audio file
   var transcription: String? // Transcription text of the conversation
@@ -16,7 +16,7 @@ struct VoiceConversationArguementModel {
   var updatedSessionID: String? // Updated session id of the conversation done from BE "PP" addition
   let sessionData: VoiceToRxContextParams? // Additional session data for init like doc ID etc
   
-  init(
+  public init(
     createdAt: Date? = nil,
     fileURL: String? = nil,
     transcription: String? = nil,
@@ -33,14 +33,14 @@ struct VoiceConversationArguementModel {
   }
 }
 
-struct VoiceChunkInfoArguementModel {
+public struct VoiceChunkInfoArguementModel {
   let startTime: String? /// Start time of the chunk
   let endTime: String? /// End time of the chunk
   let fileURL: String? /// File uri of the chunk
   let fileName: String /// File name like "1.m4a"
   var isFileUploaded: Bool = false /// Is the file uploaded
   
-  init(
+  public init(
     startTime: String? = nil,
     endTime: String? = nil,
     fileURL: String? = nil,
