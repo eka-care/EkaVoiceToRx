@@ -110,6 +110,14 @@ public final class VoiceToRxRepo {
     databaseManager.getVoice(fetchRequest: fetchRequest)
   }
   
+  // MARK: - Delete
+  
+  public func deleteVoiceConversation(
+    fetchRequest: NSFetchRequest<VoiceConversation>
+  ) {
+    databaseManager.deleteVoice(fetchRequest: fetchRequest)
+  }
+  
   /// Used to observe upload status changes for a session id
   /// - Parameters:
   ///   - sessionID: sessionID of the voice session for which changes are to be observed

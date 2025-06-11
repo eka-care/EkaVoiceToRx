@@ -230,6 +230,22 @@ extension VoiceConversationDatabaseManager {
   }
 }
 
+// MARK: - Delete
+
+extension VoiceConversationDatabaseManager {
+  func deleteVoice(fetchRequest: NSFetchRequest<VoiceConversation>) {
+    do {
+      let results = try container.viewContext.fetch(fetchRequest)
+      if let voice = results.first {
+        container.viewContext.delete(voice)
+        try container.viewContext.save()
+      }
+    } catch {
+      print("Delete error: \(error)")
+    }
+  }
+}
+
 // MARK: - Check upload status
 
 extension VoiceConversationDatabaseManager {
