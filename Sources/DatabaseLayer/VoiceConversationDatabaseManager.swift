@@ -60,7 +60,6 @@ final class VoiceConversationDatabaseManager {
     /// Observe Core Data remote change notifications on the queue where the changes were made.
     notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { [weak self] note in
       guard let self else { return }
-      debugPrint("Received a persistent store remote change notification.")
       Task { [weak self] in
         guard let self else { return }
         await self.fetchPersistentHistory()
@@ -69,10 +68,8 @@ final class VoiceConversationDatabaseManager {
     
     NotificationCenter.default.addObserver(forName: .NSManagedObjectContextObjectsDidChange, object: nil, queue: nil) { [weak self] notification in
       guard let self else { return }
-      Task {
-        for sessionID in self.watchedSessionIDs {
-          await self.checkUploadStatus(for: sessionID)
-        }
+      for sessionID in self.watchedSessionIDs {
+        self.checkUploadStatus(for: sessionID)
       }
     }
   }
@@ -111,7 +108,6 @@ extension VoiceConversationDatabaseManager {
   /// Fetches persistent history transactions and merges them into the view context.
   func fetchPersistentHistoryTransactionsAndChanges() async throws {
     backgroundContext.name = "persistentHistoryContext"
-    debugPrint("Start fetching persistent history changes from the store...")
     try await backgroundContext.perform { [weak self] in
       guard let self else { return }
       // Execute the persistent history change since the last transaction.
@@ -124,13 +120,11 @@ extension VoiceConversationDatabaseManager {
         return
       }
     }
-    debugPrint("Finished merging history changes.")
   }
   
   /// Helper function to merge persistent history changes into the view context.
   /// - Parameter history: An array of `NSPersistentHistoryTransaction` objects representing the changes.
   private func mergePersistentHistoryChanges(from history: [NSPersistentHistoryTransaction]) {
-    debugPrint("Received \(history.count) persistent history transactions.")
     // Update view context with objectIDs from history change request.
     /// - Tag: mergeChanges
     let viewContext = container.viewContext

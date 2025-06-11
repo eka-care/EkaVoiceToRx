@@ -20,6 +20,7 @@ public final class V2RxDocAssistHelper {
     guard let voiceConversation = VoiceConversationDatabaseManager.shared.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
       return .deleted
     }
+    print("Voice conversation stage for id \(sessionID.uuidString) is -> \(voiceConversation.stage)")
     if voiceConversation.updatedSessionID != nil {
       return .saved
     } else if let stage = voiceConversation.stage, VoiceConversationAPIStage(rawValue: stage) == .result {
