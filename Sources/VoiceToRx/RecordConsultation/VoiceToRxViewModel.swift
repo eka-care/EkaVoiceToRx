@@ -412,9 +412,7 @@ extension VoiceToRxViewModel {
 
 extension VoiceToRxViewModel {
   public func deleteAllData() {
-    Task {
-      await VoiceConversationAggregator.shared.deleteAll()
-    }
+    voiceToRxRepo.deleteAllVoices()
   }
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
