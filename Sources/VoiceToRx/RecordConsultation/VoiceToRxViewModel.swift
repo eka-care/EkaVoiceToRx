@@ -168,11 +168,15 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Clear any previous session data if present
     clearSession()
     /// Change the screen state to listening
-    screenState = .listening(conversationType: conversationType)
+    await MainActor.run {
+      screenState = .listening(conversationType: conversationType)
+    }
     /// Create session
     let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
     /// Setup sessionID in view model
-    sessionID = voiceModel?.sessionID
+    await MainActor.run {
+      sessionID = voiceModel?.sessionID
+    }
     do {
       try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
     } catch {
