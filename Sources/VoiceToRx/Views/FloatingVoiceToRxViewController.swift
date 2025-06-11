@@ -65,8 +65,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
     }
     getAmazonCredentials()
     await viewModel.startRecording(conversationType: conversationType)
-    await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: viewModel.sessionID, params: viewModel.contextParams)
+    Task {
+      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+    }
   }
   
   public func hideFloatingButton() {
