@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
-  func onCreateVoiceToRxSession(id: UUID, params: VoiceToRxContextParams?)
+  func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?)
   func moveToDeepthoughtPage(id: UUID)
   func errorReceivingPrescription(
     id: UUID,
@@ -66,6 +66,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     getAmazonCredentials()
     await viewModel.startRecording(conversationType: conversationType)
     await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+    voiceToRxDelegate?.onCreateVoiceToRxSession(id: viewModel.sessionID, params: viewModel.contextParams)
   }
   
   public func hideFloatingButton() {
