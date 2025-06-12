@@ -59,6 +59,7 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success:
+        
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
