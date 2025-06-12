@@ -75,13 +75,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   private let audioChunkProcessor = AudioChunkProcessor()
   private let vadAudioChunker = VADAudioChunker()
   lazy var audioChunkUploader = AudioChunkUploader(
-    delegate: self,
     s3FileUploaderService: s3FileUploader,
     voiceToRxRepo: voiceToRxRepo
-  )
-  lazy var statusJSONFileMaker = StatusFileMaker(
-    delegate: self,
-    s3FileUploaderService: s3FileUploader
   )
   let s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
@@ -332,43 +327,6 @@ extension VoiceToRxViewModel {
       try FileManager.default.createDirectory(at: FileHelper.getDocumentDirectoryURL().appendingPathComponent(sessionId), withIntermediateDirectories: true, attributes: nil)
     } catch {
       print("Error creating directory: \(error)")
-    }
-  }
-  
-  private func uploadStatusOfMessageFile(
-    conversationType: VoiceConversationType,
-    sessionID: UUID,
-    fileType: StatusFileType
-  ) {
-    statusJSONFileMaker.uploadStatusFile(
-      docOid: docOid ?? "",
-      uploadedFilesKeys: audioChunkUploader.uploadedFileKeys,
-      fileUploadMapper: audioChunkUploader.fileUploadMapper,
-      domainName: s3FileUploader.domainName,
-      bucketName: s3FileUploader.bucketName,
-      dateFolderName: s3FileUploader.dateFolderName,
-      sessionId: sessionID.uuidString,
-      conversationType: conversationType,
-      contextData: contextParams,
-      fileType: fileType
-    )
-  }
-}
-
-// MARK: - AudioChunkUploaderDelegate
-
-extension VoiceToRxViewModel: AudioChunkUploaderDelegate {
-  func fileUploadMapperDidChange(_ updatedMap: [String]) {}
-}
-
-// MARK: - StatusFileDelegate
-
-extension VoiceToRxViewModel: StatusFileDelegate {
-  func statusFileUrlsMapChanged(statusFileUrls: [URL]) {
-    guard let lastUrlAppended = statusFileUrls.last?.lastPathComponent else { return }
-    DispatchQueue.main.async { [weak self] in
-      guard let self else { return }
-      uploadedFiles.insert(lastUrlAppended)
     }
   }
 }

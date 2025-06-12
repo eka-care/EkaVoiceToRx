@@ -7,42 +7,25 @@
 
 import AVFoundation
 
-protocol AudioChunkUploaderDelegate: AnyObject {
-  func fileUploadMapperDidChange(_ updatedMap: [String])
-}
-
 final class AudioChunkUploader {
   
   let s3FileUploaderService: AmazonS3FileUploaderService
   let audioFormat: AVAudioCommonFormat = .pcmFormatInt16
   var audioBufferToM4AConverter = AudioBufferToM4AConverter()
-  /// Array of files that are in queue for upload
-  var fileUploadMapper: [String] = [] {
-    didSet {
-      /// Listen this in the caller
-      delegate?.fileUploadMapperDidChange(fileUploadMapper)
-    }
-  }
   let fullAudioFileKey = "full_audio"
   let channelCount: Int = 1
   let voiceToRxRepo: VoiceToRxRepo
-  var fileChunksInfo: [String: FileChunkInfo] = [:]
   var uploadedFileKeys: [String] = []
-  weak var delegate: AudioChunkUploaderDelegate?
   
   init(
-    delegate: AudioChunkUploaderDelegate?,
     s3FileUploaderService: AmazonS3FileUploaderService,
     voiceToRxRepo: VoiceToRxRepo
   ) {
-    self.delegate = delegate
     self.s3FileUploaderService = s3FileUploaderService
     self.voiceToRxRepo = voiceToRxRepo
   }
   
   func reset() {
-    fileUploadMapper = []
-    fileChunksInfo = [:]
     uploadedFileKeys = []
     audioBufferToM4AConverter = AudioBufferToM4AConverter()
   }
@@ -74,15 +57,12 @@ final class AudioChunkUploader {
     
     /// Get Chunk Info
     guard startingFrame < endingFrame else { return }
-    fileUploadMapper.append(String(chunkIndex))
     let fileChunkName = "\(String(chunkIndex))\(AudioFileFormat.m4aFile.extensionString)"
     uploadedFileKeys.append(fileChunkName)
     let fileChunkInfo = getFileChunkInfo(
       startIndex: startingFrame,
       endIndex: endingFrame
     )
-    /// Add the key into the upload checker array
-    fileChunksInfo[fileChunkName] = fileChunkInfo
     debugPrint("Starting frame is \(startingFrame) and Ending frame is \(endingFrame)")
     
     /// Create chunk
@@ -98,7 +78,7 @@ final class AudioChunkUploader {
       sessionId: sessionId,
       fileName: m4aUrl.lastPathComponent,
       fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
-      fileChunkInfo: fileChunkInfo
+      chunkInfo: fileChunkInfo
     )
     
     /// Upload Chunk to s3
@@ -113,7 +93,7 @@ final class AudioChunkUploader {
         sessionId: sessionId,
         fileName: m4aUrl.lastPathComponent,
         fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
-        fileChunkInfo: fileChunkInfo,
+        chunkInfo: fileChunkInfo,
         isFileUploaded: true
       )
     }
@@ -156,14 +136,14 @@ final class AudioChunkUploader {
     sessionId: UUID,
     fileName: String,
     fileURL: String,
-    fileChunkInfo: FileChunkInfo,
+    chunkInfo: ChunkInfo,
     isFileUploaded: Bool = false
   ) {
     voiceToRxRepo.updateVoiceToRxChunkInfo(
       sessionID: sessionId,
       chunkInfo: VoiceChunkInfoArguementModel(
-        startTime: fileChunkInfo.startingTime,
-        endTime: fileChunkInfo.endingTime,
+        startTime: chunkInfo.st,
+        endTime: chunkInfo.et,
         fileURL: fileURL,
         fileName: fileName,
         isFileUploaded: isFileUploaded
@@ -174,10 +154,10 @@ final class AudioChunkUploader {
   private func getFileChunkInfo(
     startIndex: Int,
     endIndex: Int
-  ) -> FileChunkInfo {
-    FileChunkInfo(
-      startingTime: AudioHelper.shared.formTimeFromAudioIndex(index: startIndex),
-      endingTime: AudioHelper.shared.formTimeFromAudioIndex(index: endIndex)
+  ) -> ChunkInfo {
+    ChunkInfo(
+      st: AudioHelper.shared.formTimeFromAudioIndex(index: startIndex),
+      et: AudioHelper.shared.formTimeFromAudioIndex(index: endIndex)
     )
   }
   
