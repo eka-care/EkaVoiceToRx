@@ -155,9 +155,11 @@ extension VoiceConversationDatabaseManager {
     voice.update(from: conversationArguement)
     do {
       try container.viewContext.save()
+      logAddVoiceEvent(sessionID: voice.sessionID, status: .success)
       return voice
     } catch {
-      print("Failed to save voice conversation: \(error.localizedDescription)")
+      logAddVoiceEvent(sessionID: voice.sessionID, status: .failure, message: "Failed to save voice conversation: \(error.localizedDescription)")
+      debugPrint("Failed to save voice conversation: \(error.localizedDescription)")
       return nil
     }
   }
@@ -181,7 +183,9 @@ extension VoiceConversationDatabaseManager {
     voice.update(from: conversationArguement)
     do {
       try container.viewContext.save()
+      logUpdateConversationEvent(sessionID: sessionID, status: .success)
     } catch {
+      logUpdateConversationEvent(sessionID: sessionID, status: .failure, message: "Failed to update voice conversation: \(error.localizedDescription)")
       print("Failed to update voice conversation: \(error.localizedDescription)")
     }
   }
@@ -207,6 +211,22 @@ extension VoiceConversationDatabaseManager {
       newChunk.update(from: chunkArguement)
       voice.addToToVoiceChunkInfo(newChunk)
     }
+    
+    do {
+      try container.viewContext.save()
+      logUpdateChunkEvent(
+        sessionID: sessionID,
+        fileName: chunkArguement.fileName,
+        status: .success
+      )
+    } catch {
+      logUpdateChunkEvent(
+        sessionID: sessionID,
+        fileName: chunkArguement.fileName,
+        status: .failure,
+        message: "Failed to update voice conversation: \(error.localizedDescription)"
+      )
+    }
   }
 }
 
@@ -230,13 +250,17 @@ extension VoiceConversationDatabaseManager {
   /// Used to delete a single conversation
   /// - Parameter fetchRequest: fetch request of the record to be deleted
   func deleteVoice(fetchRequest: NSFetchRequest<VoiceConversation>) {
+    var sessionID: UUID?
     do {
       let results = try container.viewContext.fetch(fetchRequest)
       if let voice = results.first {
+        sessionID = voice.sessionID
         container.viewContext.delete(voice)
         try container.viewContext.save()
+        logDeleteVoiceEvent(sessionID: voice.sessionID, status: .success)
       }
     } catch {
+      logDeleteVoiceEvent(sessionID: sessionID, status: .failure, message: "Delete error: \(error)")
       print("Delete error: \(error)")
     }
   }
@@ -249,7 +273,9 @@ extension VoiceConversationDatabaseManager {
     do {
       try container.viewContext.execute(deleteRequest)
       try container.viewContext.save()
+      logDeleteAllVoicesEvent(status: .success)
     } catch {
+      logDeleteAllVoicesEvent(status: .failure, message: "Failed to delete all VoiceConversations: \(error)")
       print("Failed to delete all VoiceConversations: \(error)")
     }
   }

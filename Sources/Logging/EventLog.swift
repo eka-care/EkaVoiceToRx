@@ -34,6 +34,10 @@ public struct EventLog {
 }
 
 public enum EventType: String {
+  case create
+  case read
+  case update
+  case delete
   case initSession
   case stop
   case commit
@@ -41,6 +45,14 @@ public enum EventType: String {
   
   public var eventName: String {
     switch self {
+    case .create:
+      return "VoiceToRx_CREATE"
+    case .read:
+      return "VoiceToRx_READ"
+    case .update:
+      return "VoiceToRx_UPDATE"
+    case .delete:
+      return "VoiceToRx_DELETE"
     case .initSession:
       return "VoiceToRx_INIT"
     case .stop:
