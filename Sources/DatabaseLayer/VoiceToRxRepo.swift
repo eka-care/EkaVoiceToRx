@@ -37,6 +37,11 @@ public final class VoiceToRxRepo {
       )
     )
     guard let voice, let sessionID = voice.sessionID else {
+      initVoiceEvent(
+        sessionID: nil,
+        status: .failure,
+        message: "No model could be created"
+      )
       if retryCount < 3 {
         return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1)
       }
@@ -59,7 +64,7 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success:
-        
+        initVoiceEvent(sessionID: sessionID, status: .success)
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
@@ -68,6 +73,7 @@ public final class VoiceToRxRepo {
           )
         )
       case .failure(let error):
+        initVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in init voice to rx \(error.localizedDescription)")
         debugPrint("Error in init voice to rx \(error.localizedDescription)")
       }
     }
@@ -146,6 +152,11 @@ public final class VoiceToRxRepo {
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .initialise /// Init should have been done
     else {
+      stopVoiceEvent(
+        sessionID: sessionID,
+        status: .failure,
+        message: "Insufficient parameters -> Session id: \(sessionID?.uuidString ?? "") or no Model"
+      )
       if retryCount < 3 {
         stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
       }
@@ -164,6 +175,7 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success:
+        stopVoiceEvent(sessionID: sessionID, status: .success)
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
@@ -173,10 +185,11 @@ public final class VoiceToRxRepo {
         )
         completion()
       case .failure(let error):
+        stopVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in stop voice to rx \(error.localizedDescription)")
+        debugPrint("Error in stop voice to rx \(error.localizedDescription)")
         if retryCount < 3 {
           stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
         }
-        debugPrint("Error in stop voice to rx \(error.localizedDescription)")
       }
     }
   }
@@ -192,6 +205,11 @@ public final class VoiceToRxRepo {
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .stop
     else {
+      commitVoiceEvent(
+        sessionID: sessionID,
+        status: .failure,
+        message: "Insufficient parameters -> Session id: \(sessionID?.uuidString ?? "") or no Model"
+      )
       if retryCount < 3 {
         commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1, completion: completion)
       }
@@ -210,6 +228,7 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success:
+        commitVoiceEvent(sessionID: sessionID, status: .success)
         /// Update voice conversation model to a stage
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
@@ -219,10 +238,11 @@ public final class VoiceToRxRepo {
         )
         completion()
       case .failure(let error):
+        commitVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in commit voice to rx \(error.localizedDescription)")
+        debugPrint("Error in commit voice to rx \(error.localizedDescription)")
         if retryCount < 3 {
           commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1, completion: completion)
         }
-        debugPrint("Error in commit voice to rx \(error.localizedDescription)")
       }
     }
   }
@@ -238,6 +258,8 @@ public final class VoiceToRxRepo {
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
           VoiceConversationAPIStage(rawValue: model.stage ?? "") == .commit
     else {
+      /// Status fetch event
+      statusFetchEvent(sessionID: sessionID, status: .failure, message: "No model or session id")
       if retryCount < 3 {
         fetchVoiceToRxSessionStatus(
           sessionID: sessionID,
@@ -245,6 +267,8 @@ public final class VoiceToRxRepo {
           retryCount: retryCount + 1
         )
       } else {
+        /// Status fetch event
+        statusFetchEvent(sessionID: sessionID, status: .failure, message: "Invalid session or stage")
         completion(.failure(NSError(domain: "VoiceToRx", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid session or stage"])))
       }
       return
@@ -255,11 +279,16 @@ public final class VoiceToRxRepo {
       switch result {
       case .success(let response):
         guard let outputs = response.data?.output, !outputs.isEmpty else {
+          /// Status fetch event
+          statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
           completion(.success(false))
           return
         }
         let allSuccessful = outputs.allSatisfy { $0.status == "success" }
+        
+        /// Status fetch event
+        statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
@@ -268,6 +297,8 @@ public final class VoiceToRxRepo {
         completion(.success(allSuccessful))
         
       case .failure(let error):
+        /// Status fetch event
+        statusFetchEvent(sessionID: sessionID, status: .failure, message: "Error in getting voice to rx status -> \(error)")
         debugPrint("❌ Error in getting voice to rx status -> \(error)")
         completion(.failure(error))
       }

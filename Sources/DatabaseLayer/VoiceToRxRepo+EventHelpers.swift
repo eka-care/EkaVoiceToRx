@@ -15,16 +15,15 @@ extension VoiceToRxRepo {
   
   func initVoiceEvent(
     sessionID: UUID?,
-    bid: String?,
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID, let bid else { return }
+    guard let sessionID else { return }
     
     let eventLog = EventLog(
       params: [
         "sessionID": sessionID.uuidString,
-        "bid": bid
+        "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .initSession,
       message: message,
@@ -39,16 +38,15 @@ extension VoiceToRxRepo {
   
   func stopVoiceEvent(
     sessionID: UUID?,
-    bid: String?,
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID, let bid else { return }
+    guard let sessionID else { return }
     
     let eventLog = EventLog(
       params: [
         "sessionID": sessionID.uuidString,
-        "bid": bid
+        "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .stop,
       message: message,
@@ -63,16 +61,15 @@ extension VoiceToRxRepo {
   
   func commitVoiceEvent(
     sessionID: UUID?,
-    bid: String?,
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID, let bid else { return }
+    guard let sessionID else { return }
     
     let eventLog = EventLog(
       params: [
         "sessionID": sessionID.uuidString,
-        "bid": bid
+        "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .commit,
       message: message,
@@ -87,16 +84,15 @@ extension VoiceToRxRepo {
   
   func statusFetchEvent(
     sessionID: UUID?,
-    bid: String?,
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID, let bid else { return }
+    guard let sessionID else { return }
     
     let eventLog = EventLog(
       params: [
         "sessionID": sessionID.uuidString,
-        "bid": bid
+        "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .fetchStatus,
       message: message,
