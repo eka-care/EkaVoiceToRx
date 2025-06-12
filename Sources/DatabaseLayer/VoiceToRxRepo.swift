@@ -230,40 +230,45 @@ public final class VoiceToRxRepo {
   
   public func fetchVoiceToRxSessionStatus(
     sessionID: UUID?,
-    completion: @escaping (Bool) -> Void,
+    completion: @escaping (Result<Bool, Error>) -> Void,
     retryCount: Int = 0
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-    VoiceConversationAPIStage(rawValue: model.stage ?? "") == .commit
+          VoiceConversationAPIStage(rawValue: model.stage ?? "") == .commit
     else {
       if retryCount < 3 {
-        fetchVoiceToRxSessionStatus(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
+        fetchVoiceToRxSessionStatus(
+          sessionID: sessionID,
+          completion: completion,
+          retryCount: retryCount + 1
+        )
+      } else {
+        completion(.failure(NSError(domain: "VoiceToRx", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid session or stage"])))
       }
       return
     }
+    
     service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { [weak self] result, statusCode in
       guard let self else { return }
       switch result {
       case .success(let response):
         guard let outputs = response.data?.output, !outputs.isEmpty else {
           print("❌ No output in response")
-          completion(false)
+          completion(.success(false))
           return
         }
         let allSuccessful = outputs.allSatisfy { $0.status == "success" }
-        /// Update voice conversation model to a stage
+        
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(
-            stage: .result
-          )
+          conversationArguement: VoiceConversationArguementModel(stage: .result)
         )
-        completion(allSuccessful)
+        completion(.success(allSuccessful))
+        
       case .failure(let error):
-        debugPrint("Error in getting voice to rx status -> \(error)")
-        completion(false)
+        debugPrint("❌ Error in getting voice to rx status -> \(error)")
+        completion(.failure(error))
       }
     }
-  }
-}
+  }}

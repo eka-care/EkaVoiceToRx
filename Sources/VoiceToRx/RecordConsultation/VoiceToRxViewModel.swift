@@ -448,21 +448,28 @@ extension VoiceToRxViewModel {
 
 extension VoiceToRxViewModel {
   func startStatusPolling() {
-    pollingTimer?.invalidate() // Cancel if any existing polling
+    pollingTimer?.invalidate()
     pollingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] timer in
       guard let self else { return }
-      voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] isComplete in
+      voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
         guard let self else { return }
-        if isComplete {
+        switch result {
+        case .success(let isComplete):
+          if isComplete {
+            timer.invalidate()
+            self.pollingTimer = nil
+            print("✅ Polling complete. All templates have status = success.")
+            DispatchQueue.main.async { [weak self] in
+              guard let self else { return }
+              screenState = .resultDisplay(success: true)
+            }
+          }
+          // If not complete, continue polling
+        case .failure(let error):
+          print("❌ Polling stopped due to API/model error: \(error.localizedDescription)")
           timer.invalidate()
           self.pollingTimer = nil
-          print("✅ Polling complete. All templates have status = success.")
-          DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            screenState = .resultDisplay(success: true)
-          }
         }
       }
     }
-  }
-}
+  }}
