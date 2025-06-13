@@ -74,6 +74,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
+    viewModel.r
     view.subviews.forEach { $0.removeFromSuperview() }
     Task {
       await liveActivityDelegate?.endLiveActivity()

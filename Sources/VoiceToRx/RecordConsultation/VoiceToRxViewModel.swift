@@ -380,6 +380,7 @@ extension VoiceToRxViewModel {
     pcmBuffersListRaw = []
     lastClipIndex = 0
     chunkIndex = 1
+    screenState = .startRecording
   }
 }
 
