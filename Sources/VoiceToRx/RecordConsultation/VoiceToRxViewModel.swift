@@ -425,6 +425,10 @@ extension VoiceToRxViewModel {
           // If not complete, continue polling
         case .failure(let error):
           print("❌ Polling stopped due to API/model error: \(error.localizedDescription)")
+          DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            screenState = .resultDisplay(success: false)
+          }
           timer.invalidate()
           self.pollingTimer = nil
         }
