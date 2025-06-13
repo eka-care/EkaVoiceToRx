@@ -161,17 +161,22 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Setup record session
     setupRecordSession()
     /// Clear any previous session data if present
-    clearSession()
+    await MainActor.run { [weak self] in
+      guard let self else { return }
+      clearSession()
+    }
     /// Create session
     let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel?.sessionID, params: contextParams)
     /// Setup sessionID in view model
-    await MainActor.run {
+    await MainActor.run { [weak self] in
+      guard let self else { return }
       sessionID = voiceModel?.sessionID
     }
     /// Change the screen state to listening
-    await MainActor.run {
+    await MainActor.run { [weak self] in
+      guard let self else { return }
       screenState = .listening(conversationType: conversationType)
     }
     do {
