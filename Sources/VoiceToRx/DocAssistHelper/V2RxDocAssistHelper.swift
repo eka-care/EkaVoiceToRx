@@ -23,9 +23,11 @@ public final class V2RxDocAssistHelper {
     print("Voice conversation stage for id \(sessionID.uuidString) is -> \(voiceConversation.stage)")
     if voiceConversation.updatedSessionID != nil {
       return .saved
-    } else if let stage = voiceConversation.stage, VoiceConversationAPIStage(rawValue: stage) == .result {
+    } else if let stage = voiceConversation.stage, VoiceConversationAPIStage.getEnum(from: stage) == .result(success: true) {
       return .draft
-    } else if VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) {
+    } else if let stage = voiceConversation.stage,
+              VoiceConversationAPIStage.getEnum(from: stage) == .result(success: false) ||
+                VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) {
       return .retry
     } else {
       return .loading

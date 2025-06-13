@@ -150,7 +150,7 @@ public final class VoiceToRxRepo {
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-          VoiceConversationAPIStage(rawValue: model.stage ?? "") == .initialise /// Init should have been done
+          VoiceConversationAPIStage.getEnum(from: model.stage ?? "") == .initialise /// Init should have been done
     else {
       stopVoiceEvent(
         sessionID: sessionID,
@@ -203,7 +203,7 @@ public final class VoiceToRxRepo {
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-          VoiceConversationAPIStage(rawValue: model.stage ?? "") == .stop
+          VoiceConversationAPIStage.getEnum(from: model.stage ?? "") == .stop
     else {
       commitVoiceEvent(
         sessionID: sessionID,
@@ -256,7 +256,7 @@ public final class VoiceToRxRepo {
   ) {
     guard let sessionID,
           let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-          VoiceConversationAPIStage(rawValue: model.stage ?? "") == .commit
+          VoiceConversationAPIStage.getEnum(from: model.stage ?? "") == .commit
     else {
       /// Status fetch event
       statusFetchEvent(sessionID: sessionID, status: .failure, message: "No model or session id")
@@ -292,7 +292,7 @@ public final class VoiceToRxRepo {
         
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(stage: .result)
+          conversationArguement: VoiceConversationArguementModel(stage: .result(success: true))
         )
         completion(.success(allSuccessful))
         
@@ -300,6 +300,10 @@ public final class VoiceToRxRepo {
         /// Status fetch event
         statusFetchEvent(sessionID: sessionID, status: .failure, message: "Error in getting voice to rx status -> \(error)")
         debugPrint("❌ Error in getting voice to rx status -> \(error)")
+        databaseManager.updateVoiceConversation(
+          sessionID: sessionID,
+          conversationArguement: VoiceConversationArguementModel(stage: .result(success: false))
+        )
         completion(.failure(error))
       }
     }

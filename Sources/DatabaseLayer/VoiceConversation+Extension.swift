@@ -7,11 +7,41 @@
 
 import CoreData
 
-public enum VoiceConversationAPIStage: String {
+public enum VoiceConversationAPIStage : Equatable {
   case initialise /// Once init is done
   case stop /// Once stop is done
   case commit /// Once commit is done
-  case result /// Once result is available
+  case result(success: Bool) /// Once result is available
+  
+  var databaseString: String {
+    switch self {
+    case .initialise:
+      return "initialise"
+    case .stop:
+      return "stop"
+    case .commit:
+      return "commit"
+    case .result(let success):
+      return success ? "result" : "error"
+    }
+  }
+  
+  static func getEnum(from databaseString: String) -> VoiceConversationAPIStage {
+    switch databaseString {
+    case "initialise":
+      return .initialise
+    case "stop":
+      return .stop
+    case "commit":
+      return .commit
+    case "result":
+      return .result(success: true)
+    case "error":
+      return .result(success: false)
+    default:
+      return .result(success: false) // Or consider returning nil or throwing
+    }
+  }
 }
 
 extension VoiceConversation {
@@ -23,7 +53,7 @@ extension VoiceConversation {
       self.transcription = transcription
     }
     if let stage = conversation.stage {
-      self.stage = stage.rawValue
+      self.stage = stage.databaseString
     }
     if let sessionData = conversation.sessionData {
       self.sessionData = convertToBinaryData(sessionData)
