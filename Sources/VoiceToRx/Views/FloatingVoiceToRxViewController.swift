@@ -71,6 +71,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   public func hideFloatingButton() {
+    viewModel?.clearSession()
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
