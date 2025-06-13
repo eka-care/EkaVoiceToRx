@@ -190,6 +190,7 @@ public final class VoiceToRxRepo {
         if retryCount < 3 {
           stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
         }
+        completion()
       }
     }
   }
@@ -243,6 +244,7 @@ public final class VoiceToRxRepo {
         if retryCount < 3 {
           commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1, completion: completion)
         }
+        completion()
       }
     }
   }

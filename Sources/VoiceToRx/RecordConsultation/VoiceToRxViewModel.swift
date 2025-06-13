@@ -162,10 +162,6 @@ public final class VoiceToRxViewModel: ObservableObject {
     setupRecordSession()
     /// Clear any previous session data if present
     clearSession()
-    /// Change the screen state to listening
-    await MainActor.run {
-      screenState = .listening(conversationType: conversationType)
-    }
     /// Create session
     let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
     /// Delegate to publish everywhere that a session was created
@@ -173,6 +169,10 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Setup sessionID in view model
     await MainActor.run {
       sessionID = voiceModel?.sessionID
+    }
+    /// Change the screen state to listening
+    await MainActor.run {
+      screenState = .listening(conversationType: conversationType)
     }
     do {
       try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
@@ -228,11 +228,6 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   public func stopRecording() async {
     guard let sessionID else { return }
-    /// Change screen state to processing
-    DispatchQueue.main.async { [weak self] in
-      guard let self else { return }
-      screenState = .processing
-    }
     /// Stop audio engine
     stopAudioRecording()
     /// Process whatever is remaining
@@ -253,11 +248,14 @@ public final class VoiceToRxViewModel: ObservableObject {
       )
       voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
+        /// Change screen state to processing
+        DispatchQueue.main.async { [weak self] in
+          guard let self else { return }
+          screenState = .processing
+        }
         /// Add listener after stop api
         addListenerOnUploadStatus(sessionID: sessionID)
       }
-      /// Start s3 polling
-      //    startS3Polling()
     } catch {
       debugPrint("Error in processing last audio chunk \(error.localizedDescription)")
     }
