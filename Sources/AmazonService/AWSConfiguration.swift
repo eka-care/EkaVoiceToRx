@@ -11,13 +11,17 @@ import AWSS3
 import Foundation
 
 enum RecordingS3UploadConfiguration {
-  static let bucketName = "m-prod-voice2rx"
+  static let bucketName = "m-prod-voice-record"
   static let domain = "s3://"
   static let transferUtilKey = "S3TransferUtility"
   static let s3ClientKey = "s3Client"
   
   static func getDateFolderName() -> String {
     return Date().toString(withFormat: "yyMMdd")
+  }
+  
+  static func getS3Url(sessionID: UUID) -> String {
+    "\(domain)\(bucketName)/\(getDateFolderName())/\(sessionID.uuidString)"
   }
 }
 

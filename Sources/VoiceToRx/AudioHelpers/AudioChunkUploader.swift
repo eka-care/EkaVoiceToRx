@@ -7,116 +7,161 @@
 
 import AVFoundation
 
-protocol AudioChunkUploaderDelegate: AnyObject {
-  func fileUploadMapperDidChange(_ updatedMap: [String])
-}
-
 final class AudioChunkUploader {
   
   let s3FileUploaderService: AmazonS3FileUploaderService
   let audioFormat: AVAudioCommonFormat = .pcmFormatInt16
   var audioBufferToM4AConverter = AudioBufferToM4AConverter()
-  /// Array of files that are in queue for upload
-  var fileUploadMapper: [String] = [] {
-    didSet {
-      /// Listen this in the caller
-      delegate?.fileUploadMapperDidChange(fileUploadMapper)
-    }
-  }
   let fullAudioFileKey = "full_audio"
   let channelCount: Int = 1
-  var fileChunksInfo: [String: FileChunkInfo] = [:]
+  let voiceToRxRepo: VoiceToRxRepo
   var uploadedFileKeys: [String] = []
-  weak var delegate: AudioChunkUploaderDelegate?
   
   init(
-    delegate: AudioChunkUploaderDelegate?,
-    s3FileUploaderService: AmazonS3FileUploaderService
+    s3FileUploaderService: AmazonS3FileUploaderService,
+    voiceToRxRepo: VoiceToRxRepo
   ) {
-    self.delegate = delegate
     self.s3FileUploaderService = s3FileUploaderService
+    self.voiceToRxRepo = voiceToRxRepo
   }
   
   func reset() {
-    fileUploadMapper = []
-    fileChunksInfo = [:]
     uploadedFileKeys = []
     audioBufferToM4AConverter = AudioBufferToM4AConverter()
   }
   
-  func uploadChunkToS3(
+  func createChunkM4AFileAndUploadToS3(
     startingFrame: Int,
     endingFrame: Int,
     chunkIndex: Int,
-    sessionId: String,
-    audioBuffer: UnsafeBufferPointer<Int16>,
-    completion: @escaping () -> Void
-  ) {
-    let currentSegment = audioBuffer.baseAddress! + startingFrame
+    sessionId: UUID,
+    audioBuffer: [Int16]
+  ) async throws {
+    // Validate frame indices
+    guard startingFrame < endingFrame && startingFrame >= 0 && endingFrame <= audioBuffer.count else {
+      return
+    }
+    
+    // Extract the segment from the audio buffer
     let segmentLength = endingFrame - startingFrame
+    let audioSegment = Array(audioBuffer[startingFrame..<endingFrame])
+    
+    /// Used to create a single buffer out of the segment
     guard let singleBuffer = AudioHelper.shared.createBuffer(
-      from: currentSegment,
+      from: audioSegment,
       format: audioFormat,
       frameCount: AVAudioFrameCount(segmentLength),
       channels: AVAudioChannelCount(channelCount),
       sampleRate: Double(RecordingConfiguration.shared.requiredSampleRate)
     ) else { return }
+    
+    /// Get Chunk Info
     guard startingFrame < endingFrame else { return }
-    fileUploadMapper.append(String(chunkIndex))
     let fileChunkName = "\(String(chunkIndex))\(AudioFileFormat.m4aFile.extensionString)"
     uploadedFileKeys.append(fileChunkName)
-    /// Add the key into the upload checker array
-    fileChunksInfo[fileChunkName] = getFileChunkInfo(
+    let fileChunkInfo = getFileChunkInfo(
       startIndex: startingFrame,
       endIndex: endingFrame
     )
     debugPrint("Starting frame is \(startingFrame) and Ending frame is \(endingFrame)")
-    audioBufferToM4AConverter.writePCMBufferToM4A(
+    
+    /// Create chunk
+    let m4aUrl = try await audioBufferToM4AConverter.writePCMBufferToM4A(
       pcmBuffer: singleBuffer,
       fileKey: String(chunkIndex),
-      sessionId: sessionId
-    ) { [weak self] result in
-      guard let self = self else { return }
+      sessionId: sessionId.uuidString
+    )
+    
+    /// Update chunk info in database with initial values.
+    /// Note: - Here we don't pass isFileUploaded as it has not been uploaded yet
+    updateChunkInfoInDatabse(
+      sessionId: sessionId,
+      fileName: m4aUrl.lastPathComponent,
+      fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
+      chunkInfo: fileChunkInfo
+    )
+    
+    /// Upload Chunk to s3
+    uploadChunkToS3(
+      sessionId: sessionId.uuidString,
+      fileURL: m4aUrl,
+      lastPathComponent: m4aUrl.lastPathComponent
+    ) { [weak self] in
+      guard let self else { return }
+      /// Update chunk info to make uploaded true
+      updateChunkInfoInDatabse(
+        sessionId: sessionId,
+        fileName: m4aUrl.lastPathComponent,
+        fileURL: m4aUrl.pathComponents.suffix(2).joined(separator: "/"),
+        chunkInfo: fileChunkInfo,
+        isFileUploaded: true
+      )
+    }
+  }
+  
+  private func uploadChunkToS3(
+    sessionId: String,
+    fileURL: URL,
+    lastPathComponent: String,
+    completion: @escaping () -> Void
+  ) {
+    let firstFolder: String = s3FileUploaderService.dateFolderName
+    let secondFolder = sessionId
+    let lastPathComponent = fileURL.lastPathComponent
+    let key = "\(firstFolder)/\(secondFolder)/\(lastPathComponent)"
+    s3FileUploaderService.uploadFileWithRetry(
+      url: fileURL,
+      key: key,
+      sessionID: sessionId,
+      bid: AuthTokenHolder.shared.bid
+    ) { result in
       switch result {
-      case .success(let fileURL):
-        let firstFolder: String = s3FileUploaderService.dateFolderName
-        let secondFolder = sessionId
-        let lastPathComponent = fileURL.lastPathComponent
-        let key = "\(firstFolder)/\(secondFolder)/\(lastPathComponent)"
-        s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key) { [weak self] result in
-          guard let self = self else { return }
-          switch result {
-          case .success:
-            updateUploadSuccessMap(chunkIndex: String(chunkIndex))
-            debugPrint("Successfully uploaded file")
-            completion()
-          case .failure(let error):
-            debugPrint("Failed uploading with error -> \(error.localizedDescription)")
-          }
-        }
+      case .success:
+        debugPrint("Successfully uploaded file")
+        completion()
       case .failure(let error):
-        debugPrint("Error in converting file to m4a with error -> \(error.localizedDescription)")
+        debugPrint("Failed uploading with error -> \(error.localizedDescription)")
       }
     }
+  }
+  
+  /// Used to update chunk info in database
+  /// - Parameters:
+  ///   - sessionId: session id of the chunk that has been created
+  ///   - fileName: file name of the chunk like "1.m4a"
+  ///   - fileURL: file url of the chunk
+  ///   - fileChunkInfo: file chunk info
+  ///   - isFileUploaded: tells wether file has been uploaded or not
+  private func updateChunkInfoInDatabse(
+    sessionId: UUID,
+    fileName: String,
+    fileURL: String,
+    chunkInfo: ChunkInfo,
+    isFileUploaded: Bool = false
+  ) {
+    voiceToRxRepo.updateVoiceToRxChunkInfo(
+      sessionID: sessionId,
+      chunkInfo: VoiceChunkInfoArguementModel(
+        startTime: chunkInfo.st,
+        endTime: chunkInfo.et,
+        fileURL: fileURL,
+        fileName: fileName,
+        isFileUploaded: isFileUploaded
+      )
+    )
   }
   
   private func getFileChunkInfo(
     startIndex: Int,
     endIndex: Int
-  ) -> FileChunkInfo {
-    FileChunkInfo(
-      startingTime: AudioHelper.shared.formTimeFromAudioIndex(index: startIndex),
-      endingTime: AudioHelper.shared.formTimeFromAudioIndex(index: endIndex)
+  ) -> ChunkInfo {
+    ChunkInfo(
+      st: AudioHelper.shared.formTimeFromAudioIndex(index: startIndex),
+      et: AudioHelper.shared.formTimeFromAudioIndex(index: endIndex)
     )
   }
   
-  private func updateUploadSuccessMap(chunkIndex: String) {
-    /// Remove the key from checker array
-    if let indexOfKey = fileUploadMapper.firstIndex(where: { $0 == chunkIndex }) {
-      fileUploadMapper.remove(at: indexOfKey)
-    }
-    debugPrint("Updated Upload success map is -> \(fileUploadMapper)")
-  }
+  // MARK: - Full Audio
   
   func uploadFullAudio(
     pcmBufferListRaw: [Int16],
@@ -130,36 +175,19 @@ final class AudioChunkUploader {
         channels: AVAudioChannelCount(channelCount),
         sampleRate: Double(RecordingConfiguration.shared.requiredSampleRate)
       ) else { return }
-      audioBufferToM4AConverter.writePCMBufferToM4A(
-        pcmBuffer: audioBuffer,
-        fileKey: fullAudioFileKey,
-        sessionId: sessionID.uuidString,
-        isFullAudio: true,
-        fileExtension: ".m4a_"
-      ) { [weak self] result in
-        guard let self = self else { return }
-        switch result {
-        case .success(let fileURL):
-          Task { [weak self] in
-            guard let self else { return }
-            /// Add full audio to database
-            await VoiceConversationAggregator.shared.updateVoice(id: sessionID, fileURL: fileURL)
-            /// Upload full audio to S3
-            let firstFolder: String = s3FileUploaderService.dateFolderName
-            let secondFolder = sessionID
-            let key = "\(firstFolder)/\(secondFolder)/\(fileURL.lastPathComponent)"
-            s3FileUploaderService.uploadFileWithRetry(url: fileURL, key: key) { result in
-              switch result {
-              case .success:
-                debugPrint("Successfully uploaded full audio file")
-              case .failure(let error):
-                debugPrint("Failed uploading with error -> \(error.localizedDescription)")
-              }
-            }
-          }
-        case .failure(let error):
-          debugPrint("Error in converting file to m4a with error -> \(error.localizedDescription)")
-        }
+      Task {
+        let m4aURL = try await audioBufferToM4AConverter.writePCMBufferToM4A(
+          pcmBuffer: audioBuffer,
+          fileKey: fullAudioFileKey,
+          sessionId: sessionID.uuidString,
+          isFullAudio: true,
+          fileExtension: ".m4a_"
+        )
+        uploadChunkToS3(
+          sessionId: sessionID.uuidString,
+          fileURL: m4aURL,
+          lastPathComponent: m4aURL.lastPathComponent
+        ) {}
       }
     }
   }

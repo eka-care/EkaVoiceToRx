@@ -31,75 +31,88 @@ final class AudioBufferToM4AConverter {
     fileKey: String,
     sessionId: String,
     isFullAudio: Bool = false,
-    fileExtension: String = AudioFileFormat.m4aFile.extensionString,
-    completion: @escaping (Result<URL, Error>) -> Void
-  ) {
-    /// Temporary directory
+    fileExtension: String = AudioFileFormat.m4aFile.extensionString
+  ) async throws -> URL {
     let documentDirectoryURL = FileHelper.getDocumentDirectoryURL()
     
-    /// Unique file names
     let pcmFileName = "\(fileKey)\(AudioFileFormat.coreAudioFile.extensionString)"
     let m4aFileName = "\(fileKey)\(fileExtension)"
     
-    /// File URLs
-    let outputPCMURL = documentDirectoryURL
-      .appendingPathComponent(pcmFileName)
-    
-    /// Don't store full audio in session folder
-    let outputM4AURL = documentDirectoryURL.appendingPathComponent(sessionId).appendingPathComponent(m4aFileName)
+    let outputPCMURL = documentDirectoryURL.appendingPathComponent(pcmFileName)
+    let sessionDirectoryURL = documentDirectoryURL.appendingPathComponent(sessionId)
+    let outputM4AURL = sessionDirectoryURL.appendingPathComponent(m4aFileName)
     
     cafUrlsStored.append(outputPCMURL)
     
     do {
-      /// Create AVAudioFile for writing PCM data
-      let outputAudioFile = try AVAudioFile(forWriting: outputPCMURL, settings: pcmBuffer.format.settings, commonFormat: pcmBuffer.format.commonFormat, interleaved: pcmBuffer.format.isInterleaved)
+      try FileManager.default.createDirectory(at: sessionDirectoryURL, withIntermediateDirectories: true)
       
-      /// Write the PCM buffer to the file
+      let outputAudioFile = try AVAudioFile(
+        forWriting: outputPCMURL,
+        settings: pcmBuffer.format.settings,
+        commonFormat: pcmBuffer.format.commonFormat,
+        interleaved: pcmBuffer.format.isInterleaved
+      )
+      
       try outputAudioFile.write(from: pcmBuffer)
       print("PCM file written successfully at \(outputPCMURL)")
       
-      /// Convert the PCM file to M4A
-      convertToM4A(sourceURL: outputPCMURL, destinationURL: outputM4AURL, success: { [weak self] in
-        guard let self else { return }
-        print("Removed file at url \(outputPCMURL)")
-        /// Once converted remove the PCM file
-        FileHelper.removeFile(at: outputPCMURL)
-        completion(.success(outputM4AURL))
-        urlsStored.append(outputM4AURL)
-      }, failure: { error in
-        completion(.failure(error ?? NSError(domain: "AudioConversionError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown error during M4A conversion."])))
-      })
+      try await convertToM4A(sourceURL: outputPCMURL, destinationURL: outputM4AURL)
+      
+      print("Removed intermediate PCM file at \(outputPCMURL)")
+      FileHelper.removeFile(at: outputPCMURL)
+      
+      urlsStored.append(outputM4AURL)
+      return outputM4AURL
+      
     } catch {
-      /// Handle the error
       print("Error: \(error.localizedDescription)")
-      completion(.failure(error))
+      throw error
     }
   }
   
-  private func convertToM4A(
-    sourceURL: URL,
-    destinationURL: URL,
-    success: (() -> Void)?,
-    failure: ((Error?) -> Void)?
-  ) {
+  private func convertToM4A(sourceURL: URL, destinationURL: URL) async throws {
+    print("Source URL -> \(sourceURL)")
+    print("Destination URL -> \(destinationURL)")
+    
+    if FileManager.default.fileExists(atPath: destinationURL.path) {
+      do {
+        try FileManager.default.removeItem(at: destinationURL)
+      } catch {
+        print("Failed to remove existing file at destination: \(error)")
+        throw error
+      }
+    }
+    
     let asset = AVURLAsset(url: sourceURL)
     guard let exporter = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
-      failure?(NSError(domain: "AudioConversionError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetExportSession."]))
-      return
+      throw NSError(
+        domain: "AudioConversionError",
+        code: -1,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to create AVAssetExportSession."]
+      )
     }
     
     exporter.outputFileType = .m4a
     exporter.outputURL = destinationURL
-    exporter.exportAsynchronously {
-      switch exporter.status {
-      case .completed:
-        print("M4A file written successfully at \(destinationURL)")
-        success?()
-      case .failed, .cancelled:
-        print("Error during M4A conversion: \(String(describing: exporter.error))")
-        failure?(exporter.error)
-      default:
-        break
+    
+    try await withCheckedThrowingContinuation { continuation in
+      exporter.exportAsynchronously {
+        switch exporter.status {
+        case .completed:
+          print("M4A file written successfully at \(destinationURL)")
+          continuation.resume()
+        case .failed, .cancelled:
+          let error = exporter.error ?? NSError(
+            domain: "AudioConversionError",
+            code: -1,
+            userInfo: [NSLocalizedDescriptionKey: "Unknown error during M4A conversion."]
+          )
+          print("Error during M4A conversion: \(error.localizedDescription) (\((error as NSError).code))")
+          continuation.resume(throwing: error)
+        default:
+          break
+        }
       }
     }
   }

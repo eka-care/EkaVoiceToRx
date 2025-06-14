@@ -37,6 +37,9 @@ public final class V2RxInitConfigurations {
   /// Caller id
   public var appointmentID: String?
   
+  /// Delegate to get events
+  public weak var delegate: EventLoggerProtocol?
+  
   // MARK: - Init
   
   private init() {

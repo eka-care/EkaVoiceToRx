@@ -15,4 +15,8 @@ enum DomainConfigurations {
   public static var cogUrl: String {
     return "https://cog.eka.care"
   }
+  
+  public static var apiEkaCareUrl: String {
+    return "https://api.eka.care"
+  }
 }

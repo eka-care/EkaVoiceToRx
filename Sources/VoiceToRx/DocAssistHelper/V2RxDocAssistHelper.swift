@@ -16,20 +16,21 @@ public enum DocAssistV2RxState {
 }
 
 public final class V2RxDocAssistHelper {
-  public static func fetchV2RxState(for sessionID: UUID) async -> DocAssistV2RxState? {
-    let voiceConversationModel = await VoiceConversationAggregator.shared.fetchVoiceConversation(
-      using: QueryHelper.queryForFetch(with: sessionID)
-    )
-    /// Fetch the model
-    guard let model = voiceConversationModel.first else { return .deleted }
-    if model.didFetchResult == nil || model.didFetchResult == false { /// If didFetchResult is nil or false, then return loading
-      return .loading
-    } else if model.updatedSessionID != nil { /// If session has updatedSession ID, then it is saved
+  public static func fetchV2RxState(for sessionID: UUID) -> DocAssistV2RxState {
+    guard let voiceConversation = VoiceConversationDatabaseManager.shared.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
+      return .deleted
+    }
+    print("Voice conversation stage for id \(sessionID.uuidString) is -> \(voiceConversation.stage)")
+    if voiceConversation.updatedSessionID != nil {
       return .saved
-    } else if VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) { /// If session id requires retry then return retry
+    } else if let stage = voiceConversation.stage, VoiceConversationAPIStage.getEnum(from: stage) == .result(success: true) {
+      return .draft
+    } else if let stage = voiceConversation.stage,
+              VoiceConversationAPIStage.getEnum(from: stage) == .result(success: false) ||
+                VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) {
       return .retry
     } else {
-      return .draft
+      return .loading
     }
   }
 }
