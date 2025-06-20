@@ -34,7 +34,7 @@ final class AudioChunkProcessor {
     chunkIndex: inout Int,
     audioChunkUploader: AudioChunkUploader,
     pcmBufferListRaw: inout [Int16]
-  ) {
+  ) async throws {
     var bufferPointer: UnsafeRawBufferPointer?
     /// If audio engine is running, continue forming buffer pointer
     if audioEngine.isRunning, let buffer {
@@ -72,20 +72,23 @@ final class AudioChunkProcessor {
       isClipFrame = true /// Frame is to be clipped as this would be the last clipping
     }
     
-    pcmBufferListRaw.withUnsafeBufferPointer { pointerAudioBuffer in
-      // Chunking and uploading to S3
-      if isClipFrame && (endIndex>0) {
-        audioChunkUploader.uploadChunkToS3(
-          startingFrame: startIndex,
-          endingFrame: endIndex,
-          chunkIndex: chunkIndex,
-          sessionId: sessionID.uuidString,
-          audioBuffer: pointerAudioBuffer
-        ) {}
-        
-        lastClipIndex = endIndex
-        chunkIndex += 1
-      }
+    // Get the buffer data synchronously first
+    let bufferData = pcmBufferListRaw.withUnsafeBufferPointer { pointerAudioBuffer in
+      return Array(pointerAudioBuffer) // Copy the data
+    }
+    
+    // Chunking and uploading to S3
+    if isClipFrame && (endIndex>0) {
+      try await audioChunkUploader.createChunkM4AFileAndUploadToS3(
+        startingFrame: startIndex,
+        endingFrame: endIndex,
+        chunkIndex: chunkIndex,
+        sessionId: sessionID,
+        audioBuffer: bufferData
+      )
+      
+      lastClipIndex = endIndex
+      chunkIndex += 1
     }
   }
   

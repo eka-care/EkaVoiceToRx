@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
-  func onCreateVoiceToRxSession(id: UUID, params: VoiceToRxContextParams?)
+  func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?)
   func moveToDeepthoughtPage(id: UUID)
   func errorReceivingPrescription(
     id: UUID,
@@ -49,20 +49,29 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
-  public func showFloatingButton(viewModel: VoiceToRxViewModel, liveActivityDelegate: LiveActivityDelegate?) {
+  public func showFloatingButton(
+    viewModel: VoiceToRxViewModel,
+    conversationType: VoiceConversationType,
+    liveActivityDelegate: LiveActivityDelegate?
+  ) async {
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
     loadView(viewModel: viewModel)
-    subscribeToScreenStates()
+    await MainActor.run { [weak self] in
+      guard let self else { return }
+      subscribeToScreenStates()
+      self.liveActivityDelegate = liveActivityDelegate
+    }
     getAmazonCredentials()
-    self.liveActivityDelegate = liveActivityDelegate
+    await viewModel.startRecording(conversationType: conversationType)
     Task {
       await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
     }
   }
   
   public func hideFloatingButton() {
+    viewModel?.clearSession()
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
@@ -112,9 +121,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
       style: .default,
       handler: { [weak self] _ in
         guard let self else { return }
-        viewModel?.stopRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
+        Task { [weak self] in
+          guard let self else { return }
+          await viewModel?.stopRecording()
+          await liveActivityDelegate?.endLiveActivity()
         }
       }
     ))
@@ -278,14 +288,6 @@ extension FloatingVoiceToRxViewController {
         }
       }
     }.store(in: &cancellables)
-  }
-  
-  /// Used to check if voice to rx is active
-  /// - Returns: Bool that tells if voice to rx is active at present
-  public func isTakingVoiceToRx() -> Bool {
-    viewModel?.screenState == .listening(conversationType: .conversation) ||
-    viewModel?.screenState == .listening(conversationType: .dictation) ||
-    viewModel?.screenState == .processing
   }
 }
 
