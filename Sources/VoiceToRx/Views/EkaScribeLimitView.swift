@@ -25,43 +25,10 @@ public struct EkaScribeLimitView: View {
     VStack(spacing: 24) {
       
       // Background with image and overlay
-      ZStack {
-        //        Image("EkaScribeBackground")
-        //          .resizable()
-        //          .scaledToFit()
-        
-        //        VStack(spacing: 16) {
-        //          Image("waveformIcon")
-        //            .resizable()
-        //            .frame(width: 72, height: 72)
-        //            .background(Circle().fill(Color.white))
-        //            .shadow(radius: 4)
-        //
-        //          RoundedRectangle(cornerRadius: 20)
-        //            .fill(Color.white.opacity(0.5))
-        //            .frame(height: 160)
-        //            .overlay(
-        //              VStack(alignment: .leading, spacing: 8) {
-        //                Label("Symptoms", systemImage: "cross.case")
-        //                  .font(.headline)
-        //                  .foregroundColor(.primary)
-        //
-        //                VStack(alignment: .leading, spacing: 4) {
-        //                  Text("Fever").bold() + Text("  Since 2 Days").foregroundColor(.secondary)
-        //                  Text("Cough").bold() + Text("  Since 7 Days").foregroundColor(.secondary)
-        //                }
-        //
-        //                Text("+ Add another symptom")
-        //                  .foregroundColor(.blue)
-        //                  .font(.subheadline)
-        //              }
-        //                .padding()
-        //            )
-        //            .padding(.horizontal)
-        //        }
-        //        .padding(.top, 40)
-      }
-      .frame(height: 320)
+      Image(.ekaScribeLimit)
+        .resizable()
+        .frame(height: 320)
+        .frame(maxWidth: .infinity)
       
       // Main message
       Text("You’re out of free Eka Scribe sessions for today!")
@@ -94,14 +61,14 @@ public struct EkaScribeLimitView: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color.blue)
+        .background(Color(.primary500))
         .foregroundColor(.white)
         .cornerRadius(14)
         .padding(.horizontal)
       }
     }
     .padding(.vertical)
-    .background(Color.white)
+    .background(Color(.neutrals50))
   }
   
   @ViewBuilder
@@ -109,7 +76,7 @@ public struct EkaScribeLimitView: View {
     VStack(alignment: .leading, spacing: 8) {
       Image(systemName: icon)
         .renderingMode(.template)
-        .foregroundStyle(Color.purple)
+        .foregroundStyle(Color(.primary500))
       Text(text)
         .textStyle(ekaFont: .bodyRegular, color: .black)
     }
