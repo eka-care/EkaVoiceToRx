@@ -89,7 +89,7 @@ public struct EkaScribeLimitView: View {
     .frame(height: 120)
     .background(Color(.neutrals50))
     .cornerRadius(12)
-    .addBorderWithCornerRadius(cornerRadius: 12, borderColor: .black)
+    .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: .black)
   }
 }
 
