@@ -48,38 +48,43 @@ public final class VoiceToRxRepo {
       }
       return (nil, apiError)
     }
-    /// Call the init api
-    service.initVoiceToRx(
-      sessionID: sessionID.uuidString,
-      request: VoiceToRxInitRequest(
-        additionalData: contextParams,
-        mode: conversationMode.rawValue,
-        inputLanguage: ["en-IN", "hi"],
-        s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
-        outputFormatTemplate: [
-          OutputFormatTemplate(templateID: "eka_emr_to_fhir_template")
-        ],
-        transfer: "vaded"
-      )
-    ) { [weak self] result, statusCode in
-      guard let self else { return }
-      switch result {
-      case .success:
-        initVoiceEvent(sessionID: sessionID, status: .success)
-        /// Update voice conversation model to a stage
-        databaseManager.updateVoiceConversation(
-          sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(
-            stage: .initialise
-          )
+    return await withCheckedContinuation { continuation in
+      service.initVoiceToRx(
+        sessionID: sessionID.uuidString,
+        request: VoiceToRxInitRequest(
+          additionalData: contextParams,
+          mode: conversationMode.rawValue,
+          inputLanguage: ["en-IN", "hi"],
+          s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
+          outputFormatTemplate: [
+            OutputFormatTemplate(templateID: "eka_emr_to_fhir_template")
+          ],
+          transfer: "vaded"
         )
-      case .failure(let error):
-        apiError = error
-        initVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in init voice to rx \(error.localizedDescription)")
-        debugPrint("Error in init voice to rx \(error.localizedDescription)")
+      ) { [weak self] result, statusCode in
+        guard let self else {
+          continuation.resume(returning: (voice, nil))
+          return
+        }
+        
+        switch result {
+        case .success:
+          initVoiceEvent(sessionID: sessionID, status: .success)
+          
+          databaseManager.updateVoiceConversation(
+            sessionID: sessionID,
+            conversationArguement: VoiceConversationArguementModel(stage: .initialise)
+          )
+          
+          continuation.resume(returning: (voice, nil))
+          
+        case .failure(let error):
+          initVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in init voice to rx \(error.localizedDescription)")
+          debugPrint("Error in init voice to rx \(error.localizedDescription)")
+          continuation.resume(returning: (voice, error))
+        }
       }
     }
-    return (voice, apiError)
   }
   
   // MARK: - Update
