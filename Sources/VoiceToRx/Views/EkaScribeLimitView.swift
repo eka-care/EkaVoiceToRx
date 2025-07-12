@@ -27,8 +27,10 @@ public struct EkaScribeLimitView: View {
       // Background with image and overlay
       Image(.ekaScribeLimit)
         .resizable()
-        .frame(height: 280)
+        .scaledToFit()
         .frame(maxWidth: .infinity)
+      
+      Spacer()
       
       // Main message
       Text("You’re out of free Eka Scribe sessions for today!")
@@ -78,7 +80,7 @@ public struct EkaScribeLimitView: View {
       Image(systemName: icon)
         .renderingMode(.template)
         .foregroundStyle(Color(.primary500))
-        .frame(width: 15, height: 15)
+        .frame(width: 22, height: 22)
         .padding(.top, 12)
       Spacer()
       Text(text)
@@ -90,7 +92,7 @@ public struct EkaScribeLimitView: View {
     .frame(height: 120)
     .background(Color(.neutrals50))
     .cornerRadius(12)
-    .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: .black, strokeWidth: 0.5)
+    .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
   }
 }
 

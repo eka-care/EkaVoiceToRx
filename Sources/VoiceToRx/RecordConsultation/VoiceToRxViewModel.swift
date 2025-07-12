@@ -315,7 +315,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     try audioEngine.start()
   }
   
-  func deleteRecording(id: UUID) {
+  func deleteRecording(id: UUID?) {
+    guard let id else { return }
     voiceToRxRepo.deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: id))
     screenState = .deletedRecording
   }
