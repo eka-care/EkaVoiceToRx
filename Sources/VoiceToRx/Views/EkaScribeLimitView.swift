@@ -78,6 +78,8 @@ public struct EkaScribeLimitView: View {
     VStack(alignment: .leading, spacing: 8) {
       Image(systemName: icon)
         .renderingMode(.template)
+        .resizable()
+        .scaledToFit()
         .foregroundStyle(Color(.primary500))
         .frame(width: 22, height: 22)
         .padding(.top, 12)
