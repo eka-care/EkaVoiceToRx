@@ -172,7 +172,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       await MainActor.run { [weak self] in
         guard let self else { return }
         screenState = .deletedRecording
-        voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
+        voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
       return
     }
