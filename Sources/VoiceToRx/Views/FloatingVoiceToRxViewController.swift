@@ -53,6 +53,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     conversationType: VoiceConversationType,
     liveActivityDelegate: LiveActivityDelegate?
   ) async {
+    await viewModel.startRecording(conversationType: conversationType)
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
@@ -63,7 +64,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
       self.liveActivityDelegate = liveActivityDelegate
     }
     getAmazonCredentials()
-    await viewModel.startRecording(conversationType: conversationType)
     Task {
       await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
     }
