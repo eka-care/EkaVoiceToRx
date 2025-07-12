@@ -310,14 +310,14 @@ public enum ProtoError: LocalizedError {
 }
 
 public struct APIError: Decodable, Error {
-  let status: String?
-  let error: APIErrorDetail?
-  let txn_id: String?
-  let b_id: String?
+  public let status: String?
+  public let error: APIErrorDetail?
+  public let txn_id: String?
+  public let b_id: String?
 }
 
 public struct APIErrorDetail: Decodable {
-  let code: String?
-  let message: String?
-  let display_message: String?
+  public let code: String?
+  public let message: String?
+  public let display_message: String?
 }
