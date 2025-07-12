@@ -78,15 +78,18 @@ public struct EkaScribeLimitView: View {
       Image(systemName: icon)
         .renderingMode(.template)
         .foregroundStyle(Color(.primary500))
+        .frame(width: 15, height: 15)
+        .padding(.top, 12)
+      Spacer()
       Text(text)
         .textStyle(ekaFont: .bodyRegular, color: .black)
     }
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
     .frame(height: 120)
-    .background(Color(.neutrals100))
+    .background(Color(.neutrals50))
     .cornerRadius(12)
-    .addCapsuleBorder(color: Color(.black))
+    .addBorderWithCornerRadius(cornerRadius: 12, borderColor: .black)
   }
 }
 
