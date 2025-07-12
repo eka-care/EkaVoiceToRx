@@ -27,7 +27,7 @@ public struct EkaScribeLimitView: View {
       // Background with image and overlay
       Image(.ekaScribeLimit)
         .resizable()
-        .frame(height: 320)
+        .frame(height: 280)
         .frame(maxWidth: .infinity)
       
       // Main message
@@ -84,8 +84,9 @@ public struct EkaScribeLimitView: View {
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
     .frame(height: 120)
-    .background(Color(UIColor.systemGray6))
+    .background(Color(.neutrals100))
     .cornerRadius(12)
+    .addCapsuleBorder(color: Color(.black))
   }
 }
 
