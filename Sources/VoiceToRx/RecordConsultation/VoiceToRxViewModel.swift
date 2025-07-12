@@ -82,7 +82,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     s3FileUploaderService: s3FileUploader,
     voiceToRxRepo: voiceToRxRepo
   )
-  let s3FileUploader = AmazonS3FileUploaderService()
+  var s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
   private let voiceToRxRepo = VoiceToRxRepo()
@@ -394,6 +394,7 @@ extension VoiceToRxViewModel {
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
+    s3FileUploader = AmazonS3FileUploaderService()
     vadAudioChunker.reset()
     audioChunkUploader.reset()
     pcmBuffersListRaw = []
