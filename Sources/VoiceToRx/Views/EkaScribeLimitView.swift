@@ -27,8 +27,8 @@ public struct EkaScribeLimitView: View {
       // Background with image and overlay
       Image(.ekaScribeLimit)
         .resizable()
-        .scaledToFit()
         .frame(maxWidth: .infinity)
+        .scaledToFill()
       
       Spacer()
       
