@@ -65,7 +65,11 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Properties
   
-  @Published public var screenState: RecordConsultationState = .startRecording
+  @Published public var screenState: RecordConsultationState = .startRecording {
+    didSet {
+      print("Screen state is -> \(screenState)")
+    }
+  }
   /// Don't add duplicates in the set
   @Published public var filesProcessed: Set<String> = []
   @Published public var uploadedFiles: Set<String> = []
@@ -168,7 +172,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Create session
     let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
     guard let voiceModel else {
-      /// Change the screen state to listening
+      /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
         guard let self else { return }
         screenState = .deletedRecording
