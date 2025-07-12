@@ -22,7 +22,7 @@ public struct EkaScribeLimitView: View {
   // MARK: - Body
   
   public var body: some View {
-    VStack(spacing: 24) {
+    VStack() {
       
       // Background with image and overlay
       Image(.ekaScribeLimit)
@@ -70,7 +70,6 @@ public struct EkaScribeLimitView: View {
         .padding(.horizontal)
       }
     }
-    .padding(.vertical)
     .background(Color(.neutrals50))
   }
   
