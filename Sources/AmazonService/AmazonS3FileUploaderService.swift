@@ -101,6 +101,16 @@ final class AmazonS3FileUploaderService {
       expression.setValue(value, forRequestHeader: key)
     }
     
+    debugPrint(
+      "Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType), expression: \(expression)"
+    )
+    
+    // 1. Ensure file is readable
+    guard FileManager.default.isReadableFile(atPath: url.path) else {
+      print("File not readable at path: \(url.path())")
+      return
+    }
+    
     transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: expression) { task, error in
       if let error {
         debugPrint("Error is -> \(error.localizedDescription)")
