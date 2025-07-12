@@ -167,7 +167,14 @@ public final class VoiceToRxViewModel: ObservableObject {
     }
     /// Create session
     let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
-    guard let voiceModel else { return }
+    guard let voiceModel else {
+      /// Change the screen state to listening
+      await MainActor.run { [weak self] in
+        guard let self else { return }
+        screenState = .deletedRecording
+      }
+      return
+    }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
     /// Setup sessionID in view model

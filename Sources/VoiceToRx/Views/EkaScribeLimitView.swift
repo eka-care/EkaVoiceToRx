@@ -83,13 +83,14 @@ public struct EkaScribeLimitView: View {
       Spacer()
       Text(text)
         .textStyle(ekaFont: .bodyRegular, color: .black)
+        .fixedSize(horizontal: false, vertical: true)
     }
     .padding()
     .frame(maxWidth: .infinity, alignment: .leading)
     .frame(height: 120)
     .background(Color(.neutrals50))
     .cornerRadius(12)
-    .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: .black)
+    .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: .black, strokeWidth: 0.5)
   }
 }
 
