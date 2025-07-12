@@ -167,12 +167,13 @@ public final class VoiceToRxViewModel: ObservableObject {
     }
     /// Create session
     let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    guard let voiceModel else { return }
     /// Delegate to publish everywhere that a session was created
-    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel?.sessionID, params: contextParams, error: error)
+    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
     /// Setup sessionID in view model
     await MainActor.run { [weak self] in
       guard let self else { return }
-      sessionID = voiceModel?.sessionID
+      sessionID = voiceModel.sessionID
     }
     /// Change the screen state to listening
     await MainActor.run { [weak self] in
@@ -180,7 +181,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       screenState = .listening(conversationType: conversationType)
     }
     do {
-      try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
+      try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
       debugPrint("Audio Engine did not start \(error)")
     }
