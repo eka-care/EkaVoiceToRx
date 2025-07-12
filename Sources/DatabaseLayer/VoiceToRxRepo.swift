@@ -81,6 +81,10 @@ public final class VoiceToRxRepo {
         case .failure(let error):
           initVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in init voice to rx \(error.localizedDescription)")
           debugPrint("Error in init voice to rx \(error.localizedDescription)")
+          /// Delete voice
+          if let sessionID = voice.sessionID {
+            deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: sessionID))
+          }
           continuation.resume(returning: (voice, error))
         }
       }
