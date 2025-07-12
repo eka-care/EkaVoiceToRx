@@ -33,6 +33,7 @@ public struct EkaScribeLimitView: View {
       // Main message
       Text("You’re out of free Eka Scribe sessions for today!")
         .textStyle(ekaFont: .title1Bold, color: .black)
+        .fixedSize(horizontal: false, vertical: true)
       
       // Feature list
       VStack(spacing: 16) {
