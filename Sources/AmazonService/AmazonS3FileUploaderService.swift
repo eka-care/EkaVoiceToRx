@@ -111,14 +111,31 @@ final class AmazonS3FileUploaderService {
       return
     }
     
-    transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: expression) { task, error in
+    let uploadTask = transferUtility.uploadFile(
+      url,
+      bucket: bucketName,
+      key: key,
+      contentType: contentType,
+      expression: expression
+    ) { task, error in
       if let error {
-        debugPrint("Error is -> \(error.localizedDescription)")
+        debugPrint("Upload completion handler error: \(error.localizedDescription)")
         completion(.failure(error))
         return
       }
       
+      debugPrint("Upload completion handler success for key: \(key)")
       completion(.success(key))
+    }
+    
+    uploadTask.continueWith { t in
+      if let error = t.error {
+        debugPrint("Upload task creation failed: \(error.localizedDescription)")
+        completion(.failure(error)) // <-- super important
+      } else if let result = t.result {
+        debugPrint("Upload task status: \(result.status.rawValue)") // e.g. 1 == in progress
+      }
+      return nil
     }
   }
 }
