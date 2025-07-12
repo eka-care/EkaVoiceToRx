@@ -27,8 +27,9 @@ public final class VoiceToRxRepo {
     contextParams: VoiceToRxContextParams?,
     conversationMode: VoiceConversationType,
     retryCount: Int = 0
-  ) async -> VoiceConversation? {
-    guard let contextParams else { return nil }
+  ) async -> (VoiceConversation?, APIError?) {
+    var apiError: APIError?
+    guard let contextParams else { return (nil, apiError) }
     /// Add Voice to rx session in database
     let voice = await databaseManager.addVoiceConversation(
       conversationArguement: VoiceConversationArguementModel(
@@ -45,7 +46,7 @@ public final class VoiceToRxRepo {
       if retryCount < 3 {
         return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1)
       }
-      return nil
+      return (nil, apiError)
     }
     /// Call the init api
     service.initVoiceToRx(
@@ -73,11 +74,12 @@ public final class VoiceToRxRepo {
           )
         )
       case .failure(let error):
+        apiError = error
         initVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in init voice to rx \(error.localizedDescription)")
         debugPrint("Error in init voice to rx \(error.localizedDescription)")
       }
     }
-    return voice
+    return (voice, apiError)
   }
   
   // MARK: - Update

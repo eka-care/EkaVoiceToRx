@@ -166,9 +166,9 @@ public final class VoiceToRxViewModel: ObservableObject {
       clearSession()
     }
     /// Create session
-    let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
     /// Delegate to publish everywhere that a session was created
-    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel?.sessionID, params: contextParams)
+    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel?.sessionID, params: contextParams, error: error)
     /// Setup sessionID in view model
     await MainActor.run { [weak self] in
       guard let self else { return }

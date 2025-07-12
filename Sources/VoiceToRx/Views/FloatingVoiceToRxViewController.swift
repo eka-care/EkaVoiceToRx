@@ -10,7 +10,7 @@ import SwiftUI
 import Combine
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
-  func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?)
+  func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?, error: APIError?)
   func moveToDeepthoughtPage(id: UUID)
   func errorReceivingPrescription(
     id: UUID,
@@ -33,7 +33,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
   public static let shared: FloatingVoiceToRxViewController = FloatingVoiceToRxViewController()
   private var initialButtonCenter: CGPoint?
   public var viewModel: VoiceToRxViewModel?
-  public weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public weak var liveActivityDelegate: LiveActivityDelegate?
   var cancellables = Set<AnyCancellable>()
   let keyWindow = UIApplication.shared.connectedScenes
