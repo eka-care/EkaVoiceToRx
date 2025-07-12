@@ -160,7 +160,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: VoiceConversationType) async {
+  public func startRecording(conversationType: VoiceConversationType) async -> Bool {
     voiceConversationType = conversationType
     /// Setup record session
     setupRecordSession()
@@ -178,7 +178,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         screenState = .deletedRecording
         voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
-      return
+      return false
     }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
@@ -197,6 +197,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     } catch {
       debugPrint("Audio Engine did not start \(error)")
     }
+    return true
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {

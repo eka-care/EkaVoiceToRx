@@ -53,7 +53,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
     conversationType: VoiceConversationType,
     liveActivityDelegate: LiveActivityDelegate?
   ) async {
-    await viewModel.startRecording(conversationType: conversationType)
+    let success = await viewModel.startRecording(conversationType: conversationType)
+    guard success else { return }
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
