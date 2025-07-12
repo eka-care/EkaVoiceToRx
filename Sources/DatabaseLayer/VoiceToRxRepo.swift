@@ -85,7 +85,7 @@ public final class VoiceToRxRepo {
           if let sessionID = voice.sessionID {
             deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: sessionID))
           }
-          continuation.resume(returning: (voice, error))
+          continuation.resume(returning: (nil, error))
         }
       }
     }
