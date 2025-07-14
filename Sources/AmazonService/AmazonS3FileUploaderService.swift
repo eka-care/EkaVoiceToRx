@@ -82,33 +82,58 @@ final class AmazonS3FileUploaderService {
     debugPrint("Key is \(key)")
     guard let transferUtility = AWSS3TransferUtility.s3TransferUtility(forKey: RecordingS3UploadConfiguration.transferUtilKey) else {
       print("Transfer Utility could not be formed")
-      let retryDelay = DispatchTime.now() + 2.0 // 2 seconds backoff time
-      DispatchQueue.global().asyncAfter(deadline: retryDelay) { [weak self] in
-        guard let self else { return }
-        uploadFileWithRetry(url: url, key: key, sessionID: sessionID, bid: bid) {_ in}
-      }
+      let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "Transfer Utility could not be formed"])
+      completion(.failure(error))
       return
     }
-    let expression = AWSS3TransferUtilityUploadExpression()
     
-    // Add comprehensive metadata
-    let metadata = [
-      "x-amz-meta-bid": bid,
-      "x-amz-meta-txnid": sessionID,
-    ]
-    
-    for (key, value) in metadata {
-      expression.setValue(value, forRequestHeader: key)
+    // 1. Ensure file is readable
+    guard FileManager.default.isReadableFile(atPath: url.path) else {
+      print("File not readable at path: \(url.path)")
+      let error = NSError(domain: "S3Upload", code: -2, userInfo: [NSLocalizedDescriptionKey: "File not readable at path: \(url.path)"])
+      completion(.failure(error))
+      return
     }
     
-    transferUtility.uploadFile(url, bucket: bucketName, key: key, contentType: contentType, expression: expression) { task, error in
+    let expression = AWSS3TransferUtilityUploadExpression()
+    
+    // Add comprehensive metadata only if values are not nil
+    if let bid = bid {
+      expression.setValue(bid, forRequestHeader: "x-amz-meta-bid")
+    }
+    if let sessionID = sessionID {
+      expression.setValue(sessionID, forRequestHeader: "x-amz-meta-txnid")
+    }
+    
+    debugPrint(
+      "Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType), expression: \(expression)"
+    )
+    
+    let uploadTask = transferUtility.uploadFile(
+      url,
+      bucket: bucketName,
+      key: key,
+      contentType: contentType,
+      expression: expression
+    ) { task, error in
       if let error {
-        debugPrint("Error is -> \(error.localizedDescription)")
+        debugPrint("Upload completion handler error: \(error.localizedDescription)")
         completion(.failure(error))
         return
       }
       
+      debugPrint("Upload completion handler success for key: \(key)")
       completion(.success(key))
+    }
+    
+    uploadTask.continueWith { t in
+      if let error = t.error {
+        debugPrint("Upload task creation failed: \(error.localizedDescription)")
+        completion(.failure(error))
+      } else if let result = t.result {
+        debugPrint("Upload task status: \(result.status.rawValue)")
+      }
+      return nil
     }
   }
 }

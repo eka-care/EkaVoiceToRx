@@ -139,6 +139,7 @@ final class AudioChunkUploader {
     chunkInfo: ChunkInfo,
     isFileUploaded: Bool = false
   ) {
+    print("session id \(sessionId.uuidString) chunk index \(fileName) marked as \(isFileUploaded)")
     voiceToRxRepo.updateVoiceToRxChunkInfo(
       sessionID: sessionId,
       chunkInfo: VoiceChunkInfoArguementModel(
