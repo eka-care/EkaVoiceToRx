@@ -65,7 +65,11 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Properties
   
-  @Published public var screenState: RecordConsultationState = .startRecording
+  @Published public var screenState: RecordConsultationState = .startRecording {
+    didSet {
+      print("Screen state is -> \(screenState)")
+    }
+  }
   /// Don't add duplicates in the set
   @Published public var filesProcessed: Set<String> = []
   @Published public var uploadedFiles: Set<String> = []
@@ -78,7 +82,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     s3FileUploaderService: s3FileUploader,
     voiceToRxRepo: voiceToRxRepo
   )
-  let s3FileUploader = AmazonS3FileUploaderService()
+  var s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
   private let voiceToRxRepo = VoiceToRxRepo()
@@ -156,7 +160,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: VoiceConversationType) async {
+  public func startRecording(conversationType: VoiceConversationType) async -> Bool {
     voiceConversationType = conversationType
     /// Setup record session
     setupRecordSession()
@@ -166,13 +170,22 @@ public final class VoiceToRxViewModel: ObservableObject {
       clearSession()
     }
     /// Create session
-    let voiceModel = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    guard let voiceModel else {
+      /// Change the screen state to deleted recording
+      await MainActor.run { [weak self] in
+        guard let self else { return }
+        screenState = .deletedRecording
+        voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
+      }
+      return false
+    }
     /// Delegate to publish everywhere that a session was created
-    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel?.sessionID, params: contextParams)
+    voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
     /// Setup sessionID in view model
     await MainActor.run { [weak self] in
       guard let self else { return }
-      sessionID = voiceModel?.sessionID
+      sessionID = voiceModel.sessionID
     }
     /// Change the screen state to listening
     await MainActor.run { [weak self] in
@@ -180,10 +193,11 @@ public final class VoiceToRxViewModel: ObservableObject {
       screenState = .listening(conversationType: conversationType)
     }
     do {
-      try setupAudioEngineAsync(sessionID: voiceModel?.sessionID)
+      try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
       debugPrint("Audio Engine did not start \(error)")
     }
+    return true
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {
@@ -302,7 +316,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     try audioEngine.start()
   }
   
-  func deleteRecording(id: UUID) {
+  func deleteRecording(id: UUID?) {
+    guard let id else { return }
     voiceToRxRepo.deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: id))
     screenState = .deletedRecording
   }
@@ -380,6 +395,7 @@ extension VoiceToRxViewModel {
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
+    s3FileUploader = AmazonS3FileUploaderService()
     vadAudioChunker.reset()
     audioChunkUploader.reset()
     pcmBuffersListRaw = []

@@ -293,7 +293,7 @@ extension VoiceConversationDatabaseManager {
             let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> else { return }
       
       let isFileUploadStatus = chunks.compactMap { $0.isFileUploaded }
-      print("File upload status of files -> \(isFileUploadStatus)")
+      print("File upload status of files for sessionID \(sessionID) -> \(isFileUploadStatus)")
       if chunks.allSatisfy({$0.isFileUploaded}),
          let callback = self.uploadCompletionCallbacks.removeValue(forKey: sessionID) {
         watchedSessionIDs.remove(sessionID)

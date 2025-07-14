@@ -90,6 +90,37 @@ extension Networking {
     }
   }
   
+  func execute<T: Decodable>(
+    _ requestProvider: RequestProvider,
+    completion: @escaping (Result<T, APIError>, Int?) -> Void
+  ) {
+    let request = requestProvider.urlRequest
+    
+    request.responseData { response in
+      let statusCode = response.response?.statusCode
+      
+      switch response.result {
+      case .success(let data):
+        if let decoded = try? JSONDecoder().decode(T.self, from: data) {
+          completion(.success(decoded), statusCode)
+        } else if let apiError = try? JSONDecoder().decode(APIError.self, from: data) {
+          completion(.failure(apiError), statusCode)
+        } else {
+          // decoding failed and no fallback returned
+          debugPrint("Failed to decode both T and APIError")
+        }
+        
+      case .failure:
+        if let data = response.data,
+           let apiError = try? JSONDecoder().decode(APIError.self, from: data) {
+          completion(.failure(apiError), statusCode)
+        } else {
+          debugPrint("Failed to decode APIError from failed response")
+        }
+      }
+    }
+  }
+  
   public func executeProto<T: SwiftProtobuf.Message>(
     _ requestProvider: RequestProvider,
     completion: @escaping (Result<T, ProtoError>) -> Void
@@ -278,3 +309,15 @@ public enum ProtoError: LocalizedError {
   }
 }
 
+public struct APIError: Decodable, Error {
+  public let status: String?
+  public let error: APIErrorDetail?
+  public let txn_id: String?
+  public let b_id: String?
+}
+
+public struct APIErrorDetail: Decodable {
+  public let code: String?
+  public let message: String?
+  public let display_message: String?
+}

@@ -12,7 +12,7 @@ protocol VoiceToRxProvider {
   func initVoiceToRx(
     sessionID: String,
     request: VoiceToRxInitRequest,
-    _ completion: @escaping (Result<VoiceToRxInitResponse, Error>, Int?) -> Void
+    _ completion: @escaping (Result<VoiceToRxInitResponse, APIError>, Int?) -> Void
   )
   
   /// Stop
@@ -41,7 +41,7 @@ extension VoiceToRxProvider {
   func initVoiceToRx(
     sessionID: String,
     request: VoiceToRxInitRequest,
-    _ completion: @escaping (Result<VoiceToRxInitResponse, Error>, Int?) -> Void
+    _ completion: @escaping (Result<VoiceToRxInitResponse, APIError>, Int?) -> Void
   ) {
     networkService.execute(VoiceToRxEndpoint.initVoiceToRx(request: request, sessionID: sessionID), completion: completion)
   }
