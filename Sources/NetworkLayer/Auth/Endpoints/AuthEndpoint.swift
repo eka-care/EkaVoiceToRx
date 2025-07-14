@@ -16,7 +16,7 @@ extension AuthEndpoint: RequestProvider {
     switch self {
     case .tokenRefresh(let refreshRequest):
       AF.request(
-        "\(DomainConfigurations.authURL)/auth/refresh",
+        "\(DomainConfigurations.apiEkaCareUrl)/connect-auth/v1/account/refresh",
         method: .post,
         parameters: refreshRequest,
         encoder: JSONParameterEncoder.default,

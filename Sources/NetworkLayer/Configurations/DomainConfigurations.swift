@@ -8,10 +8,6 @@
 import Foundation
 
 enum DomainConfigurations {
-  public static var authURL: String {
-    return "https://auth.eka.care"
-  }
-  
   public static var cogUrl: String {
     return "https://cog.eka.care"
   }
