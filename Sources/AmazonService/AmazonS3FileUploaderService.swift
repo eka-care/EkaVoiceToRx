@@ -88,6 +88,21 @@ final class AmazonS3FileUploaderService {
       return
     }
     
+    transferUtility.getUploadTasks().continueWith { task -> Any? in
+        if let tasks = task.result {
+          if let tasks = task.result as? [AWSS3TransferUtilityUploadTask] {
+              for oldTask in tasks {
+                  debugPrint("#BB Existing upload task: \(oldTask.key), status: \(oldTask.status.rawValue)")
+                  if oldTask.status == .waiting || oldTask.status == .inProgress {
+                      debugPrint("Cancelling blocked task: \(oldTask.key)")
+                      oldTask.cancel()
+                  }
+              }
+          }
+        }
+        return nil
+    }
+    
     // 1. Ensure file is readable
     guard FileManager.default.isReadableFile(atPath: url.path) else {
       print("File not readable at path: \(url.path)")
