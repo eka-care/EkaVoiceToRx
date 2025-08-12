@@ -39,8 +39,9 @@ final class AmazonS3FileUploaderService {
     debugPrint("S3 content type Content type: \(contentType)")
     
     uploadFile(url: url, key: key, contentType: contentType, sessionID: sessionID, bid: bid) { [weak self] result in
+      print("#BB inside uploadfileWithRetry")
       guard let self else { return }
-      
+      print("#BB giving out completion")
       switch result {
       case .success(let fileUploadedKey):
         debugPrint("Successfully uploaded hence removing file at url \(url)")

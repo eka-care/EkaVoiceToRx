@@ -90,6 +90,7 @@ final class AudioChunkUploader {
     ) { [weak self] in
       guard let self else { return }
       /// Update chunk info to make uploaded true
+      print("#BB is updating the db")
       updateChunkInfoInDatabse(
         sessionId: sessionId,
         fileName: m4aUrl.lastPathComponent,
