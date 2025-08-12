@@ -127,14 +127,14 @@ final class AmazonS3FileUploaderService {
       completion(.success(key))
     }
     
-//    uploadTask.continueWith { t in
-//      if let error = t.error {
-//        debugPrint("Upload task creation failed: \(error.localizedDescription)")
-//        completion(.failure(error))
-//      } else if let result = t.result {
-//        debugPrint("Upload task status: \(result.status.rawValue)")
-//      }
-//      return nil
-//    }
+    uploadTask.continueWith { t in
+      if let error = t.error {
+        debugPrint("Upload task creation failed: \(error.localizedDescription)")
+        completion(.failure(error))
+      } else if let result = t.result {
+        debugPrint("Upload task status: \(result.status.rawValue)")
+      }
+      return nil
+    }
   }
 }
