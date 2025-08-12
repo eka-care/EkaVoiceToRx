@@ -93,10 +93,10 @@ final class AmazonS3FileUploaderService {
           if let tasks = task.result as? [AWSS3TransferUtilityUploadTask] {
               for oldTask in tasks {
                   debugPrint("#BB Existing upload task: \(oldTask.key), status: \(oldTask.status.rawValue)")
-                  if oldTask.status == .waiting || oldTask.status == .inProgress {
-                      debugPrint("Cancelling blocked task: \(oldTask.key)")
-                      oldTask.cancel()
-                  }
+                if oldTask.status == .unknown || oldTask.status == .waiting || oldTask.status == .inProgress {
+                    debugPrint("#BB Cancelling blocked task: \(oldTask.key) [status: \(oldTask.status.rawValue)]")
+                    oldTask.cancel()
+                }
               }
           }
         }
