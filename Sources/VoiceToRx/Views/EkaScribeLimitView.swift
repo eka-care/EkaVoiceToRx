@@ -10,12 +10,16 @@ import SwiftUI
 
 public struct EkaScribeLimitView: View {
   // MARK: - Properties
-  
+  public let header: String
+  public let buttonImage: String?
+  public let buttonText: String
   public let onTapCta: () -> Void
   
   // MARK: - Init
-  
-  public init(onTapCta: @escaping () -> Void) {
+  public init(header: String, buttonImage: String?, buttonText: String, onTapCta: @escaping () -> Void) {
+    self.header = header
+    self.buttonImage = buttonImage
+    self.buttonText = buttonText
     self.onTapCta = onTapCta
   }
   
@@ -33,7 +37,7 @@ public struct EkaScribeLimitView: View {
       Spacer()
       
       // Main message
-      Text("You’re out of free Eka Scribe sessions for today!")
+      Text(header)
         .textStyle(ekaFont: .title1Bold, color: .black)
         .fixedSize(horizontal: false, vertical: true)
       
@@ -57,9 +61,11 @@ public struct EkaScribeLimitView: View {
         onTapCta()
       }) {
         HStack {
-          Image(systemName: "headphones")
-            .foregroundStyle(Color.white)
-          Text("Talk to sales to upgrade plan")
+          if let buttonImage {
+            Image(systemName: buttonImage)
+              .foregroundStyle(Color.white)
+          }
+          Text(buttonText)
             .textStyle(ekaFont: .bodyBold, color: .white)
         }
         .padding()
@@ -95,8 +101,4 @@ public struct EkaScribeLimitView: View {
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
   }
-}
-
-#Preview {
-  EkaScribeLimitView(onTapCta: {})
 }

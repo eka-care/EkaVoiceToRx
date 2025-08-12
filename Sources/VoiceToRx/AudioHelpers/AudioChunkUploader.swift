@@ -63,7 +63,7 @@ final class AudioChunkUploader {
       startIndex: startingFrame,
       endIndex: endingFrame
     )
-    debugPrint("Starting frame is \(startingFrame) and Ending frame is \(endingFrame)")
+    debugPrint("#BB Starting frame is \(startingFrame) and Ending frame is \(endingFrame)")
     
     /// Create chunk
     let m4aUrl = try await audioBufferToM4AConverter.writePCMBufferToM4A(
@@ -81,6 +81,7 @@ final class AudioChunkUploader {
       chunkInfo: fileChunkInfo
     )
     
+    print("#BB upload chunk to s3 is getting called")
     /// Upload Chunk to s3
     uploadChunkToS3(
       sessionId: sessionId.uuidString,
@@ -97,6 +98,8 @@ final class AudioChunkUploader {
         isFileUploaded: true
       )
     }
+    
+    print("#BB upload chunk to s3 finished")
   }
   
   private func uploadChunkToS3(
@@ -105,6 +108,7 @@ final class AudioChunkUploader {
     lastPathComponent: String,
     completion: @escaping () -> Void
   ) {
+    print("#BB inside uploadChunkToS3 function")
     let firstFolder: String = s3FileUploaderService.dateFolderName
     let secondFolder = sessionId
     let lastPathComponent = fileURL.lastPathComponent
@@ -117,10 +121,10 @@ final class AudioChunkUploader {
     ) { result in
       switch result {
       case .success:
-        debugPrint("Successfully uploaded file")
+        debugPrint("#BB Successfully uploaded file")
         completion()
       case .failure(let error):
-        debugPrint("Failed uploading with error -> \(error.localizedDescription)")
+        debugPrint("#BB Failed uploading with error -> \(error.localizedDescription)")
       }
     }
   }

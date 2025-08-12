@@ -20,7 +20,8 @@ let package = Package(
       .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", .upToNextMajor(from: "5.0.0")),
       .package(url: "https://github.com/gfreezy/libfvad.git", .upToNextMajor(from: "1.0.0")),
       .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.10.2")),
-      .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0")
+      .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
+      .package(url: "git@github.com:eka-care/EkaUI.git", branch: "main")
     ],
     targets: [
         .target(
@@ -32,6 +33,7 @@ let package = Package(
               .product(name: "libfvad", package: "libfvad"),
               .product(name: "Alamofire", package: "Alamofire"),
               .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+              .product(name: "EkaUI", package: "EkaUI")
             ],
             resources: [
               .process("Resources")
