@@ -71,6 +71,73 @@ final class AmazonS3FileUploaderService {
     }
   }
   
+//  private func uploadFile(
+//    url: URL,
+//    key: String,
+//    contentType: String = "audio/wav",
+//    retryCount: Int = 3,
+//    sessionID: String?,
+//    bid: String?,
+//    completion: @escaping (Result<String, Error>) -> Void
+//  ) {
+//    debugPrint("Key is \(key)")
+//    guard let transferUtility = AWSS3TransferUtility.s3TransferUtility(forKey: RecordingS3UploadConfiguration.transferUtilKey) else {
+//      print("Transfer Utility could not be formed")
+//      let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "Transfer Utility could not be formed"])
+//      completion(.failure(error))
+//      return
+//    }
+//    
+//    // 1. Ensure file is readable
+//    guard FileManager.default.isReadableFile(atPath: url.path) else {
+//      print("File not readable at path: \(url.path)")
+//      let error = NSError(domain: "S3Upload", code: -2, userInfo: [NSLocalizedDescriptionKey: "File not readable at path: \(url.path)"])
+//      completion(.failure(error))
+//      return
+//    }
+//    
+//    let expression = AWSS3TransferUtilityUploadExpression()
+//    
+//    // Add comprehensive metadata only if values are not nil
+//    if let bid = bid {
+//      expression.setValue(bid, forRequestHeader: "x-amz-meta-bid")
+//    }
+//    if let sessionID = sessionID {
+//      expression.setValue(sessionID, forRequestHeader: "x-amz-meta-txnid")
+//    }
+//    
+//    debugPrint(
+//      "Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType), expression: \(expression)"
+//    )
+//    
+//    let uploadTask = transferUtility.uploadFile(
+//      url,
+//      bucket: bucketName,
+//      key: key,
+//      contentType: contentType,
+//      expression: expression
+//    ) { task, error in
+//      if let error {
+//        debugPrint("Upload completion handler error: \(error.localizedDescription)")
+//        completion(.failure(error))
+//        return
+//      }
+//      
+//      debugPrint("Upload completion handler success for key: \(key)")
+//      completion(.success(key))
+//    }
+//    
+//    uploadTask.continueWith { t in
+//      if let error = t.error {
+//        debugPrint("Upload task creation failed: \(error.localizedDescription)")
+//        completion(.failure(error))
+//      } else if let result = t.result {
+//        debugPrint("Upload task status: \(result.status.rawValue)")
+//      }
+//      return nil
+//    }
+//  }
+  
   private func uploadFile(
     url: URL,
     key: String,
@@ -110,6 +177,23 @@ final class AmazonS3FileUploaderService {
       "Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType), expression: \(expression)"
     )
     
+    // Flag to prevent multiple completion calls
+    var completionCalled = false
+    let completionQueue = DispatchQueue(label: "upload.completion", attributes: .concurrent)
+    
+    let safeCompletion: (Result<String, Error>) -> Void = { result in
+      completionQueue.async(flags: .barrier) {
+        guard !completionCalled else {
+          debugPrint("Completion already called for key: \(key)")
+          return
+        }
+        completionCalled = true
+        DispatchQueue.main.async {
+          completion(result)
+        }
+      }
+    }
+    
     let uploadTask = transferUtility.uploadFile(
       url,
       bucket: bucketName,
@@ -119,20 +203,21 @@ final class AmazonS3FileUploaderService {
     ) { task, error in
       if let error {
         debugPrint("Upload completion handler error: \(error.localizedDescription)")
-        completion(.failure(error))
+        safeCompletion(.failure(error))
         return
       }
       
       debugPrint("Upload completion handler success for key: \(key)")
-      completion(.success(key))
+      safeCompletion(.success(key))
     }
     
     uploadTask.continueWith { t in
       if let error = t.error {
         debugPrint("Upload task creation failed: \(error.localizedDescription)")
-        completion(.failure(error))
+        safeCompletion(.failure(error))
       } else if let result = t.result {
         debugPrint("Upload task status: \(result.status.rawValue)")
+        // Don't call completion here for success case - let the upload completion handler do it
       }
       return nil
     }
