@@ -147,20 +147,33 @@ final class AmazonS3FileUploaderService {
     bid: String?,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
-    debugPrint("Key is \(key)")
+    debugPrint("v2rx🔵 ENTER uploadFile for key: \(key)")
+    debugPrint("v2rx🔵 File URL: \(url)")
+    debugPrint("v2rx🔵 Thread: \(Thread.current)")
+    
     guard let transferUtility = AWSS3TransferUtility.s3TransferUtility(forKey: RecordingS3UploadConfiguration.transferUtilKey) else {
-      print("Transfer Utility could not be formed")
+      debugPrint("v2rx❌ Transfer Utility could not be formed")
       let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "Transfer Utility could not be formed"])
       completion(.failure(error))
       return
     }
+    debugPrint("v2rx✅ Transfer Utility created successfully")
     
     // 1. Ensure file is readable
     guard FileManager.default.isReadableFile(atPath: url.path) else {
-      print("File not readable at path: \(url.path)")
+      debugPrint("v2rx❌ File not readable at path: \(url.path)")
       let error = NSError(domain: "S3Upload", code: -2, userInfo: [NSLocalizedDescriptionKey: "File not readable at path: \(url.path)"])
       completion(.failure(error))
       return
+    }
+    debugPrint("v2rx✅ File is readable")
+    
+    // Check file size
+    do {
+      let fileSize = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64 ?? 0
+      debugPrint("v2rx📊 File size: \(fileSize) bytes")
+    } catch {
+      debugPrint("v2rx⚠️ Could not get file size: \(error)")
     }
     
     let expression = AWSS3TransferUtilityUploadExpression()
@@ -173,26 +186,8 @@ final class AmazonS3FileUploaderService {
       expression.setValue(sessionID, forRequestHeader: "x-amz-meta-txnid")
     }
     
-    debugPrint(
-      "Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType), expression: \(expression)"
-    )
-    
-    // Flag to prevent multiple completion calls
-    var completionCalled = false
-    let completionQueue = DispatchQueue(label: "upload.completion", attributes: .concurrent)
-    
-    let safeCompletion: (Result<String, Error>) -> Void = { result in
-      completionQueue.async(flags: .barrier) {
-        guard !completionCalled else {
-          debugPrint("Completion already called for key: \(key)")
-          return
-        }
-        completionCalled = true
-        DispatchQueue.main.async {
-          completion(result)
-        }
-      }
-    }
+    debugPrint("v2rx🔵 About to call transferUtility.uploadFile")
+    debugPrint("v2rx🔵 Bucket: \(bucketName), Key: \(key), ContentType: \(contentType)")
     
     let uploadTask = transferUtility.uploadFile(
       url,
@@ -201,25 +196,39 @@ final class AmazonS3FileUploaderService {
       contentType: contentType,
       expression: expression
     ) { task, error in
+      debugPrint("v2rx🟡 UPLOAD COMPLETION HANDLER CALLED")
+      debugPrint("v2rx🟡 Thread: \(Thread.current)")
+      debugPrint("v2rx🟡 Task: \(String(describing: task))")
+      debugPrint("v2rx🟡 Error: \(String(describing: error))")
+      
       if let error {
-        debugPrint("Upload completion handler error: \(error.localizedDescription)")
-        safeCompletion(.failure(error))
+        debugPrint("v2rx❌ Upload completion handler error: \(error.localizedDescription)")
+        completion(.failure(error))
         return
       }
       
-      debugPrint("Upload completion handler success for key: \(key)")
-      safeCompletion(.success(key))
+      debugPrint("v2rx✅ Upload completion handler success for key: \(key)")
+      completion(.success(key))
     }
     
+    debugPrint("v2rx🔵 Upload task created: \(String(describing: uploadTask))")
+    
     uploadTask.continueWith { t in
+      debugPrint("v2rx🟡 CONTINUE WITH BLOCK CALLED")
+      debugPrint("v2rx🟡 Thread: \(Thread.current)")
+      debugPrint("v2rx🟡 Task error: \(String(describing: t.error))")
+      debugPrint("v2rx🟡 Task result: \(String(describing: t.result))")
+      
       if let error = t.error {
-        debugPrint("Upload task creation failed: \(error.localizedDescription)")
-        safeCompletion(.failure(error))
+        debugPrint("v2rx❌ Upload task creation failed: \(error.localizedDescription)")
+        completion(.failure(error))
       } else if let result = t.result {
-        debugPrint("Upload task status: \(result.status.rawValue)")
-        // Don't call completion here for success case - let the upload completion handler do it
+        debugPrint("v2rx✅ Upload task status: \(result.status.rawValue)")
+        debugPrint("v2rx✅ Upload task: \(result)")
       }
       return nil
     }
+    
+    debugPrint("v2rx🔵 EXIT uploadFile for key: \(key)")
   }
 }
