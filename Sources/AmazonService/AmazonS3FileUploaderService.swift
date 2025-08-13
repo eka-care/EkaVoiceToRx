@@ -38,7 +38,14 @@ final class AmazonS3FileUploaderService {
     }
     debugPrint("S3 content type Content type: \(contentType)")
     
-    uploadFile(url: url, key: key, contentType: contentType, sessionID: sessionID, bid: bid) { [weak self] result in
+    let delay = key.contains("full_audio") ? 1.0 : 0.0
+    
+    DispatchQueue.global().asyncAfter(deadline: .now() + delay) { [weak self] in
+      guard let self = self else {
+        completion(.failure(NSError(domain: "S3Upload", code: -999, userInfo: [NSLocalizedDescriptionKey: "Service deallocated"])))
+        return
+      }
+      self.uploadFile(url: url, key: key, contentType: contentType, sessionID: sessionID, bid: bid) { [weak self] result in
       print("#BB inside uploadfileWithRetry")
       guard let self else { return }
       print("#BB giving out completion")
@@ -69,6 +76,7 @@ final class AmazonS3FileUploaderService {
         }
       }
     }
+  }
   }
   
 //  private func uploadFile(
