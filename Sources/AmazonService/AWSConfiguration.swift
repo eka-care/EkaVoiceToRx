@@ -28,12 +28,17 @@ enum RecordingS3UploadConfiguration {
 final class AWSConfiguration {
   static let shared = AWSConfiguration()
   private init() {}
+  
   var awsClient: AWSServiceConfiguration?
+  private(set) var activeTransferKey: String?
   
   func configureAWSS3(credentials: Credentials) {
     guard let accessKeyID = credentials.accessKeyID,
           let secretKey = credentials.secretKey,
-          let sessionToken = credentials.sessionToken else { return }
+          let sessionToken = credentials.sessionToken else {
+      print("❌ Missing AWS credentials")
+      return
+    }
     
     let sessionCredentials = AWSBasicSessionCredentialsProvider(
       accessKey: accessKeyID,
@@ -47,19 +52,32 @@ final class AWSConfiguration {
     )
     awsClient = clientConfiguration
     
-    // Register transfer utility configuration
     let transferUtilityConfiguration = AWSS3TransferUtilityConfiguration()
     transferUtilityConfiguration.isAccelerateModeEnabled = false
+    
+    // Generate a NEW key each time credentials change
+    let newKey = "S3TransferUtility-\(UUID().uuidString)"
+    activeTransferKey = newKey
     
     AWSS3TransferUtility.register(
       with: clientConfiguration!,
       transferUtilityConfiguration: transferUtilityConfiguration,
-      forKey: RecordingS3UploadConfiguration.transferUtilKey
+      forKey: newKey
     )
     
     AWSS3.register(
       with: clientConfiguration!,
-      forKey: RecordingS3UploadConfiguration.s3ClientKey
+      forKey: "s3Client-\(UUID().uuidString)"
     )
+    
+    print("✅ Registered AWS S3 TransferUtility with key: \(newKey)")
+  }
+  
+  func getTransferUtility() -> AWSS3TransferUtility? {
+    guard let key = activeTransferKey else {
+      print("❌ No active TransferUtility key set")
+      return nil
+    }
+    return AWSS3TransferUtility.s3TransferUtility(forKey: key)
   }
 }
