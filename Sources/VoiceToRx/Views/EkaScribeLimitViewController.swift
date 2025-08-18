@@ -15,7 +15,7 @@ public class EkaScribeLimitViewController: UIViewController {
   // MARK: - Subviews
   
   private lazy var hostingController: UIHostingController<EkaScribeLimitView> = {
-    let swiftUIView = EkaScribeLimitView(onTapCta: onTapCta)
+    let swiftUIView = EkaScribeLimitView(header: "You're out of free Eka Scribe sessions for today!", buttonImage: "headphones", buttonText: "Talk to sales to upgrade plan", onTapCta: onTapCta)
     let controller = UIHostingController(rootView: swiftUIView)
     controller.view.backgroundColor = .systemBackground // optional
     return controller

@@ -9,8 +9,6 @@ import AWSS3
 
 final class AmazonS3FileUploaderService {
   
-  // MARK: - Properties
-  
   let domainName = RecordingS3UploadConfiguration.domain
   let bucketName = RecordingS3UploadConfiguration.bucketName
   let dateFolderName = RecordingS3UploadConfiguration.getDateFolderName()
@@ -23,7 +21,6 @@ final class AmazonS3FileUploaderService {
     bid: String?,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
-    // Make content type
     var contentType = ""
     let lastPathComponent = url.lastPathComponent
     debugPrint("S3 content type Last path component: \(lastPathComponent)")
@@ -33,25 +30,22 @@ final class AmazonS3FileUploaderService {
     } else if lastPathComponent.hasSuffix(".json") {
       contentType = "application/json"
     } else {
-      // Handle other file types or set a default content type
       contentType = "application/json"
     }
     debugPrint("S3 content type Content type: \(contentType)")
     
     uploadFile(url: url, key: key, contentType: contentType, sessionID: sessionID, bid: bid) { [weak self] result in
       guard let self else { return }
-      
       switch result {
       case .success(let fileUploadedKey):
         debugPrint("Successfully uploaded hence removing file at url \(url)")
-        if url.lastPathComponent != "full_audio.m4a_" { /// If its full audio don't remove
-          /// Remove file once uploaded
+        if url.lastPathComponent != "full_audio.m4a_" {
           FileHelper.removeFile(at: url)
         }
         completion(.success(fileUploadedKey))
       case .failure(let error):
         if retryCount > 0 {
-          let retryDelay = DispatchTime.now() + 2.0 // 2 seconds backoff time
+          let retryDelay = DispatchTime.now() + 2.0
           DispatchQueue.global().asyncAfter(deadline: retryDelay) {
             debugPrint("Retrying upload (\(retryCount) retries left)...")
             self.uploadFileWithRetry(
@@ -80,16 +74,15 @@ final class AmazonS3FileUploaderService {
     completion: @escaping (Result<String, Error>) -> Void
   ) {
     debugPrint("Key is \(key)")
-    guard let transferUtility = AWSS3TransferUtility.s3TransferUtility(forKey: RecordingS3UploadConfiguration.transferUtilKey) else {
-      print("Transfer Utility could not be formed")
-      let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "Transfer Utility could not be formed"])
+    
+    // ✅ Use dynamic active key instead of static key
+    guard let transferUtility = AWSConfiguration.shared.getTransferUtility() else {
+      let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "No active AWS Transfer Utility"])
       completion(.failure(error))
       return
     }
     
-    // 1. Ensure file is readable
     guard FileManager.default.isReadableFile(atPath: url.path) else {
-      print("File not readable at path: \(url.path)")
       let error = NSError(domain: "S3Upload", code: -2, userInfo: [NSLocalizedDescriptionKey: "File not readable at path: \(url.path)"])
       completion(.failure(error))
       return
@@ -97,7 +90,6 @@ final class AmazonS3FileUploaderService {
     
     let expression = AWSS3TransferUtilityUploadExpression()
     
-    // Add comprehensive metadata only if values are not nil
     if let bid = bid {
       expression.setValue(bid, forRequestHeader: "x-amz-meta-bid")
     }
@@ -105,9 +97,7 @@ final class AmazonS3FileUploaderService {
       expression.setValue(sessionID, forRequestHeader: "x-amz-meta-txnid")
     }
     
-    debugPrint(
-      "Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType), expression: \(expression)"
-    )
+    debugPrint("Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType)")
     
     let uploadTask = transferUtility.uploadFile(
       url,
@@ -121,7 +111,6 @@ final class AmazonS3FileUploaderService {
         completion(.failure(error))
         return
       }
-      
       debugPrint("Upload completion handler success for key: \(key)")
       completion(.success(key))
     }
