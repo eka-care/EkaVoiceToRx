@@ -50,10 +50,12 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   public func showFloatingButton(
     viewModel: VoiceToRxViewModel,
-    conversationType: VoiceConversationType,
+    conversationType: String,
+    inputLanguage: [String],
+    templateId: [String],
     liveActivityDelegate: LiveActivityDelegate?
   ) async {
-    let success = await viewModel.startRecording(conversationType: conversationType)
+    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
     guard success else { return }
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
