@@ -39,8 +39,8 @@ public enum RecordConsultationState: Equatable {
 }
 
 public enum VoiceConversationType: String {
-  case conversation = "consultation"
-  case dictation
+  case conversation = "converstaion"
+  case dictation = "dictation"
 }
 
 final class RecordingConfiguration {
@@ -160,8 +160,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: VoiceConversationType) async -> Bool {
-    voiceConversationType = conversationType
+  public func startRecording(conversationType: String, inputLanguage: [String], templateId: [String]) async -> Bool {
+    voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
     setupRecordSession()
     /// Clear any previous session data if present
@@ -170,7 +170,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       clearSession()
     }
     /// Create session
-    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType)
+    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templateId: templateId)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
@@ -190,7 +190,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Change the screen state to listening
     await MainActor.run { [weak self] in
       guard let self else { return }
-      screenState = .listening(conversationType: conversationType)
+      screenState = .listening(conversationType: VoiceConversationType(rawValue: conversationType) ?? .dictation)
     }
     do {
       try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
