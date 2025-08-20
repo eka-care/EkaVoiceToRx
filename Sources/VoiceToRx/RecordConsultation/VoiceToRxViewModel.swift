@@ -39,7 +39,7 @@ public enum RecordConsultationState: Equatable {
 }
 
 public enum VoiceConversationType: String {
-  case conversation = "converstaion"
+  case conversation = "conversation"
   case dictation = "dictation"
 }
 
