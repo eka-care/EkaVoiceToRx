@@ -12,7 +12,6 @@ public enum DocAssistV2RxState {
   case draft
   case saved
   case retry
-  case processing
   case deleted
 }
 
@@ -30,11 +29,6 @@ public final class V2RxDocAssistHelper {
               VoiceConversationAPIStage.getEnum(from: stage) == .result(success: false) ||
                 VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) {
       return .retry
-    }  else if let chunks = voiceConversation.toVoiceChunkInfo as? Set<VoiceChunkInfo>,
-               !chunks.isEmpty,
-               chunks.allSatisfy({ $0.isFileUploaded }),
-               voiceConversation.stage == nil {
-      return .processing
     } else {
       return .loading
     }
