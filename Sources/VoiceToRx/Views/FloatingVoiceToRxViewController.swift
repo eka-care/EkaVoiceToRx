@@ -151,6 +151,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         if let sessionID = viewModel?.sessionID {
           viewModel?.deleteRecording(id: sessionID)
         }
+        viewModel?.screenState = .deletedRecording
         hideFloatingButton()
       }
     ))
