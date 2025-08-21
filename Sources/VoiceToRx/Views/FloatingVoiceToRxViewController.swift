@@ -128,6 +128,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
           await viewModel?.stopRecording()
           await liveActivityDelegate?.endLiveActivity()
         }
+        viewModel?.screenState = .processing
       }
     ))
     
