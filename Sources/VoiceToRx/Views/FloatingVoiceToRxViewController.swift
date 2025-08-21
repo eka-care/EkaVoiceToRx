@@ -70,7 +70,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
     Task {
       await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
     }
-    viewModel.screenState = .startRecording
   }
   
   public func hideFloatingButton() {
@@ -129,7 +128,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
           await viewModel?.stopRecording()
           await liveActivityDelegate?.endLiveActivity()
         }
-        viewModel?.screenState = .processing
       }
     ))
     
