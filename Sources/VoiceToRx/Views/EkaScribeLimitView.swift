@@ -27,44 +27,42 @@ public struct EkaScribeLimitView: View {
   public var body: some View {
     Group {
       if UIDevice.current.userInterfaceIdiom == .pad {
-        ScrollView {
-          content
-        }
+        cardContent
+          .padding()
+          .frame(maxWidth: 500, maxHeight: .infinity)
+          .background(Color(.neutrals100))
       } else {
-        content
+        cardContent
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(Color(.neutrals50))
       }
     }
   }
   
-  private var content: some View {
-    VStack {
-      // Background with image and overlay
+  // MARK: - Card Content
+  private var cardContent: some View {
+    VStack(spacing: 24) {
+      // Top Illustration
       Image(.ekaScribeLimit)
         .resizable()
-        .frame(maxWidth: .infinity)
-        .scaledToFill()
-      
-      Spacer()
+        .scaledToFit()
+        .frame(height: 180)
       
       // Main message
       Text(header)
         .textStyle(ekaFont: .title1Bold, color: .black)
-        .fixedSize(horizontal: false, vertical: true)
+        .multilineTextAlignment(.center)
+        .padding(.horizontal)
       
-      // Feature list
-      VStack(spacing: 16) {
-        HStack(spacing: 16) {
-          featureCard(icon: "doc.text.magnifyingglass", text: "Get medically relevant data from voice")
-          featureCard(icon: "doc.text", text: "Get medical notes transcribed easily")
-        }
-        HStack(spacing: 16) {
-          featureCard(icon: "lock.shield", text: "We never store your voice recordings")
-          featureCard(icon: "square.and.arrow.up", text: "Share the output with patients easily")
-        }
+      // Feature Grid
+      LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+        featureCard(icon: "doc.text.magnifyingglass", text: "Get medically relevant data from voice")
+        featureCard(icon: "doc.text", text: "Get medical notes transcribed easily")
+        featureCard(icon: "lock.shield", text: "We never store your voice recordings")
+        featureCard(icon: "square.and.arrow.up", text: "Share the output with patients easily")
       }
       .padding(.horizontal)
       
-      Spacer()
       // CTA Button
       Button(action: {
         onTapCta()
@@ -77,17 +75,20 @@ public struct EkaScribeLimitView: View {
           Text(buttonText)
             .textStyle(ekaFont: .bodyBold, color: .white)
         }
-        .padding()
         .frame(maxWidth: .infinity)
+        .padding()
         .background(Color(.primary500))
-        .foregroundColor(.white)
         .cornerRadius(14)
-        .padding(.horizontal)
       }
+      .padding(.horizontal)
     }
+    .padding(.vertical, 24)
     .background(Color(.neutrals50))
+    .cornerRadius(24)
+    .shadow(color: .black.opacity(0.1), radius: 12, x: 0, y: 4)
   }
   
+  // MARK: - Feature Card
   @ViewBuilder
   func featureCard(icon: String, text: String) -> some View {
     VStack(alignment: .leading, spacing: 8) {
@@ -104,10 +105,13 @@ public struct EkaScribeLimitView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
     .padding()
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .frame(height: 120)
+    .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
     .background(Color(.neutrals50))
     .cornerRadius(12)
-    .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
+    .addBorderWithGivenCornerRadius(
+      cornerRadius: 12,
+      borderColor: UIColor(resource: .neutrals200),
+      strokeWidth: 0.5
+    )
   }
 }
