@@ -26,7 +26,7 @@ public struct EkaScribeLimitView: View {
   // MARK: - Body
   
   public var body: some View{
-      VStack {
+    VStack(spacing: 16) {
         Image(.ekaScribeLimitPhone)
           .resizable()
           .scaledToFit()
@@ -38,11 +38,11 @@ public struct EkaScribeLimitView: View {
         // Feature list
         VStack(spacing: 16) {
           HStack(spacing: 16) {
-            featureCard(icon: "doc.text.magnifyingglass", text: "Get medically relevant data from voice")
+            featureCard(icon: "doc.text.magnifyingglass", text: "Get medical data from voice")
             featureCard(icon: "doc.text", text: "Get medical notes transcribed easily")
           }
           HStack(spacing: 16) {
-            featureCard(icon: "lock.shield", text: "We never store your voice recordings")
+            featureCard(icon: "lock.shield", text: "We never store your recordings")
             featureCard(icon: "square.and.arrow.up", text: "Share the output with patients easily")
           }
         }
@@ -91,7 +91,7 @@ public struct EkaScribeLimitView: View {
     }
     .padding()
     .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 200 : .infinity, alignment: .leading)
-    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 150)
+    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 120)
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
