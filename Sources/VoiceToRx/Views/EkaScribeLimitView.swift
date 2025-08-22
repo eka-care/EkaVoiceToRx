@@ -94,7 +94,7 @@ public struct EkaScribeLimitView: View {
       Image(.ekaScribeLimit)
         .resizable()
         .scaledToFit()
-        .frame(width: 250)
+        .frame(width: .infinity)
       
       Spacer()
       
@@ -135,7 +135,7 @@ public struct EkaScribeLimitView: View {
         .cornerRadius(14)
         .padding(.horizontal)
       }
-      .padding(.bottom, 5)
+      .padding(.bottom, 16)
     }
     .background(Color(.neutrals50))
   }
@@ -156,8 +156,8 @@ public struct EkaScribeLimitView: View {
         .fixedSize(horizontal: false, vertical: true)
     }
     .padding()
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .frame(height: 120)
+    .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 200 : .infinity, alignment: .leading)
+    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 150 : 200)
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
