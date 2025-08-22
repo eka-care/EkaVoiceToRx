@@ -90,6 +90,8 @@ public struct EkaScribeLimitView: View {
   
   var ipadView: some View {
     VStack {
+      Spacer()
+      
       Text(header)
         .textStyle(ekaFont: .title1Bold, color: .black)
         .fixedSize(horizontal: false, vertical: true)
@@ -128,7 +130,9 @@ public struct EkaScribeLimitView: View {
         .cornerRadius(14)
         .padding(.horizontal)
       }
+      .padding(.top, 5)
     }
+    .background(Color(.neutrals50))
   }
   
   @ViewBuilder
