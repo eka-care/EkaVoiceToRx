@@ -35,63 +35,65 @@ public struct EkaScribeLimitView: View {
 
   // MARK: - iPad Layout
   private var iPadLayout: some View {
-    VStack {
-      VStack(spacing: 24) {
-        // Gradient + Illustration
-        ZStack {
-          LinearGradient(
-            colors: [Color.purple.opacity(0.3), .white],
-            startPoint: .top,
-            endPoint: .bottom
-          )
-          .frame(height: 220)
-          .clipShape(RoundedRectangle(cornerRadius: 24))
-          
-          Image(.ekaScribeLimit)
-            .resizable()
-            .scaledToFit()
-            .frame(height: 140)
-        }
+    VStack(spacing: 0) {
+      // Gradient top section
+      ZStack {
+        LinearGradient(
+          colors: [Color.purple.opacity(0.4), .white],
+          startPoint: .top,
+          endPoint: .bottom
+        )
+        .frame(height: 240)
         
-        // Title
-        Text(header)
-          .font(.system(size: 28, weight: .bold))
-          .multilineTextAlignment(.center)
-          .padding(.horizontal, 32)
-        
-        // Features grid
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
-          featureCard(icon: "doc.text.magnifyingglass", text: "Get medically relevant data from voice")
-          featureCard(icon: "doc.text", text: "Get medical notes transcribed easily")
-          featureCard(icon: "lock.shield", text: "We never store your voice recordings")
-          featureCard(icon: "square.and.arrow.up", text: "Share the output with patients easily")
-        }
-        .padding(.horizontal, 40)
-        
-        // CTA button
-        Button(action: onTapCta) {
-          HStack {
-            if let buttonImage {
-              Image(systemName: buttonImage)
-            }
-            Text(buttonText)
-              .font(.headline)
-          }
-          .frame(maxWidth: .infinity)
-          .padding()
-          .background(Color(.primary500))
-          .foregroundColor(.white)
-          .cornerRadius(14)
-        }
-        .padding(.horizontal, 40)
-        .padding(.top, 8)
-        
+        Image(.ekaScribeLimit)
+          .resizable()
+          .scaledToFit()
+          .frame(height: 140)
       }
-      .padding(.vertical, 32)
-      .background(Color(.neutrals50))
-      .cornerRadius(24)
-      .shadow(color: .black.opacity(0.1), radius: 12, x: 0, y: 4)
-      .frame(maxWidth: 600) // Card width like screenshot
+      
+      ScrollView {
+        VStack(spacing: 24) {
+          // Title
+          Text(header)
+            .font(.system(size: 28, weight: .bold))
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 32)
+          
+          // Features grid
+          LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 20) {
+            featureCard(icon: "doc.text.magnifyingglass", text: "Get medically relevant data from voice")
+            featureCard(icon: "doc.text", text: "Get medical notes transcribed easily")
+            featureCard(icon: "lock.shield", text: "We never store your voice recordings")
+            featureCard(icon: "square.and.arrow.up", text: "Share the output with patients easily")
+          }
+          .padding(.horizontal, 40)
+          
+          // CTA button
+          Button(action: onTapCta) {
+            HStack {
+              if let buttonImage {
+                Image(systemName: buttonImage)
+              }
+              Text(buttonText)
+                .font(.headline)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color(.primary500))
+            .foregroundColor(.white)
+            .cornerRadius(14)
+          }
+          .padding(.horizontal, 40)
+          .padding(.top, 8)
+          .padding(.bottom, 24) // safe space at bottom
+        }
+        .padding(.vertical, 32)
+        .background(Color(.neutrals50))
+        .cornerRadius(24)
+        .shadow(color: .black.opacity(0.1), radius: 12, x: 0, y: 4)
+        .frame(maxWidth: 600)
+        .offset(y: -40) // overlap effect
+      }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color(.neutrals100))
