@@ -82,26 +82,19 @@ extension NetworkRequestInterceptor {
     authService.refreshToken(refreshRequest: refreshRequest) { result, statusCode in
       switch result {
       case .success(let response):
-        // Error in response
-        if let success = response.success, !success {
-          debugPrint("Error refreshing token")
+        guard let sess = response.sess,
+              let refresh = response.refresh else {
           completion(false, nil)
           return
         }
+        /// Set the token in the shared instance
+        AuthTokenHolder.shared.authToken = sess
+        AuthTokenHolder.shared.refreshToken = refresh
+        completion(true, sess)
         
-        if let data = response.data,
-           let newToken = data.sess,
-           let newRefreshToken = data.refresh {
-          /// Set the token in the shared instance
-          AuthTokenHolder.shared.authToken = newToken
-          AuthTokenHolder.shared.refreshToken = newRefreshToken
-          completion(true, newToken)
-          debugPrint("✅ Refreshed access token - \(newToken)")
-        }
         // Failure
-      case .failure(let error):
+      case .failure( _ ):
         completion(false, nil)
-        debugPrint("Error refreshing token \(error)")
       }
     }
   }

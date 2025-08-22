@@ -26,7 +26,9 @@ public final class VoiceToRxRepo {
   public func createVoiceToRxSession(
     contextParams: VoiceToRxContextParams?,
     conversationMode: VoiceConversationType,
-    retryCount: Int = 0
+    retryCount: Int = 0,
+    intpuLanguage: [String],
+    templateId: [String]
   ) async -> (VoiceConversation?, APIError?) {
     var apiError: APIError?
     guard let contextParams else { return (nil, apiError) }
@@ -44,7 +46,7 @@ public final class VoiceToRxRepo {
         message: "No model could be created"
       )
       if retryCount < 3 {
-        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1)
+        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templateId: templateId)
       }
       return (nil, apiError)
     }
@@ -54,10 +56,11 @@ public final class VoiceToRxRepo {
         request: VoiceToRxInitRequest(
           additionalData: contextParams,
           mode: conversationMode.rawValue,
-          inputLanguage: ["en-IN", "hi"],
+          inputLanguage: intpuLanguage,
           s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
           outputFormatTemplate: [
-            OutputFormatTemplate(templateID: "eka_emr_to_fhir_template")
+            OutputFormatTemplate(templateID: templateId.first ?? ""),
+            OutputFormatTemplate(templateID: templateId.last ?? "")
           ],
           transfer: "vaded"
         )

@@ -8,6 +8,7 @@
 import UIKit
 import SwiftUI
 import Combine
+import AVFoundation
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
   func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?, error: APIError?)
@@ -50,10 +51,12 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   public func showFloatingButton(
     viewModel: VoiceToRxViewModel,
-    conversationType: VoiceConversationType,
+    conversationType: String,
+    inputLanguage: [String],
+    templateId: [String],
     liveActivityDelegate: LiveActivityDelegate?
-  ) async {
-    let success = await viewModel.startRecording(conversationType: conversationType)
+  ) async {    
+    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
     guard success else { return }
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
@@ -149,6 +152,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         if let sessionID = viewModel?.sessionID {
           viewModel?.deleteRecording(id: sessionID)
         }
+        viewModel?.screenState = .deletedRecording
         hideFloatingButton()
       }
     ))
