@@ -26,13 +26,6 @@ public struct EkaScribeLimitView: View {
   // MARK: - Body
   
   public var body: some View{
-    ZStack {
-      Image(.ekaScribeBg)
-        .resizable()
-        .scaledToFit()
-        .frame(maxWidth: .infinity)
-        .frame(height: 80)
-      
       VStack {
         Image(.ekaScribeLimitPhone)
           .resizable()
@@ -81,7 +74,6 @@ public struct EkaScribeLimitView: View {
         .padding(.bottom, UIDevice.current.userInterfaceIdiom == .phone ? 0 : 16)
       }
       .background(Color(.neutrals50))
-    }
   }
   
   @ViewBuilder
@@ -101,7 +93,7 @@ public struct EkaScribeLimitView: View {
     }
     .padding()
     .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 200 : .infinity, alignment: .leading)
-    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 100)
+    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 110)
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
