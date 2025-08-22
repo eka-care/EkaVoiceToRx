@@ -58,7 +58,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
   ) async {
     
     if isAudioInUse() {
-       await MainActor.run {
+       await MainActor.run { [weak self] in
+         guard let self else { return }
          let alert = UIAlertController(
            title: "Microphone in Use",
            message: "Audio is currently being used by another app (e.g. call or video). Please try again once it’s free.",
