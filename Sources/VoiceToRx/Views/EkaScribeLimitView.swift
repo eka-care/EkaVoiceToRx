@@ -27,10 +27,10 @@ public struct EkaScribeLimitView: View {
   
   public var body: some View{
     Group {
-      if UIDevice.current.userInterfaceIdiom == .pad {
-        ipadView
-      } else {
+      if UIDevice.current.userInterfaceIdiom == .phone {
         iphoneView
+      } else {
+        ipadView
       }
     }
   }
