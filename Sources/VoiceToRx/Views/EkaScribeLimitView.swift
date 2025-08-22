@@ -30,8 +30,6 @@ public struct EkaScribeLimitView: View {
         Image(.ekaScribeLimitPhone)
           .resizable()
           .scaledToFit()
-          
-        Spacer()
         // Main message
         Text(header)
           .textStyle(ekaFont: .title1Bold, color: .black)
@@ -93,7 +91,7 @@ public struct EkaScribeLimitView: View {
     }
     .padding()
     .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 200 : .infinity, alignment: .leading)
-    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 110)
+    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 150)
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
