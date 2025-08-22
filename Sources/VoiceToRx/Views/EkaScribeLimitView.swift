@@ -26,8 +26,7 @@ public struct EkaScribeLimitView: View {
   // MARK: - Body
   
   public var body: some View {
-    VStack() {
-      
+    VStack {
       // Background with image and overlay
       Image(.ekaScribeLimit)
         .resizable()
@@ -55,7 +54,6 @@ public struct EkaScribeLimitView: View {
       .padding(.horizontal)
       
       Spacer()
-      
       // CTA Button
       Button(action: {
         onTapCta()
@@ -76,7 +74,7 @@ public struct EkaScribeLimitView: View {
         .padding(.horizontal)
       }
     }
-    .background(Color(.neutrals50))
+    .modifier(DeviceAdaptiveModifier())
   }
   
   @ViewBuilder
@@ -100,5 +98,21 @@ public struct EkaScribeLimitView: View {
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
+  }
+}
+
+struct DeviceAdaptiveModifier: ViewModifier {
+  func body(content: Content) -> some View {
+    if UIDevice.current.userInterfaceIdiom == .pad {
+      content
+        .frame(maxWidth: 500)
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(.neutrals50))
+    } else {
+      content
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(.neutrals50))
+    }
   }
 }
