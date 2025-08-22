@@ -31,6 +31,7 @@ public struct EkaScribeLimitView: View {
         .resizable()
         .scaledToFit()
         .frame(maxWidth: .infinity)
+        .frame(height: 80)
       
       VStack {
         Image(.ekaScribeLimitPhone)
@@ -100,7 +101,7 @@ public struct EkaScribeLimitView: View {
     }
     .padding()
     .frame(maxWidth: UIDevice.current.userInterfaceIdiom == .pad ? 200 : .infinity, alignment: .leading)
-    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 200)
+    .frame(height: UIDevice.current.userInterfaceIdiom == .pad ? 100 : 100)
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
