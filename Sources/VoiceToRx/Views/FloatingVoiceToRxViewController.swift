@@ -55,23 +55,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     inputLanguage: [String],
     templateId: [String],
     liveActivityDelegate: LiveActivityDelegate?
-  ) async {
-    
-    if isAudioInUse() {
-       await MainActor.run { [weak self] in
-         guard let self else { return }
-         let alert = UIAlertController(
-           title: "Microphone in Use",
-           message: "Audio is currently being used by another app (e.g. call or video). Please try again once it’s free.",
-           preferredStyle: .alert
-         )
-         alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-         self.present(alert, animated: true)
-         viewModel.screenState = .deletedRecording
-       }
-       return
-     }
-    
+  ) async {    
     let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
     guard success else { return }
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
@@ -257,11 +241,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
     let xDistance = point1.x - point2.x
     let yDistance = point1.y - point2.y
     return sqrt(xDistance * xDistance + yDistance * yDistance)
-  }
-  
-  private func isAudioInUse() -> Bool {
-    let audioSession = AVAudioSession.sharedInstance()
-    return audioSession.isOtherAudioPlaying || audioSession.secondaryAudioShouldBeSilencedHint
   }
   
   public override func viewDidLayoutSubviews() {
