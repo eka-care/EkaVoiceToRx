@@ -90,6 +90,12 @@ public struct EkaScribeLimitView: View {
   
   var ipadView: some View {
     VStack {
+      
+      Image(.ekaScribeLimit)
+        .resizable()
+        .scaledToFit()
+        .frame(width: 250)
+      
       Spacer()
       
       Text(header)
@@ -111,7 +117,6 @@ public struct EkaScribeLimitView: View {
       
       Spacer()
       
-      // CTA Button
       Button(action: {
         onTapCta()
       }) {
@@ -130,7 +135,7 @@ public struct EkaScribeLimitView: View {
         .cornerRadius(14)
         .padding(.horizontal)
       }
-      .padding(.top, 5)
+      .padding(.bottom, 5)
     }
     .background(Color(.neutrals50))
   }
