@@ -90,13 +90,44 @@ public struct EkaScribeLimitView: View {
   
   var ipadView: some View {
     VStack {
-      // Background with image and overlay
-      Image(.ekaScribeLimit)
-        .resizable()
-        .frame(maxWidth: .infinity)
-        .scaledToFill()
+      Text(header)
+        .textStyle(ekaFont: .title1Bold, color: .black)
+        .fixedSize(horizontal: false, vertical: true)
+      
+      // Feature list
+      VStack(spacing: 16) {
+        HStack(spacing: 16) {
+          featureCard(icon: "doc.text.magnifyingglass", text: "Get medically relevant data from voice")
+          featureCard(icon: "doc.text", text: "Get medical notes transcribed easily")
+        }
+        HStack(spacing: 16) {
+          featureCard(icon: "lock.shield", text: "We never store your voice recordings")
+          featureCard(icon: "square.and.arrow.up", text: "Share the output with patients easily")
+        }
+      }
+      .padding(.horizontal)
       
       Spacer()
+      
+      // CTA Button
+      Button(action: {
+        onTapCta()
+      }) {
+        HStack {
+          if let buttonImage {
+            Image(systemName: buttonImage)
+              .foregroundStyle(Color.white)
+          }
+          Text(buttonText)
+            .textStyle(ekaFont: .bodyBold, color: .white)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.primary500))
+        .foregroundColor(.white)
+        .cornerRadius(14)
+        .padding(.horizontal)
+      }
     }
   }
   
