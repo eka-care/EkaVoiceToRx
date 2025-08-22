@@ -1,4 +1,3 @@
-
 //
 //  EkaScribeLimitView.swift
 //  EkaVoiceToRx
@@ -26,6 +25,18 @@ public struct EkaScribeLimitView: View {
   // MARK: - Body
   
   public var body: some View {
+    Group {
+      if UIDevice.current.userInterfaceIdiom == .pad {
+        ScrollView {
+          content
+        }
+      } else {
+        content
+      }
+    }
+  }
+  
+  private var content: some View {
     VStack {
       // Background with image and overlay
       Image(.ekaScribeLimit)
@@ -74,7 +85,7 @@ public struct EkaScribeLimitView: View {
         .padding(.horizontal)
       }
     }
-    .modifier(DeviceAdaptiveModifier())
+    .background(Color(.neutrals50))
   }
   
   @ViewBuilder
@@ -98,21 +109,5 @@ public struct EkaScribeLimitView: View {
     .background(Color(.neutrals50))
     .cornerRadius(12)
     .addBorderWithGivenCornerRadius(cornerRadius: 12, borderColor: UIColor(resource: .neutrals200), strokeWidth: 0.5)
-  }
-}
-
-struct DeviceAdaptiveModifier: ViewModifier {
-  func body(content: Content) -> some View {
-    if UIDevice.current.userInterfaceIdiom == .pad {
-      content
-        .frame(maxWidth: 500)
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color(.neutrals50))
-    } else {
-      content
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color(.neutrals50))
-    }
   }
 }
