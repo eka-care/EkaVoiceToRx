@@ -100,7 +100,6 @@ public final class VoiceToRxViewModel: ObservableObject {
   public var contextParams: VoiceToRxContextParams?
   weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?
-  private(set) var isRecording = false
   
   // MARK: - Init
   
@@ -162,11 +161,6 @@ public final class VoiceToRxViewModel: ObservableObject {
   // MARK: - Start Recording
   
   public func startRecording(conversationType: String, inputLanguage: [String], templateId: [String]) async -> Bool {
-    
-    guard !isRecording else {
-        return false
-    }
-    isRecording = true
     
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
@@ -255,7 +249,6 @@ public final class VoiceToRxViewModel: ObservableObject {
   public func stopRecording() async {
     guard let sessionID else { return }
     /// Stop audio engine
-    isRecording = false
     stopAudioRecording()
     /// Process whatever is remainingt
     do {
