@@ -15,10 +15,13 @@ struct FloatingVoiceToRxDropdownView: View {
   var body: some View {
     VStack(spacing: 0) {
       // Done button
-      Button(action: onTapDone) {
+      Button(action: {
+        debugPrint("Done button tapped in dropdown")
+        onTapDone()
+      }) {
         HStack {
           Image(systemName: "checkmark.circle.fill")
-            .foregroundColor(.green)
+          .foregroundColor(.green)
           Text("Yes I'm done")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.primary)
@@ -26,6 +29,8 @@ struct FloatingVoiceToRxDropdownView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
       }
       .buttonStyle(PlainButtonStyle())
       
@@ -33,10 +38,13 @@ struct FloatingVoiceToRxDropdownView: View {
         .background(Color.gray.opacity(0.3))
       
       // Not yet button
-      Button(action: onTapNotYet) {
+      Button(action: {
+        debugPrint("Not yet button tapped in dropdown")
+        onTapNotYet()
+      }) {
         HStack {
           Image(systemName: "clock.fill")
-            .foregroundColor(.orange)
+          .foregroundColor(.orange)
           Text("Not yet")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.primary)
@@ -44,6 +52,8 @@ struct FloatingVoiceToRxDropdownView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
       }
       .buttonStyle(PlainButtonStyle())
       
@@ -51,10 +61,13 @@ struct FloatingVoiceToRxDropdownView: View {
         .background(Color.gray.opacity(0.3))
       
       // Cancel recording button
-      Button(action: onTapCancel) {
+      Button(action: {
+        debugPrint("Cancel button tapped in dropdown")
+        onTapCancel()
+      }) {
         HStack {
           Image(systemName: "xmark.circle.fill")
-            .foregroundColor(.red)
+          .foregroundColor(.red)
           Text("Cancel recording")
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.primary)
@@ -62,6 +75,8 @@ struct FloatingVoiceToRxDropdownView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
       }
       .buttonStyle(PlainButtonStyle())
     }

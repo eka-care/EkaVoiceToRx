@@ -109,14 +109,17 @@ struct FloatingVoiceToRxRecordingView: View {
       if showDropdown {
         FloatingVoiceToRxDropdownView(
           onTapDone: {
+            debugPrint("onTapDone called in recording view")
             showDropdown = false
             onTapDone()
           },
           onTapNotYet: {
+            debugPrint("onTapNotYet called in recording view")
             showDropdown = false
             onTapNotYet()
           },
           onTapCancel: {
+            debugPrint("onTapCancel called in recording view")
             showDropdown = false
             onTapCancel()
           }

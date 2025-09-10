@@ -128,6 +128,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func handleDoneRecording() {
+    debugPrint("handleDoneRecording called")
     Task { [weak self] in
       guard let self else { return }
       await viewModel?.stopRecording()
@@ -136,11 +137,13 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func handleNotYetRecording() {
+    debugPrint("handleNotYetRecording called")
     // Just close the dropdown, no action needed
     // The dropdown will be closed automatically by the view
   }
   
   private func handleCancelRecording() {
+    debugPrint("handleCancelRecording called")
     viewModel?.stopAudioRecording()
     Task {
       await liveActivityDelegate?.endLiveActivity()
