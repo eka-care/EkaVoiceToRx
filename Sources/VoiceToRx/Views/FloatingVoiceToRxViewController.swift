@@ -9,6 +9,7 @@ import UIKit
 import SwiftUI
 import Combine
 import AVFoundation
+import WebKit
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
   func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?, error: APIError?)
@@ -91,7 +92,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         title: V2RxInitConfigurations.shared.subOwnerName ?? "Patient",
         voiceToRxViewModel: viewModel,
         delegate: self,
-        onTapStop: showConfirmationAlert,
+        onTapStop: handleStopButton,
         onTapClose: hideFloatingButton
       )
     ).view else {
@@ -110,6 +111,18 @@ public class FloatingVoiceToRxViewController: UIViewController {
     
     let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:)))
     button.addGestureRecognizer(panGesture)
+  }
+  
+  private func handleStopButton() {
+    if let topView = view.subviews.last, topView is WKWebView {
+      Task { [weak self] in
+        guard let self else { return }
+        await viewModel?.stopRecording()
+        await liveActivityDelegate?.endLiveActivity()
+      }
+    } else {
+      showConfirmationAlert()
+    }
   }
   
   private func showConfirmationAlert() {
