@@ -114,7 +114,12 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func handleStopButton() {
-    if let topView = view.subviews.last, topView is WKWebView {
+    if let topVC = UIApplication.shared.connectedScenes
+      .compactMap({ $0 as? UIWindowScene })
+      .flatMap({ $0.windows })
+      .first(where: { $0.isKeyWindow })?
+      .rootViewController?.topMostViewController(),
+       topVC.view is WKWebView {
       Task { [weak self] in
         guard let self else { return }
         await viewModel?.stopRecording()
@@ -311,5 +316,20 @@ extension FloatingVoiceToRxViewController {
 extension FloatingVoiceToRxViewController {
   private func getAmazonCredentials() {
     viewModel?.getAmazonCredentials()
+  }
+}
+
+extension UIViewController {
+  func topMostViewController() -> UIViewController {
+    if let presented = self.presentedViewController {
+      return presented.topMostViewController()
+    }
+    if let nav = self as? UINavigationController {
+      return nav.visibleViewController?.topMostViewController() ?? nav
+    }
+    if let tab = self as? UITabBarController {
+      return tab.selectedViewController?.topMostViewController() ?? tab
+    }
+    return self
   }
 }
