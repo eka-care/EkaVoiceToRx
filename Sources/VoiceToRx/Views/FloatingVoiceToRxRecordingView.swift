@@ -11,94 +11,120 @@ struct FloatingVoiceToRxRecordingView: View {
   let name: String
   @ObservedObject var voiceToRxViewModel: VoiceToRxViewModel
   let onTapStop: () -> Void
+  let onTapDone: () -> Void
+  let onTapNotYet: () -> Void
+  let onTapCancel: () -> Void
   
   @State private var elapsedTime: TimeInterval = 0
   @State private var timer: Timer?
+  @State private var showDropdown = false
   
   var body: some View {
-    HStack(spacing: 12) {
-      VStack(alignment: .leading) {
-        Text(name)
-          .font(.system(size: 16, weight: .semibold))
-        
-        HStack {
-          Text(formatTime(elapsedTime))
-            .textStyle(
-              ekaFont: .calloutRegular,
-              color: UIColor(
-                resource: .neutrals600
-              )
-            )
-          if voiceToRxViewModel.screenState == .paused {
-            Text("(paused)")
+    VStack(spacing: 0) {
+      // Main recording view
+      HStack(spacing: 12) {
+        VStack(alignment: .leading) {
+          Text(name)
+            .font(.system(size: 16, weight: .semibold))
+          
+          HStack {
+            Text(formatTime(elapsedTime))
               .textStyle(
                 ekaFont: .calloutRegular,
                 color: UIColor(
                   resource: .neutrals600
                 )
               )
-          }
-        }
-      }
-      
-      Spacer()
-      
-      if let conversationType = voiceToRxViewModel.voiceConversationType,
-         voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
-        Image(systemName: "pause.fill")
-          .resizable()
-          .scaledToFit()
-          .frame(width: 20, height: 20)
-          .onTapGesture {
-            voiceToRxViewModel.pauseRecording()
-          }
-      } else if voiceToRxViewModel.screenState == .paused {
-        Image(systemName: "play.circle")
-          .resizable()
-          .scaledToFit()
-          .fontWeight(.bold)
-          .frame(width: 20, height: 20)
-          .onTapGesture {
-            do {
-              try voiceToRxViewModel.resumeRecording()
-            } catch {
-              debugPrint("Error while resuming recording")
+            if voiceToRxViewModel.screenState == .paused {
+              Text("(paused)")
+                .textStyle(
+                  ekaFont: .calloutRegular,
+                  color: UIColor(
+                    resource: .neutrals600
+                  )
+                )
             }
           }
-      }
-      
-      Image(systemName: "stop.circle.fill")
-        .resizable()
-        .scaledToFit()
-        .frame(width: 20, height: 20)
-        .symbolRenderingMode(.palette) // Enables multi-color rendering
-        .foregroundStyle(.white, .red) // First color is for the main shape, second for the inner part
-        .frame(width: 40, height: 40)
-        .contentShape(Rectangle())
-        .onTapGesture {
-          onTapStop()
         }
-    }
-    .padding()
-    .background(
-      LinearGradient(
-        colors: [
-          Color(red: 233/255, green: 237/255, blue: 254/255, opacity: 1.0),
-          Color(red: 248/255, green: 239/255, blue: 251/255, opacity: 1.0)
-        ],
-        startPoint: .leading,
-        endPoint: .trailing
+        
+        Spacer()
+        
+        if let conversationType = voiceToRxViewModel.voiceConversationType,
+           voiceToRxViewModel.screenState == .listening(conversationType: conversationType) {
+          Image(systemName: "pause.fill")
+            .resizable()
+            .scaledToFit()
+            .frame(width: 20, height: 20)
+            .onTapGesture {
+              voiceToRxViewModel.pauseRecording()
+            }
+        } else if voiceToRxViewModel.screenState == .paused {
+          Image(systemName: "play.circle")
+            .resizable()
+            .scaledToFit()
+            .fontWeight(.bold)
+            .frame(width: 20, height: 20)
+            .onTapGesture {
+              do {
+                try voiceToRxViewModel.resumeRecording()
+              } catch {
+                debugPrint("Error while resuming recording")
+              }
+            }
+        }
+        
+        Image(systemName: "stop.circle.fill")
+          .resizable()
+          .scaledToFit()
+          .frame(width: 20, height: 20)
+          .symbolRenderingMode(.palette) // Enables multi-color rendering
+          .foregroundStyle(.white, .red) // First color is for the main shape, second for the inner part
+          .frame(width: 40, height: 40)
+          .contentShape(Rectangle())
+          .onTapGesture {
+            showDropdown.toggle()
+          }
+      }
+      .padding()
+      .background(
+        LinearGradient(
+          colors: [
+            Color(red: 233/255, green: 237/255, blue: 254/255, opacity: 1.0),
+            Color(red: 248/255, green: 239/255, blue: 251/255, opacity: 1.0)
+          ],
+          startPoint: .leading,
+          endPoint: .trailing
+        )
       )
-    )
-    .frame(width: 250)
-    .cornerRadius(20)
-    .shadow(color: .black.opacity(0.24), radius: 25, x: 0, y: 8)
-    .overlay(
-      RoundedRectangle(cornerRadius: 20)
-        .inset(by: 0.5)
-        .stroke(.white, lineWidth: 1)
+      .frame(width: 250)
+      .cornerRadius(20)
+      .shadow(color: .black.opacity(0.24), radius: 25, x: 0, y: 8)
+      .overlay(
+        RoundedRectangle(cornerRadius: 20)
+          .inset(by: 0.5)
+          .stroke(.white, lineWidth: 1)
+      )
       
-    )
+      // Dropdown menu
+      if showDropdown {
+        FloatingVoiceToRxDropdownView(
+          onTapDone: {
+            showDropdown = false
+            onTapDone()
+          },
+          onTapNotYet: {
+            showDropdown = false
+            onTapNotYet()
+          },
+          onTapCancel: {
+            showDropdown = false
+            onTapCancel()
+          }
+        )
+        .padding(.top, 8)
+        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+      }
+    }
     .onAppear {
       startOrResumeTimer()
     }

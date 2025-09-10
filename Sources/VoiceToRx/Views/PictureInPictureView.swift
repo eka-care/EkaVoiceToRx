@@ -19,19 +19,28 @@ public struct PictureInPictureView: View {
   weak var delegate: PictureInPictureViewDelegate?
   let onTapStop: () -> Void
   let onTapClose: () -> Void
+  let onTapDone: () -> Void
+  let onTapNotYet: () -> Void
+  let onTapCancel: () -> Void
   
   public init(
     title: String,
     voiceToRxViewModel: VoiceToRxViewModel,
     delegate: PictureInPictureViewDelegate?,
     onTapStop: @escaping () -> Void,
-    onTapClose: @escaping () -> Void
+    onTapClose: @escaping () -> Void,
+    onTapDone: @escaping () -> Void,
+    onTapNotYet: @escaping () -> Void,
+    onTapCancel: @escaping () -> Void
   ) {
     self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
     self.delegate = delegate
     self.onTapStop = onTapStop
     self.onTapClose = onTapClose
+    self.onTapDone = onTapDone
+    self.onTapNotYet = onTapNotYet
+    self.onTapCancel = onTapCancel
   }
   
   public var body: some View {
@@ -42,7 +51,10 @@ public struct PictureInPictureView: View {
       FloatingVoiceToRxRecordingView(
         name: title,
         voiceToRxViewModel: voiceToRxViewModel,
-        onTapStop: onTapStop
+        onTapStop: onTapStop,
+        onTapDone: onTapDone,
+        onTapNotYet: onTapNotYet,
+        onTapCancel: onTapCancel
       )
     case .processing:
       FloatingVoiceToRxProcessingView()

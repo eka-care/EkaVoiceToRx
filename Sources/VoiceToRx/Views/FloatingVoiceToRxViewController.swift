@@ -93,7 +93,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
         voiceToRxViewModel: viewModel,
         delegate: self,
         onTapStop: handleStopButton,
-        onTapClose: hideFloatingButton
+        onTapClose: hideFloatingButton,
+        onTapDone: handleDoneRecording,
+        onTapNotYet: handleNotYetRecording,
+        onTapCancel: handleCancelRecording
       )
     ).view else {
       return
@@ -120,70 +123,35 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func handleStopButton() {
-    if let topVC = UIApplication.shared.connectedScenes
-      .compactMap({ $0 as? UIWindowScene })
-      .flatMap({ $0.windows })
-      .first(where: { $0.isKeyWindow })?
-      .rootViewController?.topMostViewController(),
-       containsWKWebView(in: topVC.view) {
-      Task { [weak self] in
-        guard let self else { return }
-        await viewModel?.stopRecording()
-        await liveActivityDelegate?.endLiveActivity()
-      }
-    } else {
-      showConfirmationAlert()
+    // This method is now handled by the dropdown in the recording view
+    // The stop button now toggles the dropdown instead of showing an alert
+  }
+  
+  private func handleDoneRecording() {
+    Task { [weak self] in
+      guard let self else { return }
+      await viewModel?.stopRecording()
+      await liveActivityDelegate?.endLiveActivity()
     }
   }
   
-  private func showConfirmationAlert() {
-    let alertController = UIAlertController(
-      title: "Are you done with the conversation?",
-      message: "Make sure you record entire conversation to get accurate medical notes.",
-      preferredStyle: .alert
-    )
-    
-    alertController.addAction(UIAlertAction(
-      title: "Yes I'm done",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-        Task { [weak self] in
-          guard let self else { return }
-          await viewModel?.stopRecording()
-          await liveActivityDelegate?.endLiveActivity()
-        }
-      }
-    ))
-    
-    alertController.addAction(UIAlertAction(
-      title: "Not yet",
-      style: .default,
-      handler: { _ in
-        alertController.dismiss(animated: true)
-      }
-    ))
-    
-    alertController.addAction(UIAlertAction(
-      title: "Cancel recording",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-        viewModel?.stopAudioRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
-        }
-        if let sessionID = viewModel?.sessionID {
-          viewModel?.deleteRecording(id: sessionID)
-        }
-        viewModel?.screenState = .deletedRecording
-        hideFloatingButton()
-      }
-    ))
-    
-    let controller = keyWindow?.rootViewController
-    controller?.present(alertController, animated: true)
+  private func handleNotYetRecording() {
+    // Just close the dropdown, no action needed
+    // The dropdown will be closed automatically by the view
   }
+  
+  private func handleCancelRecording() {
+    viewModel?.stopAudioRecording()
+    Task {
+      await liveActivityDelegate?.endLiveActivity()
+    }
+    if let sessionID = viewModel?.sessionID {
+      viewModel?.deleteRecording(id: sessionID)
+    }
+    viewModel?.screenState = .deletedRecording
+    hideFloatingButton()
+  }
+  
   
   @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
     let buttonView = gesture.view!
