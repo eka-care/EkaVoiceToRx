@@ -113,53 +113,75 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func showConfirmationAlert() {
-    let alertController = UIAlertController(
-      title: "Are you done with the conversation?",
-      message: "Make sure you record entire conversation to get accurate medical notes.",
-      preferredStyle: .alert
-    )
-    
-    alertController.addAction(UIAlertAction(
-      title: "Yes I'm done",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-        Task { [weak self] in
-          guard let self else { return }
-          await viewModel?.stopRecording()
-          await liveActivityDelegate?.endLiveActivity()
-        }
+      // Get top-most presented VC
+      guard let topVC = UIApplication.shared
+          .connectedScenes
+          .compactMap({ $0 as? UIWindowScene })
+          .flatMap({ $0.windows })
+          .first(where: { $0.isKeyWindow })?
+          .rootViewController?
+          .presentedViewController ?? UIApplication.shared
+          .connectedScenes
+          .compactMap({ $0 as? UIWindowScene })
+          .flatMap({ $0.windows })
+          .first(where: { $0.isKeyWindow })?
+          .rootViewController else {
+          return
       }
-    ))
-    
-    alertController.addAction(UIAlertAction(
-      title: "Not yet",
-      style: .default,
-      handler: { _ in
-        alertController.dismiss(animated: true)
+
+      // If top VC is PrescriptionPadController (or any VC with a webView) -> directly stop
+      if topVC is PrescriptionPadController {
+          Task { [weak self] in
+              guard let self else { return }
+              await viewModel?.stopRecording()
+              await liveActivityDelegate?.endLiveActivity()
+          }
+          return
       }
-    ))
-    
-    alertController.addAction(UIAlertAction(
-      title: "Cancel recording",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-        viewModel?.stopAudioRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
-        }
-        if let sessionID = viewModel?.sessionID {
-          viewModel?.deleteRecording(id: sessionID)
-        }
-        viewModel?.screenState = .deletedRecording
-        hideFloatingButton()
-      }
-    ))
-    
-    if let topVC = UIApplication.shared.topMostViewController() {
+
+      // Otherwise -> show the confirmation alert
+      let alertController = UIAlertController(
+          title: "Are you done with the conversation?",
+          message: "Make sure you record entire conversation to get accurate medical notes.",
+          preferredStyle: .alert
+      )
+
+      alertController.addAction(UIAlertAction(
+          title: "Yes I'm done",
+          style: .default,
+          handler: { [weak self] _ in
+              guard let self else { return }
+              Task {
+                  await viewModel?.stopRecording()
+                  await liveActivityDelegate?.endLiveActivity()
+              }
+          }
+      ))
+
+      alertController.addAction(UIAlertAction(
+          title: "Not yet",
+          style: .default,
+          handler: { _ in
+              alertController.dismiss(animated: true)
+          }
+      ))
+
+      alertController.addAction(UIAlertAction(
+          title: "Cancel recording",
+          style: .destructive,
+          handler: { [weak self] _ in
+              guard let self else { return }
+              viewModel?.stopAudioRecording()
+              Task { await self.liveActivityDelegate?.endLiveActivity() }
+              if let sessionID = viewModel?.sessionID {
+                  viewModel?.deleteRecording(id: sessionID)
+              }
+              viewModel?.screenState = .deletedRecording
+              hideFloatingButton()
+          }
+      ))
+
       topVC.present(alertController, animated: true)
-    }
   }
   
   @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
@@ -300,23 +322,4 @@ extension FloatingVoiceToRxViewController {
   private func getAmazonCredentials() {
     viewModel?.getAmazonCredentials()
   }
-}
-
-extension UIApplication {
-  func topMostViewController(base: UIViewController? = UIApplication.shared.connectedScenes
-    .compactMap { $0 as? UIWindowScene }
-    .flatMap { $0.windows }
-    .first { $0.isKeyWindow }?.rootViewController) -> UIViewController? {
-      
-      if let nav = base as? UINavigationController {
-        return topMostViewController(base: nav.visibleViewController)
-      }
-      if let tab = base as? UITabBarController {
-        return topMostViewController(base: tab.selectedViewController)
-      }
-      if let presented = base?.presentedViewController {
-        return topMostViewController(base: presented)
-      }
-      return base
-    }
 }
