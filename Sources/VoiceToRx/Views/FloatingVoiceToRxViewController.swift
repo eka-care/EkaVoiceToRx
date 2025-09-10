@@ -113,13 +113,19 @@ public class FloatingVoiceToRxViewController: UIViewController {
     button.addGestureRecognizer(panGesture)
   }
   
+  private func containsWKWebView(in view: UIView?) -> Bool {
+    guard let view else { return false }
+    if view is WKWebView { return true }
+    return view.subviews.contains { containsWKWebView(in: $0) }
+  }
+  
   private func handleStopButton() {
     if let topVC = UIApplication.shared.connectedScenes
       .compactMap({ $0 as? UIWindowScene })
       .flatMap({ $0.windows })
       .first(where: { $0.isKeyWindow })?
       .rootViewController?.topMostViewController(),
-       topVC.view is WKWebView {
+       containsWKWebView(in: topVC.view) {
       Task { [weak self] in
         guard let self else { return }
         await viewModel?.stopRecording()
@@ -333,3 +339,5 @@ extension UIViewController {
     return self
   }
 }
+
+
