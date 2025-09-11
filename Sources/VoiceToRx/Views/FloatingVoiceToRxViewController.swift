@@ -256,9 +256,16 @@ private class FloatingButtonWindow: UIWindow {
   }
   
   fileprivate override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-    guard let button = button else { return false }
-    let buttonPoint = convert(point, to: button)
-    return button.point(inside: buttonPoint, with: event)
+      guard let button = button else { return false }
+      if button.point(inside: convert(point, to: button), with: event) {
+          return true
+      }
+      for subview in button.subviews {
+          if subview.point(inside: convert(point, to: subview), with: event) {
+              return true
+          }
+      }
+      return false
   }
 }
 
