@@ -95,8 +95,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
         onTapStop: handleStopButton,
         onTapClose: hideFloatingButton,
         onTapDone: handleDoneRecording,
-        onTapNotYet: handleNotYetRecording,
-        onTapCancel: handleCancelRecording
+        onTapNotYet: handleDoneRecording,
+        onTapCancel: handleDoneRecording
       )
     ).view else {
       return
