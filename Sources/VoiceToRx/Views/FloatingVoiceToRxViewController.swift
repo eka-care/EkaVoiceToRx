@@ -164,8 +164,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
     guard let button = self.button else { return }
     
     let baseHeight: CGFloat = 50
-    let dropdownHeight: CGFloat = 140 // Approximate height of dropdown (3 items + padding)
-    let totalHeight = isDropdownOpen ? baseHeight + dropdownHeight + 8 : baseHeight // +8 for top padding
+    let dropdownHeight: CGFloat = 180 // Increased height for dropdown (3 items + padding + shadow + margins)
+    let totalHeight = isDropdownOpen ? baseHeight + dropdownHeight + 20 : baseHeight // +20 for top padding and extra space
     
     UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
       button.frame.size.height = totalHeight
