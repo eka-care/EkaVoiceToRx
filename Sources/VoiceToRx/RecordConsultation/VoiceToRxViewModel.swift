@@ -16,7 +16,7 @@ public enum RecordConsultationState: Equatable {
   case listening(conversationType: VoiceConversationType)
   case paused
   case processing
-  case resultDisplay(success: Bool)
+  case resultDisplay(success: Bool, value: String?)
   case deletedRecording
   
   public static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
@@ -433,14 +433,14 @@ extension VoiceToRxViewModel {
       voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
         guard let self else { return }
         switch result {
-        case .success(let isComplete):
+        case .success(let isComplete, let value):
           if isComplete {
             timer.invalidate()
             self.pollingTimer = nil
             print("✅ Polling complete. All templates have status = success.")
             DispatchQueue.main.async { [weak self] in
               guard let self else { return }
-              screenState = .resultDisplay(success: true)
+              screenState = .resultDisplay(success: true, value: value)
             }
           }
           // If not complete, continue polling
@@ -448,7 +448,7 @@ extension VoiceToRxViewModel {
           print("❌ Polling stopped due to API/model error: \(error.localizedDescription)")
           DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            screenState = .resultDisplay(success: false)
+            screenState = .resultDisplay(success: false, value: nil)
           }
           timer.invalidate()
           self.pollingTimer = nil
