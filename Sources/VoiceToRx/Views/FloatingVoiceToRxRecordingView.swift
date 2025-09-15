@@ -14,6 +14,7 @@ struct FloatingVoiceToRxRecordingView: View {
   let onTapDone: () -> Void
   let onTapNotYet: () -> Void
   let onTapCancel: () -> Void
+  let onDropdownStateChange: (Bool) -> Void
   
   @State private var elapsedTime: TimeInterval = 0
   @State private var timer: Timer?
@@ -83,6 +84,7 @@ struct FloatingVoiceToRxRecordingView: View {
           .contentShape(Rectangle())
           .onTapGesture {
             showDropdown.toggle()
+            onDropdownStateChange(showDropdown)
           }
       }
       .padding()
@@ -111,16 +113,19 @@ struct FloatingVoiceToRxRecordingView: View {
           onTapDone: {
             debugPrint("onTapDone called in recording view")
             showDropdown = false
+            onDropdownStateChange(false)
             onTapDone()
           },
           onTapNotYet: {
             debugPrint("onTapNotYet called in recording view")
             showDropdown = false
+            onDropdownStateChange(false)
             onTapNotYet()
           },
           onTapCancel: {
             debugPrint("onTapCancel called in recording view")
             showDropdown = false
+            onDropdownStateChange(false)
             onTapCancel()
           }
         )

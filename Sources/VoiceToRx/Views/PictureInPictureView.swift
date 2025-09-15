@@ -22,6 +22,7 @@ public struct PictureInPictureView: View {
   let onTapDone: () -> Void
   let onTapNotYet: () -> Void
   let onTapCancel: () -> Void
+  let onDropdownStateChange: (Bool) -> Void
   
   public init(
     title: String,
@@ -31,7 +32,8 @@ public struct PictureInPictureView: View {
     onTapClose: @escaping () -> Void,
     onTapDone: @escaping () -> Void,
     onTapNotYet: @escaping () -> Void,
-    onTapCancel: @escaping () -> Void
+    onTapCancel: @escaping () -> Void,
+    onDropdownStateChange: @escaping (Bool) -> Void
   ) {
     self.title = title
     self.voiceToRxViewModel = voiceToRxViewModel
@@ -41,6 +43,7 @@ public struct PictureInPictureView: View {
     self.onTapDone = onTapDone
     self.onTapNotYet = onTapNotYet
     self.onTapCancel = onTapCancel
+    self.onDropdownStateChange = onDropdownStateChange
   }
   
   public var body: some View {
@@ -54,7 +57,8 @@ public struct PictureInPictureView: View {
         onTapStop: onTapStop,
         onTapDone: onTapDone,
         onTapNotYet: onTapNotYet,
-        onTapCancel: onTapCancel
+        onTapCancel: onTapCancel,
+        onDropdownStateChange: onDropdownStateChange
       )
     case .processing:
       FloatingVoiceToRxProcessingView()
