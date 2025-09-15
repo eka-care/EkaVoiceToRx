@@ -10,6 +10,7 @@ import SwiftUI
 struct FloatingVoiceToRxResultView: View {
   
   var success: Bool
+  var value: String?
   let onTapClose: () -> Void
   
   var body: some View {
@@ -59,5 +60,11 @@ struct FloatingVoiceToRxResultView: View {
         .stroke(.white, lineWidth: 1)
       
     )
+    .onAppear {
+      if let value {
+        print("#BB floating voice button value is \(value)")
+      }
+      
+    }
   }
 }

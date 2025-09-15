@@ -267,7 +267,7 @@ public final class VoiceToRxRepo {
   
   public func fetchVoiceToRxSessionStatus(
     sessionID: UUID?,
-    completion: @escaping (Result<Bool, Error>) -> Void,
+    completion: @escaping (Result<(Bool, String), Error>) -> Void,
     retryCount: Int = 0
   ) {
     guard let sessionID,
@@ -298,19 +298,15 @@ public final class VoiceToRxRepo {
           /// Status fetch event
           statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
-          completion(.success(false))
+          completion(.success((false, "")))
           return
         }
         let allSuccessful = outputs.allSatisfy { $0.status == "success" }
-        
-        /// Status fetch event
+        let value = outputs.first(where: { $0.value != nil })?.value ?? ""
+        print("#BB base64 value is value")
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
-        
-        databaseManager.updateVoiceConversation(
-          sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(stage: .result(success: true))
-        )
-        completion(.success(allSuccessful))
+  
+        completion(.success((allSuccessful, value)))
         
       case .failure(let error):
         /// Status fetch event

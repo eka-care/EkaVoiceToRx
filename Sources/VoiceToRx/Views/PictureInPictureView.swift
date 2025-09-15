@@ -58,9 +58,10 @@ public struct PictureInPictureView: View {
       )
     case .processing:
       FloatingVoiceToRxProcessingView()
-    case .resultDisplay(let success):
+    case .resultDisplay(let success, let value):
       FloatingVoiceToRxResultView(
         success: success,
+        value: value,
         onTapClose: onTapClose
       )
       .contentShape(Rectangle())
