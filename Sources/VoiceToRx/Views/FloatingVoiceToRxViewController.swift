@@ -95,8 +95,9 @@ public class FloatingVoiceToRxViewController: UIViewController {
         onTapStop: handleStopButton,
         onTapClose: hideFloatingButton,
         onTapDone: handleDoneRecording,
-        onTapNotYet: handleDoneRecording,
-        onTapCancel: handleDoneRecording
+        onTapNotYet: handleNotYetRecording,
+        onTapCancel: handleCancelRecording,
+        onDropdownStateChange: handleDropdownStateChange
       )
     ).view else {
       return
@@ -153,6 +154,22 @@ public class FloatingVoiceToRxViewController: UIViewController {
     }
     viewModel?.screenState = .deletedRecording
     hideFloatingButton()
+  }
+  
+  private func handleDropdownStateChange(isDropdownOpen: Bool) {
+    updateButtonFrame(isDropdownOpen: isDropdownOpen)
+  }
+  
+  private func updateButtonFrame(isDropdownOpen: Bool) {
+    guard let button = self.button else { return }
+    
+    let baseHeight: CGFloat = 50
+    let dropdownHeight: CGFloat = 180 // Increased height for dropdown (3 items + padding + shadow + margins)
+    let totalHeight = isDropdownOpen ? baseHeight + dropdownHeight + 20 : baseHeight // +20 for top padding and extra space
+    
+    UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
+      button.frame.size.height = totalHeight
+    }, completion: nil)
   }
   
   
