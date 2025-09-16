@@ -68,6 +68,13 @@ public final class VoiceToRxViewModel: ObservableObject {
   @Published public var screenState: RecordConsultationState = .startRecording {
     didSet {
       print("Screen state is -> \(screenState)")
+      switch screenState {
+      case .startRecording, .deletedRecording:
+        voiceToRxDelegate?.onVoiceToRxRecordingEnded()
+      default:
+        voiceToRxDelegate?.onVoiceToRxRecordingStarted()
+        break
+      }
     }
   }
   /// Don't add duplicates in the set

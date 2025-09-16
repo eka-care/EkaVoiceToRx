@@ -20,6 +20,8 @@ public protocol FloatingVoiceToRxDelegate: AnyObject {
     transcriptText: String
   )
   func updateAppointmentsData(appointmentID: String, voiceToRxID: String)
+  func onVoiceToRxRecordingStarted()
+  func onVoiceToRxRecordingEnded()
 }
 
 public protocol LiveActivityDelegate: AnyObject {
