@@ -7,5 +7,5 @@
 import UIKit
 
 extension Notification.Name {
-  static let voiceTORxResultReceived = Notification.Name("voiceToRxResultReceived")
+  public static let voiceTORxResultReceived = Notification.Name("voiceToRxResultReceived")
 }
