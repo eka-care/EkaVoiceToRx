@@ -288,7 +288,7 @@ private class FloatingButtonWindow: UIWindow {
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onResultValueReceived(value: String) {
-    print("#BB value received is (value)")
+    print("#BB value received is \(value)")
   }
   
   public func onTapResultDisplayView(success: Bool) {
