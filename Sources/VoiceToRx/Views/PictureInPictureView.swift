@@ -10,6 +10,7 @@ import SwiftUI
 
 public protocol PictureInPictureViewDelegate: AnyObject {
   func onTapResultDisplayView(success: Bool)
+  func onResultValueReceived(value: String)
 }
 
 public struct PictureInPictureView: View {
@@ -66,7 +67,10 @@ public struct PictureInPictureView: View {
       FloatingVoiceToRxResultView(
         success: success,
         value: value,
-        onTapClose: onTapClose
+        onTapClose: onTapClose,
+        onValueReceived: { value in
+          delegate?.onResultValueReceived(value: value)
+        }
       )
       .contentShape(Rectangle())
       .onTapGesture {
