@@ -289,6 +289,7 @@ private class FloatingButtonWindow: UIWindow {
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onResultValueReceived(value: String) {
     print("#BB value received is \(value)")
+    NotificationCenter.default.post(name: .voiceTORxResultReceived, object: "voice_to_rx", userInfo: ["value": value])
   }
   
   public func onTapResultDisplayView(success: Bool) {
@@ -323,20 +324,3 @@ extension FloatingVoiceToRxViewController {
     viewModel?.getAmazonCredentials()
   }
 }
-
-extension UIViewController {
-  func topMostViewController() -> UIViewController {
-    if let presented = self.presentedViewController {
-      return presented.topMostViewController()
-    }
-    if let nav = self as? UINavigationController {
-      return nav.visibleViewController?.topMostViewController() ?? nav
-    }
-    if let tab = self as? UITabBarController {
-      return tab.selectedViewController?.topMostViewController() ?? tab
-    }
-    return self
-  }
-}
-
-
