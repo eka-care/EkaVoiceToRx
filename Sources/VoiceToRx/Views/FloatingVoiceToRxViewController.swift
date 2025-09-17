@@ -291,8 +291,6 @@ private class FloatingButtonWindow: UIWindow {
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onResultValueReceived(value: String) {
-    print("#BB value received is \(value)")
-    NotificationCenter.default.post(name: .voiceTORxResultReceived, object: "voice_to_rx", userInfo: ["value": value])
     viewModel?.voiceToRxDelegate?.onResultValueReceived(value: value)
   }
   
