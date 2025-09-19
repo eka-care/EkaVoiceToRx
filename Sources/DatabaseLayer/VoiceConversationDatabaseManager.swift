@@ -139,6 +139,7 @@ extension VoiceConversationDatabaseManager {
   func observeUploadStatus(for sessionID: UUID, completion: @escaping () -> Void) {
     uploadCompletionCallbacks[sessionID] = completion
     watchedSessionIDs.insert(sessionID)
+    checkUploadStatus(for: sessionID)
   }
 }
 

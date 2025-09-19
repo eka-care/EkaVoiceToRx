@@ -10,7 +10,21 @@ import SwiftUI
 struct FloatingVoiceToRxResultView: View {
   
   var success: Bool
+  var value: String?
   let onTapClose: () -> Void
+  let onValueReceived: (String) -> Void
+  
+  init(success: Bool, value: String?, onTapClose: @escaping () -> Void, onValueReceived: @escaping (String) -> Void) {
+    self.success = success
+    self.value = value
+    self.onTapClose = onTapClose
+    self.onValueReceived = onValueReceived
+    
+    if let value {
+      print("#BB floating voice button value is \(value)")
+      onValueReceived(value)
+    }
+  }
   
   var body: some View {
     HStack(spacing: 10) {

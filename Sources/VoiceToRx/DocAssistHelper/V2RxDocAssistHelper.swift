@@ -30,6 +30,9 @@ public final class V2RxDocAssistHelper {
                 VoiceToRxFileUploadRetry.checkIfRetryNeeded(sessionID: sessionID) {
       return .retry
     } else {
+      if let stage = voiceConversation.stage {
+        print("#BB the value is \(VoiceConversationAPIStage.getEnum(from: stage))")
+      }
       return .loading
     }
   }
