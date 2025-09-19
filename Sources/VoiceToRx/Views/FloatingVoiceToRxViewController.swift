@@ -9,6 +9,7 @@ import UIKit
 import SwiftUI
 import Combine
 import AVFoundation
+import WebKit
 
 public protocol FloatingVoiceToRxDelegate: AnyObject {
   func onCreateVoiceToRxSession(id: UUID?, params: VoiceToRxContextParams?, error: APIError?)
@@ -19,6 +20,9 @@ public protocol FloatingVoiceToRxDelegate: AnyObject {
     transcriptText: String
   )
   func updateAppointmentsData(appointmentID: String, voiceToRxID: String)
+  func onVoiceToRxRecordingStarted()
+  func onVoiceToRxRecordingEnded()
+  func onResultValueReceived(value: String)
 }
 
 public protocol LiveActivityDelegate: AnyObject {
@@ -41,6 +45,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
     .flatMap({ $0.windows })
     .first(where: { $0.isKeyWindow })
   
+  // State tracking to prevent multiple windows
+  private var isWindowActive: Bool = false
+  private var isInitializing: Bool = false
+  
   required init?(coder aDecoder: NSCoder) {
     fatalError()
   }
@@ -49,15 +57,66 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
+  /// Check if the floating window is currently active or initializing
+  public var isFloatingWindowBusy: Bool {
+    return isWindowActive || isInitializing
+  }
+  
+  /// Convenience method to safely show floating button with completion handler
+  public func showFloatingButtonSafely(
+    viewModel: VoiceToRxViewModel,
+    conversationType: String,
+    inputLanguage: [String],
+    templateId: [String],
+    liveActivityDelegate: LiveActivityDelegate?,
+    completion: @escaping (Bool) -> Void
+  ) {
+    Task {
+      if isFloatingWindowBusy {
+        debugPrint("FloatingVoiceToRxViewController: Cannot show floating button - window is busy")
+        await MainActor.run {
+          completion(false)
+        }
+        return
+      }
+      
+      await showFloatingButton(
+        viewModel: viewModel,
+        conversationType: conversationType,
+        inputLanguage: inputLanguage,
+        templateId: templateId,
+        liveActivityDelegate: liveActivityDelegate
+      )
+      
+      await MainActor.run {
+        completion(self.isWindowActive)
+      }
+    }
+  }
+  
   public func showFloatingButton(
     viewModel: VoiceToRxViewModel,
     conversationType: String,
     inputLanguage: [String],
     templateId: [String],
     liveActivityDelegate: LiveActivityDelegate?
-  ) async {    
+  ) async {
+    // Prevent multiple windows from being created
+    guard !isWindowActive && !isInitializing else {
+      debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
+      return
+    }
+    
+    isInitializing = true
+    defer { isInitializing = false }
+    
     let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
-    guard success else { return }
+    guard success else { 
+      debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
+      return 
+    }
+    
+    isWindowActive = true
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
@@ -74,11 +133,21 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   public func hideFloatingButton() {
+    guard isWindowActive else {
+      debugPrint("FloatingVoiceToRxViewController: Window is not active. Ignoring hide request.")
+      return
+    }
+    
     viewModel?.clearSession()
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
     view.subviews.forEach { $0.removeFromSuperview() }
+    
+    // Reset state to allow future window creation
+    isWindowActive = false
+    cancellables.removeAll()
+    
     Task {
       await liveActivityDelegate?.endLiveActivity()
     }
@@ -91,8 +160,12 @@ public class FloatingVoiceToRxViewController: UIViewController {
         title: V2RxInitConfigurations.shared.subOwnerName ?? "Patient",
         voiceToRxViewModel: viewModel,
         delegate: self,
-        onTapStop: showConfirmationAlert,
-        onTapClose: hideFloatingButton
+        onTapStop: handleStopButton,
+        onTapClose: hideFloatingButton,
+        onTapDone: handleDoneRecording,
+        onTapNotYet: handleNotYetRecording,
+        onTapCancel: handleCancelRecording,
+        onDropdownStateChange: handleDropdownStateChange
       )
     ).view else {
       return
@@ -112,54 +185,61 @@ public class FloatingVoiceToRxViewController: UIViewController {
     button.addGestureRecognizer(panGesture)
   }
   
-  private func showConfirmationAlert() {
-    let alertController = UIAlertController(
-      title: "Are you done with the conversation?",
-      message: "Make sure you record entire conversation to get accurate medical notes.",
-      preferredStyle: .alert
-    )
-    
-    alertController.addAction(UIAlertAction(
-      title: "Yes I'm done",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-        Task { [weak self] in
-          guard let self else { return }
-          await viewModel?.stopRecording()
-          await liveActivityDelegate?.endLiveActivity()
-        }
-      }
-    ))
-    
-    alertController.addAction(UIAlertAction(
-      title: "Not yet",
-      style: .default,
-      handler: { _ in
-        alertController.dismiss(animated: true)
-      }
-    ))
-    
-    alertController.addAction(UIAlertAction(
-      title: "Cancel recording",
-      style: .default,
-      handler: { [weak self] _ in
-        guard let self else { return }
-        viewModel?.stopAudioRecording()
-        Task {
-          await self.liveActivityDelegate?.endLiveActivity()
-        }
-        if let sessionID = viewModel?.sessionID {
-          viewModel?.deleteRecording(id: sessionID)
-        }
-        viewModel?.screenState = .deletedRecording
-        hideFloatingButton()
-      }
-    ))
-    
-    let controller = keyWindow?.rootViewController
-    controller?.present(alertController, animated: true)
+  private func containsWKWebView(in view: UIView?) -> Bool {
+    guard let view else { return false }
+    if view is WKWebView { return true }
+    return view.subviews.contains { containsWKWebView(in: $0) }
   }
+  
+  private func handleStopButton() {
+    // This method is now handled by the dropdown in the recording view
+    // The stop button now toggles the dropdown instead of showing an alert
+  }
+  
+  private func handleDoneRecording() {
+    debugPrint("handleDoneRecording called")
+    Task { [weak self] in
+      guard let self else { return }
+      await viewModel?.stopRecording()
+      await liveActivityDelegate?.endLiveActivity()
+    }
+  }
+  
+  private func handleNotYetRecording() {
+    debugPrint("handleNotYetRecording called")
+    // Just close the dropdown, no action needed
+    // The dropdown will be closed automatically by the view
+  }
+  
+  private func handleCancelRecording() {
+    debugPrint("handleCancelRecording called")
+    viewModel?.stopAudioRecording()
+    Task {
+      await liveActivityDelegate?.endLiveActivity()
+    }
+    if let sessionID = viewModel?.sessionID {
+      viewModel?.deleteRecording(id: sessionID)
+    }
+    viewModel?.screenState = .deletedRecording
+    hideFloatingButton()
+  }
+  
+  private func handleDropdownStateChange(isDropdownOpen: Bool) {
+    updateButtonFrame(isDropdownOpen: isDropdownOpen)
+  }
+  
+  private func updateButtonFrame(isDropdownOpen: Bool) {
+    guard let button = self.button else { return }
+    
+    let baseHeight: CGFloat = 50
+    let dropdownHeight: CGFloat = 150
+    let totalHeight = isDropdownOpen ? baseHeight + dropdownHeight : baseHeight
+    
+    UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
+      button.frame.size.height = totalHeight
+    }, completion: nil)
+  }
+  
   
   @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
     let buttonView = gesture.view!
@@ -261,13 +341,24 @@ private class FloatingButtonWindow: UIWindow {
   }
   
   fileprivate override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-    guard let button = button else { return false }
-    let buttonPoint = convert(point, to: button)
-    return button.point(inside: buttonPoint, with: event)
+      guard let button = button else { return false }
+      if button.point(inside: convert(point, to: button), with: event) {
+          return true
+      }
+      for subview in button.subviews {
+          if subview.point(inside: convert(point, to: subview), with: event) {
+              return true
+          }
+      }
+      return false
   }
 }
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
+  public func onResultValueReceived(value: String) {
+    viewModel?.voiceToRxDelegate?.onResultValueReceived(value: value)
+  }
+  
   public func onTapResultDisplayView(success: Bool) {
     guard let sessionID = viewModel?.sessionID else { return }
     if success {
