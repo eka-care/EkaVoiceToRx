@@ -303,9 +303,12 @@ public final class VoiceToRxRepo {
         }
         let allSuccessful = outputs.allSatisfy { $0.status == "success" }
         let value = outputs.first(where: { $0.value != nil })?.value ?? ""
-        print("#BB base64 value is value")
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
-  
+        
+        databaseManager.updateVoiceConversation(
+          sessionID: sessionID,
+          conversationArguement: VoiceConversationArguementModel(stage: .result(success: true))
+        )
         completion(.success((allSuccessful, value)))
         
       case .failure(let error):
