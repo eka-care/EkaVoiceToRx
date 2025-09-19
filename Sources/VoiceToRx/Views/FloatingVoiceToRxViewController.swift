@@ -45,6 +45,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
     .flatMap({ $0.windows })
     .first(where: { $0.isKeyWindow })
   
+  // State tracking to prevent multiple windows
+  private var isWindowActive: Bool = false
+  private var isInitializing: Bool = false
+  
   required init?(coder aDecoder: NSCoder) {
     fatalError()
   }
@@ -53,15 +57,66 @@ public class FloatingVoiceToRxViewController: UIViewController {
     super.init(nibName: nil, bundle: nil)
   }
   
+  /// Check if the floating window is currently active or initializing
+  public var isFloatingWindowBusy: Bool {
+    return isWindowActive || isInitializing
+  }
+  
+  /// Convenience method to safely show floating button with completion handler
+  public func showFloatingButtonSafely(
+    viewModel: VoiceToRxViewModel,
+    conversationType: String,
+    inputLanguage: [String],
+    templateId: [String],
+    liveActivityDelegate: LiveActivityDelegate?,
+    completion: @escaping (Bool) -> Void
+  ) {
+    Task {
+      if isFloatingWindowBusy {
+        debugPrint("FloatingVoiceToRxViewController: Cannot show floating button - window is busy")
+        await MainActor.run {
+          completion(false)
+        }
+        return
+      }
+      
+      await showFloatingButton(
+        viewModel: viewModel,
+        conversationType: conversationType,
+        inputLanguage: inputLanguage,
+        templateId: templateId,
+        liveActivityDelegate: liveActivityDelegate
+      )
+      
+      await MainActor.run {
+        completion(self.isWindowActive)
+      }
+    }
+  }
+  
   public func showFloatingButton(
     viewModel: VoiceToRxViewModel,
     conversationType: String,
     inputLanguage: [String],
     templateId: [String],
     liveActivityDelegate: LiveActivityDelegate?
-  ) async {    
+  ) async {
+    // Prevent multiple windows from being created
+    guard !isWindowActive && !isInitializing else {
+      debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
+      return
+    }
+    
+    isInitializing = true
+    defer { isInitializing = false }
+    
     let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
-    guard success else { return }
+    guard success else {
+      debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
+      return
+    }
+    
+    isWindowActive = true
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
     window.rootViewController = self
@@ -78,11 +133,21 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   public func hideFloatingButton() {
+    guard isWindowActive else {
+      debugPrint("FloatingVoiceToRxViewController: Window is not active. Ignoring hide request.")
+      return
+    }
+    
     viewModel?.clearSession()
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
     view.subviews.forEach { $0.removeFromSuperview() }
+    
+    // Reset state to allow future window creation
+    isWindowActive = false
+    cancellables.removeAll()
+    
     Task {
       await liveActivityDelegate?.endLiveActivity()
     }
@@ -276,16 +341,16 @@ private class FloatingButtonWindow: UIWindow {
   }
   
   fileprivate override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-      guard let button = button else { return false }
-      if button.point(inside: convert(point, to: button), with: event) {
-          return true
+    guard let button = button else { return false }
+    if button.point(inside: convert(point, to: button), with: event) {
+      return true
+    }
+    for subview in button.subviews {
+      if subview.point(inside: convert(point, to: subview), with: event) {
+        return true
       }
-      for subview in button.subviews {
-          if subview.point(inside: convert(point, to: subview), with: event) {
-              return true
-          }
-      }
-      return false
+    }
+    return false
   }
 }
 
