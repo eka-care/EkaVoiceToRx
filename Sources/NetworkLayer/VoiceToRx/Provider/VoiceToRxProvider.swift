@@ -34,6 +34,9 @@ protocol VoiceToRxProvider {
     sessionID: String,
     _ completion: @escaping (Result<VoiceToRxStatusResponse, Error>, Int?) -> Void
   )
+  
+  /// History
+  func getHistoryEkaScribe(_ completion: @escaping (Result<EkaScribeHistoryResponse, Error>, Int?) -> Void)
 }
 
 extension VoiceToRxProvider {
@@ -70,5 +73,10 @@ extension VoiceToRxProvider {
     _ completion: @escaping (Result<VoiceToRxStatusResponse, Error>, Int?) -> Void
   ) {
     networkService.execute(VoiceToRxEndpoint.getVoiceToRxStatus(sessionID: sessionID), completion: completion)
+  }
+  
+  /// History
+  func getHistoryEkaScribe(_ completion: @escaping (Result<EkaScribeHistoryResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.getHistoryEkaScribe, completion: completion)
   }
 }
