@@ -322,4 +322,17 @@ public final class VoiceToRxRepo {
         completion(.failure(error))
       }
     }
-  }}
+  }
+  
+  func getEkaScribeHistory()  {
+    service.getHistoryEkaScribe { result, _ in
+      switch result {
+      case .success(let response):
+        print("#BB history data \(response)")
+        
+      case .failure(let error):
+        print("#BB error \(error)")
+      }
+    }
+  }
+}

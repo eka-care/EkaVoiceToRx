@@ -67,7 +67,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       .validate()
       
     case .getHistoryEkaScribe:
-      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/transaction/history",
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/transaction/history?count=50",
       method: .get,
       headers: HTTPHeaders([.contentType(HTTPHeader.contentTypeJson.rawValue)]),
       interceptor: NetworkRequestInterceptor()
