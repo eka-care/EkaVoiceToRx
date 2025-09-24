@@ -324,7 +324,7 @@ public final class VoiceToRxRepo {
     }
   }
   
-  func getEkaScribeHistory()  {
+  public func getEkaScribeHistory()  {
     service.getHistoryEkaScribe { result, _ in
       switch result {
       case .success(let response):
