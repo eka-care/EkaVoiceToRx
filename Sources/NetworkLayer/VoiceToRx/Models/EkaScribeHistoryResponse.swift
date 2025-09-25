@@ -8,9 +8,9 @@
 import Foundation
 
 public struct EkaScribeHistoryResponse: Codable {
-    let status: Status
-    let data: [ScribeData]
-    let retrievedCount: Int
+    public let status: Status
+    public let data: [ScribeData]
+    public let retrievedCount: Int
 
     enum CodingKeys: String, CodingKey {
         case status, data
@@ -18,7 +18,7 @@ public struct EkaScribeHistoryResponse: Codable {
     }
 }
 
-struct ScribeData: Codable {
+public struct ScribeData: Codable {
     let bID: String
     let createdAt: String
     let flavour: Flavour
@@ -30,7 +30,7 @@ struct ScribeData: Codable {
     let uuid, version: String
     let patientDetails: PatientDetails?
 
-    enum CodingKeys: String, CodingKey {
+    public enum CodingKeys: String, CodingKey {
         case bID = "b_id"
         case createdAt = "created_at"
         case flavour, mode, oid
@@ -42,7 +42,7 @@ struct ScribeData: Codable {
     }
 }
 
-enum Flavour: String, Codable {
+public enum Flavour: String, Codable {
     case android = "android"
     case empty = ""
     case flavourExtension = "extension"
@@ -51,24 +51,24 @@ enum Flavour: String, Codable {
     case web = "web"
 }
 
-enum Mode: String, Codable {
+public enum Mode: String, Codable {
     case consultation = "consultation"
     case dictation = "dictation"
 }
 
-struct PatientDetails: Codable {
+public struct PatientDetails: Codable {
     let age: Int
     let biologicalSex, username: String
 }
 
-enum Status: String, Codable {
+public enum Status: String, Codable {
     case cancelled = "cancelled"
     case inProgress = "in-progress"
     case success = "success"
     case systemFailure = "system_failure"
 }
 
-enum UserStatus: String, Codable {
+public enum UserStatus: String, Codable {
     case commit = "commit"
     case userStatusInit = "init"
 }
