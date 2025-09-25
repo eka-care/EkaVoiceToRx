@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct EkaScribeHistoryResponse: Codable {
+public struct EkaScribeHistoryResponse: Codable {
     let status: Status
     let data: [ScribeData]
     let retrievedCount: Int
