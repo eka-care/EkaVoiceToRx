@@ -328,10 +328,8 @@ public final class VoiceToRxRepo {
       service.getHistoryEkaScribe { result, _ in
           switch result {
           case .success(let response):
-              print("#BB history data \(response)")
               completion(.success(response))
           case .failure(let error):
-              print("#BB error \(error)")
               completion(.failure(error))
           }
       }
