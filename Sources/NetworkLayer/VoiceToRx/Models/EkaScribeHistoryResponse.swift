@@ -20,7 +20,7 @@ struct EkaScribeHistoryResponse: Codable {
 
 struct ScribeData: Codable {
     let bID: String
-    let createdAt: Date
+    let createdAt: String
     let flavour: Flavour
     let mode: Mode
     let oid: String
