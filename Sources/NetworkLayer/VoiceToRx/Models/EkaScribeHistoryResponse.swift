@@ -19,17 +19,17 @@ public struct EkaScribeHistoryResponse: Codable {
 }
 
 public struct ScribeData: Codable {
-    let bID: String
-    let createdAt: String
-    let flavour: Flavour
-    let mode: Mode
-    let oid: String
-    let processingStatus: Status
-    let txnID: String
-    let userStatus: UserStatus
-    let uuid, version: String
-    let patientDetails: PatientDetails?
-
+    public let bID: String
+    public let createdAt: String
+    public let flavour: Flavour
+    public let mode: Mode
+    public let oid: String
+    public let processingStatus: Status
+    public let txnID: String
+    public let userStatus: UserStatus
+    public let uuid, version: String
+    public let patientDetails: PatientDetails?
+  
     public enum CodingKeys: String, CodingKey {
         case bID = "b_id"
         case createdAt = "created_at"
