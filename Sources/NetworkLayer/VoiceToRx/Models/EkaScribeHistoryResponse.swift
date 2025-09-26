@@ -70,5 +70,7 @@ public enum Status: String, Codable {
 
 public enum UserStatus: String, Codable {
     case commit = "commit"
-    case userStatusInit = "init"
+    case userInit = "init"
+    case stopped = "stopped"
+    case result = "result"
 }
