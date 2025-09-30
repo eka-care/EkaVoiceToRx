@@ -8,9 +8,9 @@
 import Foundation
 
 public struct EkaScribeHistoryResponse: Codable {
-    public let status: Status
-    public let data: [ScribeData]
-    public let retrievedCount: Int
+    public let status: Status?
+    public let data: [ScribeData]?
+    public let retrievedCount: Int?
 
     enum CodingKeys: String, CodingKey {
         case status, data
@@ -19,15 +19,15 @@ public struct EkaScribeHistoryResponse: Codable {
 }
 
 public struct ScribeData: Codable {
-    public let bID: String
-    public let createdAt: String
-    public let flavour: Flavour
-    public let mode: Mode
-    public let oid: String
-    public let processingStatus: Status
-    public let txnID: String
-    public let userStatus: UserStatus
-    public let uuid, version: String
+    public let bID: String?
+    public let createdAt: String?
+    public let flavour: Flavour?
+    public let mode: Mode?
+    public let oid: String?
+    public let processingStatus: Status?
+    public let txnID: String?
+    public let userStatus: UserStatus?
+    public let uuid, version: String?
     public let patientDetails: PatientDetails?
   
     public enum CodingKeys: String, CodingKey {
@@ -57,8 +57,8 @@ public enum Mode: String, Codable {
 }
 
 public struct PatientDetails: Codable {
-    public let age: Int
-    public let biologicalSex, username: String
+    public let age: Int?
+    public let biologicalSex, username: String?
 }
 
 public enum Status: String, Codable {
