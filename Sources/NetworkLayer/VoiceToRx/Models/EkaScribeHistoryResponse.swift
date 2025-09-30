@@ -57,8 +57,8 @@ public enum Mode: String, Codable {
 }
 
 public struct PatientDetails: Codable {
-    let age: Int
-    let biologicalSex, username: String
+    public let age: Int
+    public let biologicalSex, username: String
 }
 
 public enum Status: String, Codable {
