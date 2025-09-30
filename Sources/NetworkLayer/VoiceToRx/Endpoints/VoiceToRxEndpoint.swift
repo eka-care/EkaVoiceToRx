@@ -16,6 +16,8 @@ enum VoiceToRxEndpoint {
   case commitVoiceToRx(request: VoiceToRxCommitRequest, sessionID: String)
   /// Result
   case getVoiceToRxStatus(sessionID: String)
+  /// History
+  case getHistoryEkaScribe
 }
 
 extension VoiceToRxEndpoint: RequestProvider {
@@ -63,6 +65,14 @@ extension VoiceToRxEndpoint: RequestProvider {
         interceptor: NetworkRequestInterceptor()
       )
       .validate()
+      
+    case .getHistoryEkaScribe:
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/transaction/history?count=50",
+      method: .get,
+      headers: HTTPHeaders([.contentType(HTTPHeader.contentTypeJson.rawValue)]),
+      interceptor: NetworkRequestInterceptor()
+      )
+    .validate()
     }
   }
 }

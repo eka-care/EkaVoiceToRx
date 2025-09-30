@@ -322,4 +322,16 @@ public final class VoiceToRxRepo {
         completion(.failure(error))
       }
     }
-  }}
+  }
+  
+  public func getEkaScribeHistory(completion: @escaping (Result<EkaScribeHistoryResponse, Error>) -> Void) {
+      service.getHistoryEkaScribe { result, _ in
+          switch result {
+          case .success(let response):
+              completion(.success(response))
+          case .failure(let error):
+              completion(.failure(error))
+          }
+      }
+  }
+}
