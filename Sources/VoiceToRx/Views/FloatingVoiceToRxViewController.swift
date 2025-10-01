@@ -177,7 +177,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
       .compactMap { $0 as? UIWindowScene }
       .flatMap { $0.windows }
       .first { $0.isKeyWindow }
-    button.frame = CGRect(x: (keyWindow?.frame.width ?? 0), y: (keyWindow?.frame.height ?? 0)/6, width: 200, height: 50)
+    button.frame = CGRect(x: (keyWindow?.frame.width ?? 0), y: (keyWindow?.frame.height ?? 0)/2, width: 200, height: 50)
     view.addSubview(button)
     self.button = button
     window.button = button
