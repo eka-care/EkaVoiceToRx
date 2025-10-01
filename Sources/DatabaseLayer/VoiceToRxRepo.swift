@@ -345,7 +345,7 @@ public final class VoiceToRxRepo {
 // MARK: - Helper Extension
 
 extension VoiceToRxRepo {
-    func getTemplateID(for sessionID: UUID) -> String {
+    public func getTemplateID(for sessionID: UUID) -> String {
         guard let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
             return ""
         }
