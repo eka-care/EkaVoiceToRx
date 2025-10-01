@@ -310,6 +310,7 @@ public final class VoiceToRxRepo {
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
         let clinicalNotesValue = outputs.first(where: { $0.templateID == "clinical_notes_template" })?.value ?? ""
+        print("#BB clinicalNotesValue is \(clinicalNotesValue)")
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
           conversationArguement: VoiceConversationArguementModel(transcription: clinicalNotesValue, stage: .result(success: true))
@@ -351,20 +352,3 @@ extension VoiceToRxRepo {
       return model.transcription ?? ""
     }
 }
-
-//public extension VoiceToRxRepo {
-//    
-//    /// Fetches the templateID stored for a given sessionID
-//    /// - Parameter sessionID: The session ID of the voice conversation
-//    /// - Returns: templateID string if present, otherwise empty string
-//    func getTemplateID(for sessionID: UUID) -> String {
-//        let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
-//        fetchRequest.predicate = NSPredicate(format: "sessionID == %@", sessionID as CVarArg)
-//        
-//        if let conversation = fetchVoiceConversation(fetchRequest: fetchRequest) {
-//            return conversation.transcription ?? ""
-//        } else {
-//            return ""
-//        }
-//    }
-//}
