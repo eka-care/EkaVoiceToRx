@@ -57,6 +57,7 @@ public enum Mode: String, Codable {
 }
 
 public struct PatientDetails: Codable {
+    public let oid: String?
     public let age: Int?
     public let biologicalSex, username: String?
 }

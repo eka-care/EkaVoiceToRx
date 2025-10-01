@@ -99,6 +99,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     conversationType: String,
     inputLanguage: [String],
     templateId: [String],
+    modelType: String = "pro",
     liveActivityDelegate: LiveActivityDelegate?
   ) async {
     // Prevent multiple windows from being created
@@ -110,7 +111,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     isInitializing = true
     defer { isInitializing = false }
     
-    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
+    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId, modelType: modelType)
     guard success else {
       debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
       return

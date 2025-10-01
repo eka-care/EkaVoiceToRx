@@ -28,7 +28,9 @@ public final class VoiceToRxRepo {
     conversationMode: VoiceConversationType,
     retryCount: Int = 0,
     intpuLanguage: [String],
-    templateId: [String]
+    templateId: [String],
+    modelType: String,
+    patientDetails: PatientDetails?
   ) async -> (VoiceConversation?, APIError?) {
     var apiError: APIError?
     guard let contextParams else { return (nil, apiError) }
@@ -46,7 +48,7 @@ public final class VoiceToRxRepo {
         message: "No model could be created"
       )
       if retryCount < 3 {
-        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templateId: templateId)
+        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
       }
       return (nil, apiError)
     }
@@ -62,7 +64,9 @@ public final class VoiceToRxRepo {
             OutputFormatTemplate(templateID: templateId.first ?? ""),
             OutputFormatTemplate(templateID: templateId.last ?? "")
           ],
-          transfer: "vaded"
+          transfer: "vaded",
+          modelType: modelType,
+          patientDetails: patientDetails
         )
       ) { [weak self] result, statusCode in
         guard let self else {
