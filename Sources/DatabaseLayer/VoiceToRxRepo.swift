@@ -309,9 +309,11 @@ public final class VoiceToRxRepo {
         let value = outputs.first(where: { $0.value != nil })?.value ?? ""
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
+        let clinicalNotesTemplateID = outputs.first(where: { $0.templateID == "clinical_notes_template" })?.templateID ?? ""
+
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(stage: .result(success: true))
+          conversationArguement: VoiceConversationArguementModel(transcription: clinicalNotesTemplateID, stage: .result(success: true))
         )
         completion(.success((allSuccessful, value)))
         
@@ -339,3 +341,31 @@ public final class VoiceToRxRepo {
       }
   }
 }
+
+// MARK: - Helper Extension
+
+extension VoiceToRxRepo {
+    func getTemplateID(for sessionID: UUID) -> String {
+        guard let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
+            return ""
+        }
+      return model.transcription ?? ""
+    }
+}
+
+//public extension VoiceToRxRepo {
+//    
+//    /// Fetches the templateID stored for a given sessionID
+//    /// - Parameter sessionID: The session ID of the voice conversation
+//    /// - Returns: templateID string if present, otherwise empty string
+//    func getTemplateID(for sessionID: UUID) -> String {
+//        let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
+//        fetchRequest.predicate = NSPredicate(format: "sessionID == %@", sessionID as CVarArg)
+//        
+//        if let conversation = fetchVoiceConversation(fetchRequest: fetchRequest) {
+//            return conversation.transcription ?? ""
+//        } else {
+//            return ""
+//        }
+//    }
+//}
