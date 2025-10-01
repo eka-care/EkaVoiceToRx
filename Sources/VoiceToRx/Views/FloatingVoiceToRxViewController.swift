@@ -68,6 +68,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     conversationType: String,
     inputLanguage: [String],
     templateId: [String],
+    modelType: String,
     liveActivityDelegate: LiveActivityDelegate?,
     completion: @escaping (Bool) -> Void
   ) {
@@ -85,6 +86,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         conversationType: conversationType,
         inputLanguage: inputLanguage,
         templateId: templateId,
+        modelType: modelType,
         liveActivityDelegate: liveActivityDelegate
       )
       
