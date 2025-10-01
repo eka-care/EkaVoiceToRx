@@ -68,6 +68,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     conversationType: String,
     inputLanguage: [String],
     templateId: [String],
+    modelType: String,
     liveActivityDelegate: LiveActivityDelegate?,
     completion: @escaping (Bool) -> Void
   ) {
@@ -85,6 +86,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         conversationType: conversationType,
         inputLanguage: inputLanguage,
         templateId: templateId,
+        modelType: modelType,
         liveActivityDelegate: liveActivityDelegate
       )
       
@@ -99,6 +101,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     conversationType: String,
     inputLanguage: [String],
     templateId: [String],
+    modelType: String = "pro",
     liveActivityDelegate: LiveActivityDelegate?
   ) async {
     // Prevent multiple windows from being created
@@ -110,7 +113,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     isInitializing = true
     defer { isInitializing = false }
     
-    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId)
+    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId, modelType: modelType)
     guard success else {
       debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
       return
@@ -174,7 +177,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
       .compactMap { $0 as? UIWindowScene }
       .flatMap { $0.windows }
       .first { $0.isKeyWindow }
-    button.frame = CGRect(x: (keyWindow?.frame.width ?? 0), y: (keyWindow?.frame.height ?? 0)/4, width: 200, height: 50)
+    button.frame = CGRect(x: (keyWindow?.frame.width ?? 0), y: (keyWindow?.frame.height ?? 0)/2, width: 200, height: 50)
     view.addSubview(button)
     self.button = button
     window.button = button

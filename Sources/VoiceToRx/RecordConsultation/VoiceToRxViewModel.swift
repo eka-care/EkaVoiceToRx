@@ -108,6 +108,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?
   
+  private var emptyResponseCount = 0
+  
   // MARK: - Init
   
   public init(
@@ -167,7 +169,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: String, inputLanguage: [String], templateId: [String]) async -> Bool {
+  public func startRecording(conversationType: String, inputLanguage: [String], templateId: [String], modelType: String) async -> Bool {
     
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
@@ -177,8 +179,10 @@ public final class VoiceToRxViewModel: ObservableObject {
       guard let self else { return }
       clearSession()
     }
+    
+    let patientDetails = PatientDetails(oid: V2RxInitConfigurations.shared.subOwnerOID, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.subOwnerName)
     /// Create session
-    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templateId: templateId)
+    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
@@ -410,6 +414,7 @@ extension VoiceToRxViewModel {
     lastClipIndex = 0
     chunkIndex = 1
     screenState = .startRecording
+    emptyResponseCount = 0
   }
 }
 
@@ -448,8 +453,18 @@ extension VoiceToRxViewModel {
             DispatchQueue.main.async { [weak self] in
               guard let self else { return }
               screenState = .resultDisplay(success: true, value: value)
+            } 
+          } else {
+            self.emptyResponseCount += 1
+            if self.emptyResponseCount >= 3 {
+                print("Stopping polling after 3 empty responses")
+                timer.invalidate()
+                self.pollingTimer = nil
+                DispatchQueue.main.async {
+                    self.screenState = .resultDisplay(success: false, value: nil)
+                }
             }
-          }
+        }
           // If not complete, continue polling
         case .failure(let error):
           print("❌ Polling stopped due to API/model error: \(error.localizedDescription)")
