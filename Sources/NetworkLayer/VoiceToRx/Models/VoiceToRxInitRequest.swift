@@ -16,12 +16,13 @@ struct VoiceToRxInitRequest: Codable {
   let patientDetails: PatientDetails?
   
   enum CodingKeys: String, CodingKey {
-    case additionalData, mode, transfer
+    case mode, transfer
     case inputLanguage = "input_language"
     case s3URL = "s3_url"
     case outputFormatTemplate = "output_format_template"
     case modelType = "model_type"
     case patientDetails = "patient_details"
+    case additionalData = "additional_data"
   }
 }
 
