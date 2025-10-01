@@ -309,7 +309,11 @@ public final class VoiceToRxRepo {
         let value = outputs.first(where: { $0.value != nil })?.value ?? ""
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
-        let clinicalNotesValue = outputs.first(where: { $0.templateID == "clinical_notes_template" })?.value ?? ""
+        let clinicalNotesValue = outputs
+            .filter { $0.templateID == "clinical_notes_template" }
+            .compactMap { $0.value }
+            .joined(separator: "\n")
+        
         print("#BB clinicalNotesValue is \(clinicalNotesValue)")
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
