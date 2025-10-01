@@ -108,6 +108,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   weak var voiceToRxDelegate: FloatingVoiceToRxDelegate?
   public var voiceConversationType: VoiceConversationType?
   
+  private var emptyResponseCount = 0
+  
   // MARK: - Init
   
   public init(
@@ -410,6 +412,7 @@ extension VoiceToRxViewModel {
     lastClipIndex = 0
     chunkIndex = 1
     screenState = .startRecording
+    emptyResponseCount = 0
   }
 }
 
@@ -448,8 +451,18 @@ extension VoiceToRxViewModel {
             DispatchQueue.main.async { [weak self] in
               guard let self else { return }
               screenState = .resultDisplay(success: true, value: value)
+            } 
+          } else {
+            self.emptyResponseCount += 1
+            if self.emptyResponseCount >= 3 {
+                print("Stopping polling after 3 empty responses")
+                timer.invalidate()
+                self.pollingTimer = nil
+                DispatchQueue.main.async {
+                    self.screenState = .resultDisplay(success: false, value: nil)
+                }
             }
-          }
+        }
           // If not complete, continue polling
         case .failure(let error):
           print("❌ Polling stopped due to API/model error: \(error.localizedDescription)")
