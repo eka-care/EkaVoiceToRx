@@ -309,11 +309,10 @@ public final class VoiceToRxRepo {
         let value = outputs.first(where: { $0.value != nil })?.value ?? ""
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
-        let clinicalNotesTemplateID = outputs.first(where: { $0.templateID == "clinical_notes_template" })?.templateID ?? ""
-
+        let clinicalNotesValue = outputs.first(where: { $0.templateID == "clinical_notes_template" })?.value ?? ""
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(transcription: clinicalNotesTemplateID, stage: .result(success: true))
+          conversationArguement: VoiceConversationArguementModel(transcription: clinicalNotesValue, stage: .result(success: true))
         )
         completion(.success((allSuccessful, value)))
         
