@@ -112,7 +112,7 @@ extension NetworkRequestInterceptor {
       urlRequest.headers.add(name: "Accept", value: "application/x-protobuf")
     }
     
-    urlRequest.headers.add(name: "client-id", value: "doctor-app-ios")
+    urlRequest.headers.add(name: "client-id", value: "doctor-ipad-ios")
     urlRequest.headers.add(name: "flavour", value: UIDevice.current.userInterfaceIdiom == .phone ? "io" : "ip")
     urlRequest.headers.add(name: "locale", value: String(Locale.preferredLanguages.first?.prefix(2) ?? "en"))
     
