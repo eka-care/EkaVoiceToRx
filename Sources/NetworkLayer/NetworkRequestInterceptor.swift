@@ -62,6 +62,8 @@ final class NetworkRequestInterceptor: Alamofire.RequestInterceptor {
       /// If we have new token then retry immediately
       if succeeded {
         completion(.retry)
+      } else {
+        completion(.doNotRetryWithError(error))
       }
     }
   }
@@ -95,6 +97,7 @@ extension NetworkRequestInterceptor {
         // Failure
       case .failure( _ ):
         completion(false, nil)
+        debugPrint("Retry refresh token failed")
       }
     }
   }
