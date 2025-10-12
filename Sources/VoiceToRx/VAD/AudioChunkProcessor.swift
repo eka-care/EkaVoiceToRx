@@ -25,6 +25,14 @@ final class AudioChunkProcessor {
     }
   }
   
+  func calculateAmplitude(bufferPointer: UnsafePointer<Int16>, length: Int) -> Float {
+    var sum: Float = 0
+    for i in 0..<length {
+      sum += abs(Float(bufferPointer[i]) / 32768.0)
+    }
+    return sum / Float(length)
+  }
+  
   func processAudioChunk(
     audioEngine: AVAudioEngine,
     buffer: AVAudioPCMBuffer? = nil,
@@ -33,7 +41,8 @@ final class AudioChunkProcessor {
     lastClipIndex: inout Int,
     chunkIndex: inout Int,
     audioChunkUploader: AudioChunkUploader,
-    pcmBufferListRaw: inout [Int16]
+    pcmBufferListRaw: inout [Int16],
+    onAmplitudeUpdate: ((Float) -> Void)? = nil
   ) async throws {
     var bufferPointer: UnsafeRawBufferPointer?
     /// If audio engine is running, continue forming buffer pointer
@@ -56,6 +65,10 @@ final class AudioChunkProcessor {
       /// Break down buffer of 100ms into smaller buffer of 20ms each for processing vad
       for i in 0..<numberOfChunks {
         let newPointer = p.baseAddress! + chunkSize*i
+        
+        let amplitude = calculateAmplitude(bufferPointer: newPointer, length: chunkSize)
+            onAmplitudeUpdate?(amplitude)
+        
         if let voiceActivityValue = processAudioWithVad(
           bufferPointer: newPointer,
           length: chunkSize

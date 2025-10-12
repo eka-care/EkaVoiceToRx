@@ -80,6 +80,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   /// Don't add duplicates in the set
   @Published public var filesProcessed: Set<String> = []
   @Published public var uploadedFiles: Set<String> = []
+  @Published public var amplitude: Float = 0.0
   
   private var docOid: String?
   
@@ -247,7 +248,11 @@ public final class VoiceToRxViewModel: ObservableObject {
           chunkIndex: &chunkIndex,
           audioChunkUploader: audioChunkUploader,
           pcmBufferListRaw: &pcmBuffersListRaw
-        )
+        ) { amplitude in
+          DispatchQueue.main.async {
+            self.amplitude = amplitude
+          }
+        }
       }
     }
     

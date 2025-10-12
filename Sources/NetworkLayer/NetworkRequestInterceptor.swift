@@ -62,6 +62,8 @@ final class NetworkRequestInterceptor: Alamofire.RequestInterceptor {
       /// If we have new token then retry immediately
       if succeeded {
         completion(.retry)
+      } else {
+        completion(.doNotRetryWithError(error))
       }
     }
   }
@@ -95,6 +97,7 @@ extension NetworkRequestInterceptor {
         // Failure
       case .failure( _ ):
         completion(false, nil)
+        debugPrint("Retry refresh token failed")
       }
     }
   }
@@ -109,7 +112,7 @@ extension NetworkRequestInterceptor {
       urlRequest.headers.add(name: "Accept", value: "application/x-protobuf")
     }
     
-    urlRequest.headers.add(name: "client-id", value: "doctor-app-ios")
+    urlRequest.headers.add(name: "client-id", value: "doctor-ipad-ios")
     urlRequest.headers.add(name: "flavour", value: UIDevice.current.userInterfaceIdiom == .phone ? "io" : "ip")
     urlRequest.headers.add(name: "locale", value: String(Locale.preferredLanguages.first?.prefix(2) ?? "en"))
     
