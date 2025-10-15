@@ -24,7 +24,7 @@ public struct ScribeData: Codable {
     public let flavour: Flavour?
     public let mode: Mode
     public let oid: String
-    public let processingStatus: Status
+    public let processingStatus: ProcessingStatus
     public let txnID: String
     public let userStatus: UserStatus
     public let uuid, version: String?
@@ -75,3 +75,12 @@ public enum UserStatus: String, Codable {
     case stopped = "stopped"
     case cancelled = "cancelled"
 }
+
+public enum ProcessingStatus: String, Codable {
+  case success = "success"
+  case inProgress = "in-progress"
+  case systemFailure = "system_failure"
+  case requestFailure = "request_failure"
+  case cancelled = "cancelled"
+}
+
