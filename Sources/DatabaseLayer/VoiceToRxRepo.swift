@@ -358,22 +358,22 @@ extension VoiceToRxRepo {
 }
 
 extension VoiceToRxRepo {
-  public func fetchResultStatus(sessionID: UUID,
+  public func fetchResultStatus(sessionID: String,
                                 completion: @escaping (Result<(Bool, String), Error>) -> Void) {
-    service.getVoiceToRxStatus(sessionID: sessionID.uuidString) { [weak self] result, statusCode in
+    service.getVoiceToRxStatus(sessionID: sessionID) { [weak self] result, statusCode in
       guard let self else { return }
       switch result {
       case .success(let response):
         guard let outputs = response.data?.output, !outputs.isEmpty else {
           /// Status fetch event
-          statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
+          //statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
           completion(.success((false, "")))
           return
         }
         let allSuccessful = outputs.allSatisfy { $0.status == "success" }
         let value = outputs.first(where: { $0.value != nil })?.value ?? ""
-        statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
+       // statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
         let clinicalNotesValue = outputs
           .filter { $0.templateID == "clinical_notes_template" }
@@ -381,20 +381,12 @@ extension VoiceToRxRepo {
           .joined(separator: "\n")
         
         print("#BB clinicalNotesValue is \(clinicalNotesValue)")
-        databaseManager.updateVoiceConversation(
-          sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(transcription: clinicalNotesValue, stage: .result(success: true))
-        )
         completion(.success((allSuccessful, value)))
         
       case .failure(let error):
         /// Status fetch event
-        statusFetchEvent(sessionID: sessionID, status: .failure, message: "Error in getting voice to rx status -> \(error)")
+    //    statusFetchEvent(sessionID: sessionID, status: .failure, message: "Error in getting voice to rx status -> \(error)")
         debugPrint("❌ Error in getting voice to rx status -> \(error)")
-        databaseManager.updateVoiceConversation(
-          sessionID: sessionID,
-          conversationArguement: VoiceConversationArguementModel(stage: .result(success: false))
-        )
         completion(.failure(error))
       }
     }
