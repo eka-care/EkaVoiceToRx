@@ -6,9 +6,10 @@
 //
 
 
-import AWSCore
 import AWSS3
+import AWSClientRuntime
 import Foundation
+import AWSSDKIdentity
 
 enum RecordingS3UploadConfiguration {
   static let bucketName = "m-prod-voice-record"
@@ -29,10 +30,11 @@ final class AWSConfiguration {
   static let shared = AWSConfiguration()
   private init() {}
   
-  var awsClient: AWSServiceConfiguration?
-  private(set) var activeTransferKey: String?
+  private(set) var s3Client: S3Client?
+  private(set) var region: String = "ap-south-1"
   
-  func configureAWSS3(credentials: Credentials) {
+  /// Configure AWS S3 using the AWS SDK for Swift (awslabs/aws-sdk-swift)
+  func configureS3(credentials: Credentials, region: String = "ap-south-1") {
     guard let accessKeyID = credentials.accessKeyID,
           let secretKey = credentials.secretKey,
           let sessionToken = credentials.sessionToken else {
@@ -40,44 +42,29 @@ final class AWSConfiguration {
       return
     }
     
-    let sessionCredentials = AWSBasicSessionCredentialsProvider(
-      accessKey: accessKeyID,
-      secretKey: secretKey,
-      sessionToken: sessionToken
-    )
-    
-    let clientConfiguration = AWSServiceConfiguration(
-      region: .APSouth1, // Change to your region
-      credentialsProvider: sessionCredentials
-    )
-    awsClient = clientConfiguration
-    
-    let transferUtilityConfiguration = AWSS3TransferUtilityConfiguration()
-    transferUtilityConfiguration.isAccelerateModeEnabled = false
-    
-    // Generate a NEW key each time credentials change
-    let newKey = "S3TransferUtility-\(UUID().uuidString)"
-    activeTransferKey = newKey
-    
-    AWSS3TransferUtility.register(
-      with: clientConfiguration!,
-      transferUtilityConfiguration: transferUtilityConfiguration,
-      forKey: newKey
-    )
-    
-    AWSS3.register(
-      with: clientConfiguration!,
-      forKey: "s3Client-\(UUID().uuidString)"
-    )
-    
-    print("✅ Registered AWS S3 TransferUtility with key: \(newKey)")
+    do {
+      let identity = AWSCredentialIdentity(
+        accessKey: accessKeyID,
+        secret: secretKey,
+        sessionToken: sessionToken
+      )
+      let resolver = StaticAWSCredentialIdentityResolver(identity)
+      
+      let config = try S3Client.S3ClientConfiguration(
+        region: region
+      )
+      // Plug in explicit static credentials resolver so requests are signed with provided creds
+      config.awsCredentialIdentityResolver = resolver
+      
+      self.s3Client = S3Client(config: config)
+      self.region = region
+      print("✅ Configured AWS S3Client for region: \(region)")
+    } catch {
+      print("❌ Failed to configure S3Client: \(error)")
+    }
   }
   
-  func getTransferUtility() -> AWSS3TransferUtility? {
-    guard let key = activeTransferKey else {
-      print("❌ No active TransferUtility key set")
-      return nil
-    }
-    return AWSS3TransferUtility.s3TransferUtility(forKey: key)
+  func getS3Client() -> S3Client? {
+    s3Client
   }
 }

@@ -432,7 +432,7 @@ extension VoiceToRxViewModel {
       switch result {
       case .success(let response):
         guard let credentials = response.credentials else { return }
-        AWSConfiguration.shared.configureAWSS3(credentials: credentials)
+        AWSConfiguration.shared.configureS3(credentials: credentials)
       case .failure(let error):
         print("Error in fetching aws credentials -> \(error.localizedDescription)")
       }
