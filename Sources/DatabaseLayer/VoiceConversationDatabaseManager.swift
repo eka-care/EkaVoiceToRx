@@ -60,10 +60,10 @@ final class VoiceConversationDatabaseManager {
     /// Observe Core Data remote change notifications on the queue where the changes were made.
     notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { [weak self] note in
       guard let self else { return }
-      Task { [weak self] in
-        guard let self else { return }
-        await self.fetchPersistentHistory()
-      }
+   //   Task { [weak self] in
+   //     guard let self else { return }
+        self.fetchPersistentHistory()
+   //   }
     }
     
     NotificationCenter.default.addObserver(forName: .NSManagedObjectContextObjectsDidChange, object: nil, queue: nil) { [weak self] notification in
@@ -97,27 +97,52 @@ extension VoiceConversationDatabaseManager {
   }
   
   /// Used to fetch persistent history changes from the store.
-  func fetchPersistentHistory() async {
-    do {
-      try await fetchPersistentHistoryTransactionsAndChanges()
-    } catch {
-      debugPrint("\(error.localizedDescription)")
+//  func fetchPersistentHistory() async {
+//    do {
+//      try await fetchPersistentHistoryTransactionsAndChanges()
+//    } catch {
+//      debugPrint("\(error.localizedDescription)")
+//    }
+//  }
+  
+  /// Fetches persistent history transactions and merges them into the view context.
+//  func fetchPersistentHistoryTransactionsAndChanges() async throws {
+//    backgroundContext.name = "persistentHistoryContext"
+//    try await backgroundContext.perform { [weak self] in
+//      guard let self else { return }
+//      // Execute the persistent history change since the last transaction.
+//      /// - Tag: fetchHistory
+//      let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
+//      let historyResult = try backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
+//      if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
+//         !history.isEmpty {
+//        self.mergePersistentHistoryChanges(from: history)
+//        return
+//      }
+//    }
+//  }
+  func fetchPersistentHistory() {
+    Task(priority: .background) { [weak self] in
+      guard let self else { return }
+      self.fetchPersistentHistoryTransactionsAndChanges()
     }
   }
   
-  /// Fetches persistent history transactions and merges them into the view context.
-  func fetchPersistentHistoryTransactionsAndChanges() async throws {
-    backgroundContext.name = "persistentHistoryContext"
-    try await backgroundContext.perform { [weak self] in
+  func fetchPersistentHistoryTransactionsAndChanges() {
+    Task(priority: .background) { @MainActor [weak self] in
       guard let self else { return }
-      // Execute the persistent history change since the last transaction.
-      /// - Tag: fetchHistory
-      let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
-      let historyResult = try backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
-      if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
-         !history.isEmpty {
-        self.mergePersistentHistoryChanges(from: history)
-        return
+      
+      backgroundContext.perform {
+        let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
+        do {
+          let historyResult = try self.backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
+          if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
+             !history.isEmpty {
+            self.mergePersistentHistoryChanges(from: history)
+          }
+        } catch {
+          print("⚠️ Persistent history fetch failed: \(error)")
+        }
       }
     }
   }
@@ -303,3 +328,4 @@ extension VoiceConversationDatabaseManager {
     }
   }
 }
+
