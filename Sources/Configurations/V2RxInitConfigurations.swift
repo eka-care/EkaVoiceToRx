@@ -31,6 +31,9 @@ public final class V2RxInitConfigurations {
   /// Oid of the subOwner
   public var subOwnerOID: String?
   
+  /// Name to be used for sending to BackEnd
+  public var name: String?
+  
   /// Model container
   public var modelContainer: ModelContainer!
   
