@@ -183,7 +183,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     
     var patientDetails: PatientDetails? = nil
     
-    if let oid = V2RxInitConfigurations.shared.subOwnerOID {
+    if let oid = V2RxInitConfigurations.shared.subOwnerOID, oid != "" {
       patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
     }
     /// Create session
