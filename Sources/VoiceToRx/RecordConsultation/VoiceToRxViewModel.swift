@@ -111,7 +111,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   private var emptyResponseCount = 0
   
-  // MARK: - Init
+   // MARK: - Init
   
   public init(
     voiceToRxInitConfig: V2RxInitConfigurations,
@@ -181,7 +181,11 @@ public final class VoiceToRxViewModel: ObservableObject {
       clearSession()
     }
     
-    let patientDetails = PatientDetails(oid: V2RxInitConfigurations.shared.subOwnerOID, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.subOwnerName)
+    var patientDetails: PatientDetails? = nil
+    
+    if let oid = V2RxInitConfigurations.shared.subOwnerOID {
+      patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
+    }
     /// Create session
     let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
