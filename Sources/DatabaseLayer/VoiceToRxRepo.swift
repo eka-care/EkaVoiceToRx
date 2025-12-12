@@ -310,9 +310,9 @@ public final class VoiceToRxRepo {
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
         let clinicalNotesValue = outputs
-            .filter { $0.templateID == "clinical_notes_template" }
-            .compactMap { $0.value }
-            .joined(separator: "\n")
+          .filter { $0.templateID == "clinical_notes_template" }
+          .compactMap { $0.value }
+          .joined(separator: "\n")
         
         print("#BB clinicalNotesValue is \(clinicalNotesValue)")
         databaseManager.updateVoiceConversation(
@@ -335,14 +335,25 @@ public final class VoiceToRxRepo {
   }
   
   public func getEkaScribeHistory(completion: @escaping (Result<EkaScribeHistoryResponse, Error>) -> Void) {
-      service.getHistoryEkaScribe { result, _ in
-          switch result {
-          case .success(let response):
-              completion(.success(response))
-          case .failure(let error):
-              completion(.failure(error))
-          }
+    service.getHistoryEkaScribe { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
       }
+    }
+  }
+  
+  public func getTemplates(completion: @escaping (Result<TemplateResponse,Error>)-> Void) {
+    service.getTemplate { result, response in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
   }
 }
 

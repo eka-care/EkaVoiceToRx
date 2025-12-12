@@ -79,4 +79,9 @@ extension VoiceToRxProvider {
   func getHistoryEkaScribe(_ completion: @escaping (Result<EkaScribeHistoryResponse, Error>, Int?) -> Void) {
     networkService.execute(VoiceToRxEndpoint.getHistoryEkaScribe, completion: completion)
   }
+  
+  /// Get template
+  func getTemplate(_ completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.getTemplates, completion: completion)
+  }
 }
