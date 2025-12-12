@@ -40,7 +40,9 @@ protocol VoiceToRxProvider {
   
   func getTemplate(_ completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void)
   
-  func saveEditedTemplate(templateID: String, request: TemplateEditRequest,_ completion: @escaping (Result<TemplateEditResponse, Error>, Int?) -> Void)
+  func createTemplate(request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void)
+  
+  func saveEditedTemplate(templateID: String, request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void)
 }
 
 extension VoiceToRxProvider {
@@ -89,7 +91,11 @@ extension VoiceToRxProvider {
     networkService.execute(VoiceToRxEndpoint.getTemplates, completion: completion)
   }
   
-  func saveEditedTemplate(templateID: String, request: TemplateEditRequest,_ completion: @escaping (Result<TemplateEditResponse, Error>, Int?) -> Void) {
+  func createTemplate(request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.createTemplate(request: request), completion: completion)
+  }
+  
+  func saveEditedTemplate(templateID: String, request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void) {
     networkService.execute(VoiceToRxEndpoint.editTemplate(request: request, templateID: templateID), completion: completion)
   }
 }

@@ -20,8 +20,10 @@ enum VoiceToRxEndpoint {
   case getHistoryEkaScribe
   /// Get templates
   case getTemplates
+  /// Create template
+  case createTemplate(request: TemplateCreateAndEditRequest)
   /// Edit template
-  case editTemplate(request: TemplateEditRequest, templateID: String)
+  case editTemplate(request: TemplateCreateAndEditRequest, templateID: String)
 }
 
 extension VoiceToRxEndpoint: RequestProvider {
@@ -82,6 +84,19 @@ extension VoiceToRxEndpoint: RequestProvider {
       AF.request(
         "\(DomainConfigurations.apiEkaCareUrl)/template",
         method: .get,
+        headers: HTTPHeaders(
+          [.contentType(
+            HTTPHeader.contentTypeJson.rawValue
+          )]
+        ),
+        interceptor: NetworkRequestInterceptor()
+      ).validate()
+      
+    case let .createTemplate(request):
+      AF.request(
+        "\(DomainConfigurations.apiEkaCareUrl)/template",
+        method: .post,
+        parameters: request,
         headers: HTTPHeaders(
           [.contentType(
             HTTPHeader.contentTypeJson.rawValue

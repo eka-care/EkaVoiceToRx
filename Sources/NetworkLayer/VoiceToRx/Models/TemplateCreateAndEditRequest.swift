@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct TemplateEditRequest: Codable {
+public struct TemplateCreateAndEditRequest: Codable {
     public let title: String?
     public let desc: String?
     public let sectionIds: [String]?
