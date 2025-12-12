@@ -37,6 +37,10 @@ protocol VoiceToRxProvider {
   
   /// History
   func getHistoryEkaScribe(_ completion: @escaping (Result<EkaScribeHistoryResponse, Error>, Int?) -> Void)
+  
+  func getTemplate(_ completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void)
+  
+  func saveEditedTemplate(templateID: String, request: TemplateEditRequest,_ completion: @escaping (Result<TemplateEditResponse, Error>, Int?) -> Void)
 }
 
 extension VoiceToRxProvider {
@@ -83,5 +87,9 @@ extension VoiceToRxProvider {
   /// Get template
   func getTemplate(_ completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void) {
     networkService.execute(VoiceToRxEndpoint.getTemplates, completion: completion)
+  }
+  
+  func saveEditedTemplate(templateID: String, request: TemplateEditRequest,_ completion: @escaping (Result<TemplateEditResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.editTemplate(request: request, templateID: templateID), completion: completion)
   }
 }
