@@ -24,6 +24,8 @@ enum VoiceToRxEndpoint {
   case createTemplate(request: TemplateCreateAndEditRequest)
   /// Edit template
   case editTemplate(request: TemplateCreateAndEditRequest, templateID: String)
+  /// Delete template
+  case deleteTemplate(templateID: String)
 }
 
 extension VoiceToRxEndpoint: RequestProvider {
@@ -105,9 +107,9 @@ extension VoiceToRxEndpoint: RequestProvider {
         interceptor: NetworkRequestInterceptor()
       ).validate()
       
-    case let .editTemplate(request, sessionID):
+    case let .editTemplate(request, templateID):
       AF.request(
-        "\(DomainConfigurations.apiEkaCareUrl)/template/\(sessionID)",
+        "\(DomainConfigurations.apiEkaCareUrl)/template/\(templateID)",
         method: .put,
         parameters: request,
         headers: HTTPHeaders(
@@ -118,6 +120,17 @@ extension VoiceToRxEndpoint: RequestProvider {
         interceptor: NetworkRequestInterceptor()
       ).validate()
     
+    case let .deleteTemplate(templateID):
+      AF.request(
+        "\(DomainConfigurations.apiEkaCareUrl)/template/\(templateID)",
+        method: .delete,
+        headers: HTTPHeaders(
+          [.contentType(
+            HTTPHeader.contentTypeJson.rawValue
+          )]
+        ),
+        interceptor: NetworkRequestInterceptor()
+      ).validate()
     }
   }
 }
