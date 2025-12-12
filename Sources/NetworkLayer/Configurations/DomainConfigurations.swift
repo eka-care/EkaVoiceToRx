@@ -15,8 +15,4 @@ enum DomainConfigurations {
   public static var apiEkaCareUrl: String {
     return "https://api.eka.care"
   }
-  
-  public static var scribeEkaCare: String {
-    return "https://scribe.eka.care"
-  }
 }

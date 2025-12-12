@@ -355,6 +355,18 @@ public final class VoiceToRxRepo {
       }
     }
   }
+  
+  public func saveEditedTemplate(templateID: String, title: String, sessionID: [String], desc: String, completion: @escaping (Result<TemplateEditResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateEditRequest(title: title, desc: desc, sectionIds: sessionID)
+    service.saveEditedTemplate(templateID: templateID, request: templateEditRequest) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
 }
 
 // MARK: - Helper Extension
