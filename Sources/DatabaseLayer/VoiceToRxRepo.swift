@@ -379,6 +379,17 @@ public final class VoiceToRxRepo {
       }
     }
   }
+
+  public func deleteTemplate(templateID: String, completion: @escaping (Result<Void,Error>)-> Void) {
+    service.deleteTemplate(templateID: templateID) { result, _ in
+      switch result {
+      case .success(_):
+        completion(.success(()))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
 }
 
 // MARK: - Helper Extension
@@ -427,3 +438,4 @@ extension VoiceToRxRepo {
     }
   }
 }
+
