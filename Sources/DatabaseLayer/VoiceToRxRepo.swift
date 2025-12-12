@@ -356,8 +356,20 @@ public final class VoiceToRxRepo {
     }
   }
   
-  public func saveEditedTemplate(templateID: String, title: String, sessionID: [String], desc: String, completion: @escaping (Result<TemplateEditResponse,Error>)-> Void) {
-    let templateEditRequest = TemplateEditRequest(title: title, desc: desc, sectionIds: sessionID)
+  public func createTemplate(title: String, desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: [])
+    service.createTemplate(request: templateEditRequest) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+  
+  public func saveEditedTemplate(templateID: String, title: String, sessionID: [String], desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: sessionID)
     service.saveEditedTemplate(templateID: templateID, request: templateEditRequest) { result, _ in
       switch result {
       case .success(let response):
