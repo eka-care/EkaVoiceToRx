@@ -5,13 +5,13 @@
 //  Created by Arya Vashisht on 27/05/25.
 //
 
-struct VoiceToRxStatusResponse: Codable {
-  let data: VoiceToRxStatusData?
+public struct VoiceToRxStatusResponse: Codable {
+  public let data: VoiceToRxStatusData?
 }
 
-struct VoiceToRxStatusData: Codable {
-  let output: [VoiceToRxOutput]?
-  let additionalData: VoiceToRxContextParams?
+public struct VoiceToRxStatusData: Codable {
+  public let output: [VoiceToRxOutput]?
+  public let additionalData: VoiceToRxContextParams?
   
   enum CodingKeys: String, CodingKey {
     case output
@@ -19,10 +19,10 @@ struct VoiceToRxStatusData: Codable {
   }
 }
 
-struct VoiceToRxOutput: Codable {
-  let templateID, value, type, name: String?
-  let status: String?
-  let errors, warnings: [VoiceToRxError]
+public struct VoiceToRxOutput: Codable {
+  public let templateID, value, type, name: String?
+  public let status: String?
+  public let errors, warnings: [VoiceToRxError]
   
   enum CodingKeys: String, CodingKey {
     case templateID = "template_id"
@@ -31,6 +31,6 @@ struct VoiceToRxOutput: Codable {
 }
 
 // MARK: - Error
-struct VoiceToRxError: Codable {
-  let type, msg, code: String?
+public struct VoiceToRxError: Codable {
+  public let type, msg, code: String?
 }

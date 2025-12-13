@@ -345,46 +345,11 @@ public final class VoiceToRxRepo {
     }
   }
   
-  public func getTemplates(completion: @escaping (Result<TemplateResponse,Error>)-> Void) {
-    service.getTemplate { result, response in
+  public func fetchResultStatusResponse(sessionID: String, completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void)  {
+    service.getVoiceToRxStatus(sessionID: sessionID) { result, _ in
       switch result {
       case .success(let response):
         completion(.success(response))
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
-  
-  public func createTemplate(title: String, desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
-    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: [])
-    service.createTemplate(request: templateEditRequest) { result, _ in
-      switch result {
-      case .success(let response):
-        completion(.success(response))
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
-  
-  public func saveEditedTemplate(templateID: String, title: String, sessionID: [String], desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
-    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: sessionID)
-    service.saveEditedTemplate(templateID: templateID, request: templateEditRequest) { result, _ in
-      switch result {
-      case .success(let response):
-        completion(.success(response))
-      case .failure(let error):
-        completion(.failure(error))
-      }
-    }
-  }
-
-  public func deleteTemplate(templateID: String, completion: @escaping (Result<Void,Error>)-> Void) {
-    service.deleteTemplate(templateID: templateID) { result, _ in
-      switch result {
-      case .success(_):
-        completion(.success(()))
       case .failure(let error):
         completion(.failure(error))
       }
@@ -439,3 +404,51 @@ extension VoiceToRxRepo {
   }
 }
 
+// Mark: - Templates
+extension VoiceToRxRepo {
+  public func getTemplates(completion: @escaping (Result<TemplateResponse,Error>)-> Void) {
+    service.getTemplate { result, response in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+  
+  public func createTemplate(title: String, desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: [])
+    service.createTemplate(request: templateEditRequest) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+  
+  public func saveEditedTemplate(templateID: String, title: String, sessionID: [String], desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: sessionID)
+    service.saveEditedTemplate(templateID: templateID, request: templateEditRequest) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+
+  public func deleteTemplate(templateID: String, completion: @escaping (Result<Void,Error>)-> Void) {
+    service.deleteTemplate(templateID: templateID) { result, _ in
+      switch result {
+      case .success(_):
+        completion(.success(()))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+}
