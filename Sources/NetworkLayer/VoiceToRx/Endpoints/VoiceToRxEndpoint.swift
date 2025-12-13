@@ -84,7 +84,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       
     case .getTemplates:
       AF.request(
-        "\(DomainConfigurations.apiEkaCareUrl)/template",
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template",
         method: .get,
         headers: HTTPHeaders(
           [.contentType(
@@ -96,7 +96,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       
     case let .createTemplate(request):
       AF.request(
-        "\(DomainConfigurations.apiEkaCareUrl)/template",
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template",
         method: .post,
         parameters: request,
         headers: HTTPHeaders(
@@ -109,7 +109,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       
     case let .editTemplate(request, templateID):
       AF.request(
-        "\(DomainConfigurations.apiEkaCareUrl)/template/\(templateID)",
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template/\(templateID)",
         method: .put,
         parameters: request,
         headers: HTTPHeaders(
@@ -122,7 +122,7 @@ extension VoiceToRxEndpoint: RequestProvider {
     
     case let .deleteTemplate(templateID):
       AF.request(
-        "\(DomainConfigurations.apiEkaCareUrl)/template/\(templateID)",
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template/\(templateID)",
         method: .delete,
         headers: HTTPHeaders(
           [.contentType(
