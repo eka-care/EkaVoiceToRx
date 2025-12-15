@@ -28,7 +28,7 @@ public final class VoiceToRxRepo {
     conversationMode: VoiceConversationType,
     retryCount: Int = 0,
     intpuLanguage: [String],
-    templateId: [String],
+    templates: [OutputFormatTemplate],
     modelType: String,
     patientDetails: PatientDetails?
   ) async -> (VoiceConversation?, APIError?) {
@@ -48,7 +48,7 @@ public final class VoiceToRxRepo {
         message: "No model could be created"
       )
       if retryCount < 3 {
-        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
+        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
       }
       return (nil, apiError)
     }
@@ -60,10 +60,7 @@ public final class VoiceToRxRepo {
           mode: conversationMode.rawValue,
           inputLanguage: intpuLanguage,
           s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
-          outputFormatTemplate: [
-            OutputFormatTemplate(templateID: templateId.first ?? ""),
-            OutputFormatTemplate(templateID: templateId.last ?? "")
-          ],
+          outputFormatTemplate: templates,
           transfer: "vaded",
           modelType: modelType,
           patientDetails: patientDetails

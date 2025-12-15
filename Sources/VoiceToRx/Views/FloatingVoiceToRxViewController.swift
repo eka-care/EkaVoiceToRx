@@ -67,7 +67,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     viewModel: VoiceToRxViewModel,
     conversationType: String,
     inputLanguage: [String],
-    templateId: [String],
+    templates: [OutputFormatTemplate],
     modelType: String,
     liveActivityDelegate: LiveActivityDelegate?,
     completion: @escaping (Bool) -> Void
@@ -85,7 +85,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         viewModel: viewModel,
         conversationType: conversationType,
         inputLanguage: inputLanguage,
-        templateId: templateId,
+        templates: templates,
         modelType: modelType,
         liveActivityDelegate: liveActivityDelegate
       )
@@ -100,7 +100,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     viewModel: VoiceToRxViewModel,
     conversationType: String,
     inputLanguage: [String],
-    templateId: [String],
+    templates: [OutputFormatTemplate],
     modelType: String = "pro",
     liveActivityDelegate: LiveActivityDelegate?
   ) async {
@@ -113,7 +113,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     isInitializing = true
     defer { isInitializing = false }
     
-    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templateId: templateId, modelType: modelType)
+    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
     guard success else {
       debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
       return

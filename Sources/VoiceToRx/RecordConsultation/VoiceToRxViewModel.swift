@@ -170,7 +170,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: String, inputLanguage: [String], templateId: [String], modelType: String) async -> Bool {
+  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Bool {
     
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
@@ -187,7 +187,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
     }
     /// Create session
-    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
+    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
