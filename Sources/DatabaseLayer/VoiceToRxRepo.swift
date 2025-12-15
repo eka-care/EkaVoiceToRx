@@ -451,4 +451,23 @@ extension VoiceToRxRepo {
       }
     }
   }
+  
+  public func switchTemplate(templateID: String, sessionID: String,completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void) {
+    service.switchTemplate(templateID: templateID, sessionID: sessionID) { result, _ in
+      switch result {
+      case .success(let success):
+        print("response -> \(success)")
+        self.service.getVoiceToRxStatus(sessionID: success.txnID) { trxnResult, _ in
+          switch trxnResult {
+          case .success(let data):
+            completion(.success(data))
+          case .failure(let error):
+            completion(.failure(error))
+          }
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
 }

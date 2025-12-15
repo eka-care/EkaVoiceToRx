@@ -26,6 +26,9 @@ enum VoiceToRxEndpoint {
   case editTemplate(request: TemplateCreateAndEditRequest, templateID: String)
   /// Delete template
   case deleteTemplate(templateID: String)
+  ///  Switch template
+  case switchTemplate(templateID: String, sessionID: String)
+
 }
 
 extension VoiceToRxEndpoint: RequestProvider {
@@ -130,6 +133,18 @@ extension VoiceToRxEndpoint: RequestProvider {
           )]
         ),
         interceptor: NetworkRequestInterceptor()
+      ).validate()
+      
+    case let .switchTemplate(templateID, sessionID):
+      AF.request(
+          "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/transaction/\(sessionID)/convert-to-template/\(templateID)",
+                 method: .post,
+                 headers: HTTPHeaders(
+                  [.contentType(
+                    HTTPHeader.contentTypeJson.rawValue
+                  )]
+                 ),
+                 interceptor: NetworkRequestInterceptor()
       ).validate()
     }
   }
