@@ -47,6 +47,12 @@ protocol VoiceToRxProvider {
   func deleteTemplate(templateID: String, completion: @escaping (Result<String, Error>, Int?) -> Void)
   
   func switchTemplate(templateID: String, sessionID: String, completion: @escaping (Result<ScribeTransactionResponse, Error>, Int?) -> Void)
+  
+  func updateConfig(request: ConfigRequest, completion: @escaping (Result<String, Error>, Int?) -> Void)
+  
+  func getConfig(completion: @escaping (Result<ConfigResponse,Error>, Int?) -> Void)
+  
+  func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void)
 }
 
 extension VoiceToRxProvider {
@@ -109,5 +115,17 @@ extension VoiceToRxProvider {
   
   func switchTemplate(templateID: String, sessionID: String, completion: @escaping (Result<ScribeTransactionResponse, Error>, Int?) -> Void) {
     networkService.execute(VoiceToRxEndpoint.switchTemplate(templateID: templateID, sessionID: sessionID), completion: completion)
+  }
+  
+  func updateConfig(request: ConfigRequest, completion: @escaping (Result<String, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.updateConfig(request: request), completion: completion)
+  }
+  
+  func getConfig(completion: @escaping (Result<ConfigResponse,Error>,Int?) -> Void ) {
+    networkService.execute(VoiceToRxEndpoint.getConfig, completion: completion)
+  }
+  
+  func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.getTemplateFromConfig, completion: completion)
   }
 }

@@ -26,8 +26,14 @@ enum VoiceToRxEndpoint {
   case editTemplate(request: TemplateCreateAndEditRequest, templateID: String)
   /// Delete template
   case deleteTemplate(templateID: String)
-  ///  Switch template
+  /// Switch template
   case switchTemplate(templateID: String, sessionID: String)
+  /// Upadate config
+  case updateConfig(request: ConfigRequest)
+  ///  Get config
+  case getConfig
+  /// Get templates from config
+  case getTemplateFromConfig
 
 }
 
@@ -146,6 +152,38 @@ extension VoiceToRxEndpoint: RequestProvider {
                  ),
                  interceptor: NetworkRequestInterceptor()
       ).validate()
+      
+    case let .updateConfig(request):
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config",
+                 method: .patch,
+                 parameters: request,
+                 headers: HTTPHeaders(
+                  [.contentType(
+                    HTTPHeader.contentTypeJson.rawValue
+                  )]
+                 ),
+                 interceptor: NetworkRequestInterceptor()).validate()
+      
+    case .getConfig:
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config",
+                 method: .get,
+                 headers: HTTPHeaders(
+                  [.contentType(
+                    HTTPHeader.contentTypeJson.rawValue
+                  )]
+                 ),
+                 interceptor: NetworkRequestInterceptor()).validate()
+      
+    case .getTemplateFromConfig:
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config/?my_template=true",
+      method: .get,
+      headers: HTTPHeaders(
+       [.contentType(
+         HTTPHeader.contentTypeJson.rawValue
+       )]
+      ),
+      interceptor: NetworkRequestInterceptor()).validate()
+      
     }
   }
 }

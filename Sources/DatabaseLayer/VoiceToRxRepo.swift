@@ -401,7 +401,7 @@ extension VoiceToRxRepo {
   }
 }
 
-// Mark: - Templates
+// MARK: - Templates
 extension VoiceToRxRepo {
   public func getTemplates(completion: @escaping (Result<TemplateResponse,Error>)-> Void) {
     service.getTemplate { result, response in
@@ -468,3 +468,42 @@ extension VoiceToRxRepo {
     }
   }
 }
+
+extension VoiceToRxRepo {
+  func getConfig(completion: @escaping (Result<ConfigResponse,Error>) -> Void ) {
+    service.getConfig { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let failure):
+        completion(.failure(failure))
+      }
+      
+    }
+  }
+  
+  func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>) -> Void) {
+    service.getTemplateFromConfig { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let failure):
+        completion(.failure(failure))
+      }
+    }
+  }
+  
+  func updateConfig(templates: [String], completion: @escaping (Result<String, Error>) -> Void) {
+    let templateData = MyTemplatesData(myTemplates: templates)
+    let request = ConfigRequest(data: templateData, requestType: "user")
+    service.updateConfig(request: request) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+}
+
