@@ -172,6 +172,10 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Bool {
     
+    guard isMicrophoneFreeToUse() else {
+      return false
+    }
+    
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
     setupRecordSession()
@@ -486,4 +490,25 @@ extension VoiceToRxViewModel {
         }
       }
     }
-  }}
+  }
+
+  public func isMicrophoneFreeToUse() -> Bool {
+    let session = AVAudioSession.sharedInstance()
+
+    do {
+      try session.setCategory(.playAndRecord, mode: .default, options: [])
+      try session.setActive(true, options: [.notifyOthersOnDeactivation])
+    } catch {
+      return false
+    }
+
+    if session.availableInputs?.isEmpty ?? true {
+      return false
+    }
+
+    if !session.isInputAvailable {
+      return false
+    }
+    return true
+  }
+}
