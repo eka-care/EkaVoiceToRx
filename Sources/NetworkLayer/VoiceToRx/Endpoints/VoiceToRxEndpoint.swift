@@ -110,6 +110,7 @@ extension VoiceToRxEndpoint: RequestProvider {
         "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template",
         method: .post,
         parameters: request,
+        encoder: JSONParameterEncoder.default,
         headers: HTTPHeaders(
           [.contentType(
             HTTPHeader.contentTypeJson.rawValue
@@ -123,6 +124,7 @@ extension VoiceToRxEndpoint: RequestProvider {
         "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template/\(templateID)",
         method: .put,
         parameters: request,
+        encoder: JSONParameterEncoder.default,
         headers: HTTPHeaders(
           [.contentType(
             HTTPHeader.contentTypeJson.rawValue
@@ -159,6 +161,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config",
                  method: .patch,
                  parameters: request,
+                 encoder: JSONParameterEncoder.default,
                  headers: HTTPHeaders(
                   [.contentType(
                     HTTPHeader.contentTypeJson.rawValue
@@ -191,6 +194,7 @@ extension VoiceToRxEndpoint: RequestProvider {
           "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v3/status/\(sessionId)",
           method: .patch,
           parameters: request,
+          encoder: JSONParameterEncoder.default,
           headers: HTTPHeaders(
             [.contentType(
               HTTPHeader.contentTypeJson.rawValue
