@@ -12,10 +12,12 @@ public struct VoiceToRxStatusResponse: Codable {
 public struct VoiceToRxStatusData: Codable {
   public let output: [VoiceToRxOutput]?
   public let additionalData: VoiceToRxContextParams?
+  public let audioMatrix: AudioMatrix?
   
   enum CodingKeys: String, CodingKey {
     case output
     case additionalData = "additional_data"
+    case audioMatrix = "audio_matrix"
   }
 }
 
@@ -34,3 +36,8 @@ public struct VoiceToRxOutput: Codable {
 public struct VoiceToRxError: Codable {
   public let type, msg, code: String?
 }
+
+public struct AudioMatrix: Codable {
+    public let quality: Double?
+}
+
