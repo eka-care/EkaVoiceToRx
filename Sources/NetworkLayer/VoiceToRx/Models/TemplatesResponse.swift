@@ -6,19 +6,19 @@
 //
 
 
-struct TemplatesResponse: Codable {
-    let data: TemplateData
+public struct TemplatesResponse: Codable {
+    public let data: TemplateData
 }
 
-struct TemplateData: Codable {
-    let myTemplates: [ResponseId]
+public struct TemplateData: Codable {
+    public let myTemplates: [ResponseId]
 
     enum CodingKeys: String, CodingKey {
         case myTemplates = "my_templates"
     }
 }
 
-struct ResponseId: Codable {
-  let id, name: String
-  let desc: String?
+public struct ResponseId: Codable {
+  public let id, name: String
+  public let desc: String?
 }

@@ -470,7 +470,7 @@ extension VoiceToRxRepo {
 }
 
 extension VoiceToRxRepo {
-  func getConfig(completion: @escaping (Result<ConfigResponse,Error>) -> Void ) {
+  public func getConfig(completion: @escaping (Result<ConfigResponse,Error>) -> Void ) {
     service.getConfig { result, _ in
       switch result {
       case .success(let response):
@@ -482,7 +482,7 @@ extension VoiceToRxRepo {
     }
   }
   
-  func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>) -> Void) {
+  public func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>) -> Void) {
     service.getTemplateFromConfig { result, _ in
       switch result {
       case .success(let response):
@@ -493,7 +493,7 @@ extension VoiceToRxRepo {
     }
   }
   
-  func updateConfig(templates: [String], completion: @escaping (Result<String, Error>) -> Void) {
+  public func updateConfig(templates: [String], completion: @escaping (Result<String, Error>) -> Void) {
     let templateData = MyTemplatesData(myTemplates: templates)
     let request = ConfigRequest(data: templateData, requestType: "user")
     service.updateConfig(request: request) { result, _ in
