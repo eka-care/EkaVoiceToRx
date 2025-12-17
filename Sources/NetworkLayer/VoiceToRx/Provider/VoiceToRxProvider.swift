@@ -53,6 +53,8 @@ protocol VoiceToRxProvider {
   func getConfig(completion: @escaping (Result<ConfigResponse,Error>, Int?) -> Void)
   
   func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void)
+  
+  func updateResultData(sessionID: String, request: UpdateResultRequest, completion: @escaping (Result<UpdateResultResponse, Error>, Int?) -> Void)
 }
 
 extension VoiceToRxProvider {
@@ -127,5 +129,9 @@ extension VoiceToRxProvider {
   
   func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void) {
     networkService.execute(VoiceToRxEndpoint.getTemplateFromConfig, completion: completion)
+  }
+  
+  func updateResultData(sessionID: String, request: UpdateResultRequest, completion: @escaping (Result<UpdateResultResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.updateResultData(request: [request], sessionID: sessionID), completion: completion)
   }
 }

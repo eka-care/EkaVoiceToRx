@@ -399,12 +399,23 @@ extension VoiceToRxRepo {
       }
     }
   }
+  
+  public func updateResult(sessionID: String, request: UpdateResultRequest, completion: @escaping (Result<UpdateResultResponse, Error>, Int?) -> Void)  {
+    service.updateResultData(sessionID: sessionID, request: request) { result, status in
+      switch result {
+      case .success(let success):
+        completion(.success(success), status)
+      case .failure(let failure):
+        completion(.failure(failure), status)
+      }
+    }
+  }
 }
 
 // MARK: - Templates
 extension VoiceToRxRepo {
   public func getTemplates(completion: @escaping (Result<TemplateResponse,Error>)-> Void) {
-    service.getTemplate { result, response in
+    service.getTemplate { result, _ in
       switch result {
       case .success(let response):
         completion(.success(response))
@@ -469,6 +480,7 @@ extension VoiceToRxRepo {
   }
 }
 
+// MARK: - Config
 extension VoiceToRxRepo {
   public func getConfig(completion: @escaping (Result<ConfigResponse,Error>) -> Void ) {
     service.getConfig { result, _ in

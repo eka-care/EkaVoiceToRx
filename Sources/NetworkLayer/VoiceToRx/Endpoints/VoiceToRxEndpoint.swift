@@ -34,6 +34,8 @@ enum VoiceToRxEndpoint {
   case getConfig
   /// Get templates from config
   case getTemplateFromConfig
+  /// Update result data
+  case updateResultData(request: [UpdateResultRequest], sessionID: String)
 
 }
 
@@ -184,6 +186,18 @@ extension VoiceToRxEndpoint: RequestProvider {
       ),
       interceptor: NetworkRequestInterceptor()).validate()
       
+    case let .updateResultData(request, sessionId):
+      AF.request(
+          "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v3/status/\(sessionId)",
+          method: .patch,
+          parameters: request,
+          headers: HTTPHeaders(
+            [.contentType(
+              HTTPHeader.contentTypeJson.rawValue
+            )]
+          ),
+          interceptor: NetworkRequestInterceptor()
+        ).validate()
     }
   }
 }
