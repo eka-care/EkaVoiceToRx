@@ -158,7 +158,7 @@ extension VoiceToRxEndpoint: RequestProvider {
       ).validate()
       
     case let .updateConfig(request):
-      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config",
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config/",
                  method: .put,
                  parameters: request,
                  encoder: JSONParameterEncoder.default,
