@@ -13,6 +13,8 @@ public final class V2RxInitConfigurations {
   
   public static let shared = V2RxInitConfigurations()
   
+  public var clientId: String?
+
   /// Bucket name for Amazon S3
   public var awsS3BucketName: String?
   
