@@ -11,18 +11,30 @@ public struct VoiceToRxStatusResponse: Codable {
 
 public struct VoiceToRxStatusData: Codable {
   public let output: [VoiceToRxOutput]?
+  public let templateResults: TemplateResults?
   public let additionalData: VoiceToRxContextParams?
   public let audioMatrix: AudioMatrix?
   
   enum CodingKeys: String, CodingKey {
     case output
+    case templateResults = "template_results"
     case additionalData = "additional_data"
     case audioMatrix = "audio_matrix"
   }
 }
 
+public struct TemplateResults: Codable {
+
+  public let custom: [VoiceToRxOutput]?
+  
+  enum CodingKeys: String, CodingKey {
+    case custom
+  }
+}
+
 public struct VoiceToRxOutput: Codable {
-  public let templateID, value, type, name: String?
+  public let templateID, value, name: String?
+  public let type: TemplateType?
   public let status: String?
   public let errors, warnings: [VoiceToRxError]
   
@@ -41,3 +53,6 @@ public struct AudioMatrix: Codable {
     public let quality: Double?
 }
 
+public enum TemplateType: String, Codable {
+  case json, custom, markdown
+}
