@@ -13,12 +13,13 @@ public final class VoiceToRxRepo {
   // MARK: - Properties
   
   private let databaseManager = VoiceConversationDatabaseManager.shared
-  let service = VoiceToRxApiService()
-  let maxRetries = 3
+  private let service = VoiceToRxApiService()
+  private let maxRetries = 3
+  static let shared = VoiceToRxRepo()
   
   // MARK: - Init
   
-  public init() {}
+  private init() {}
   
   // MARK: - Create
   
