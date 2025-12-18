@@ -15,7 +15,7 @@ public final class VoiceToRxRepo {
   private let databaseManager = VoiceConversationDatabaseManager.shared
   private let service = VoiceToRxApiService()
   private let maxRetries = 3
-  static let shared = VoiceToRxRepo()
+  public static let shared = VoiceToRxRepo()
   
   // MARK: - Init
   
