@@ -34,7 +34,7 @@ public struct TemplateResults: Codable {
 
 public struct VoiceToRxOutput: Codable {
   public let templateID, value, name: String?
-  public let type: TemplateType
+  public let type: TemplateType?
   public let status: String?
   public let errors, warnings: [VoiceToRxError]
   
