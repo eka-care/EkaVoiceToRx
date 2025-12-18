@@ -6,11 +6,11 @@
 //
 
 public struct VoiceToRxStatusResponse: Codable {
-  public let data: VoiceToRxStatusData?
+ public var data: VoiceToRxStatusData?
 }
 
 public struct VoiceToRxStatusData: Codable {
-  public let output: [VoiceToRxOutput]?
+  public var output: [VoiceToRxOutput]?
   public let templateResults: TemplateResults?
   public let additionalData: VoiceToRxContextParams?
   public let audioMatrix: AudioMatrix?
@@ -33,7 +33,7 @@ public struct TemplateResults: Codable {
 }
 
 public struct VoiceToRxOutput: Codable {
-  public let templateID, value, name: String?
+  public var templateID, value, name: String?
   public let type: TemplateType?
   public let status: String?
   public let errors, warnings: [VoiceToRxError]
@@ -46,7 +46,7 @@ public struct VoiceToRxOutput: Codable {
 
 // MARK: - Error
 public struct VoiceToRxError: Codable {
-  public let type, msg, code: String?
+ public var type, msg, code: String?
 }
 
 public struct AudioMatrix: Codable {
