@@ -12,7 +12,6 @@ public final class VoiceToRxFileUploadRetry {
   // MARK: - Properties
   
   let s3FileUploaderService = AmazonS3FileUploaderService()
-  let voiceToRxRepo = VoiceToRxRepo()
   
   /// Used to check if retry is needed
   /// - Returns: Bool value indicating if retry is needed
@@ -64,7 +63,7 @@ public final class VoiceToRxFileUploadRetry {
   ) {
     guard let sessionUUID = UUID(uuidString: sessionID) else { return}
     let bid = AuthTokenHolder.shared.bid
-    guard let voice = voiceToRxRepo.fetchVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: sessionUUID)),
+    guard let voice = VoiceToRxRepo.shared.fetchVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: sessionUUID)),
           let createdAt = voice.createdAt else { return }
     let firstFolder: String = createdAt.toString(withFormat: "yyMMdd")
     let secondFolder = sessionID
