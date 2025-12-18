@@ -53,14 +53,6 @@ public struct AudioMatrix: Codable {
     public let quality: Double?
 }
 
-public struct TemplateType: Codable {
-  let json: String
-  let custom: String
-  let markdown: String
-  
-  enum CodingKeys: String, CodingKey {
-    case json = "json"
-    case custom = "custom"
-    case markdown = "markdown"
-  }
+public enum TemplateType: String, Codable {
+  case json, custom, markdown
 }
