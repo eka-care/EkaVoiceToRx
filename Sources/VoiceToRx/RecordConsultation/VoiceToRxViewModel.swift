@@ -171,7 +171,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Bool {
     
-    guard MicrophonePermissionManager.isMicrophoneFreeToUse() else {
+    guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
       return false
     }
     
