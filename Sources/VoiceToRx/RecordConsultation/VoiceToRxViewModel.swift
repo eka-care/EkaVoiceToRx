@@ -102,6 +102,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var filesProcessedListenerReference: (any ListenerRegistration)?
   private var listenerReference: (any ListenerRegistration)?
   private var pollingTimer: Timer?
+  private let microphoneManager = MicrophoneManager()
   
   public var sessionID: UUID?
   public var contextParams: VoiceToRxContextParams?
@@ -171,23 +172,20 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Bool {
     
-    guard isMicrophoneFreeToUse() else {
+    /// Check microphone permission
+    let microphoneAvailable = await withCheckedContinuation { continuation in
+      microphoneManager.checkMicrophoneStatus { status in
+        switch status {
+        case .available:
+          continuation.resume(returning: true)
+        case .permissionDenied, .inUseByOtherApp, .unavailable, .inUseByThisApp:
+          continuation.resume(returning: false)
+        }
+      }
+    }
+    
+    guard microphoneAvailable else {
       return false
-    }
-    
-    voiceConversationType = VoiceConversationType(rawValue: conversationType)
-    /// Setup record session
-    setupRecordSession()
-    /// Clear any previous session data if present
-    await MainActor.run { [weak self] in
-      guard let self else { return }
-      clearSession()
-    }
-    
-    var patientDetails: PatientDetails? = nil
-    
-    if let oid = V2RxInitConfigurations.shared.subOwnerOID, oid != "" {
-      patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
     }
     /// Create session
     let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
@@ -489,36 +487,5 @@ extension VoiceToRxViewModel {
         }
       }
     }
-  }
-  
-  public func isMicrophonePermissionGranted() -> Bool {
-    let status = AVAudioApplication.shared.recordPermission
-    return status == .granted
-  }
-
-  public func isMicrophoneFreeToUse() -> Bool {
-    guard isMicrophonePermissionGranted() else { return false }
-    guard isMicrophoneAccessibleToUse() else { return false }
-    return true
-  }
-
-  public func isMicrophoneAccessibleToUse() -> Bool {
-    let session = AVAudioSession.sharedInstance()
-
-    do {
-      try session.setCategory(.playAndRecord, mode: .default, options: [])
-      try session.setActive(true, options: [.notifyOthersOnDeactivation])
-    } catch {
-      return false
-    }
-
-    if session.availableInputs?.isEmpty ?? true {
-      return false
-    }
-
-    if !session.isInputAvailable {
-      return false
-    }
-    return true
   }
 }
