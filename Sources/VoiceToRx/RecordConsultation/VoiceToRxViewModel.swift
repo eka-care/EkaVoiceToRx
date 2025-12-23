@@ -490,8 +490,19 @@ extension VoiceToRxViewModel {
       }
     }
   }
+  
+  public func isMicrophonePermissionGranted() -> Bool {
+    let status = AVAudioApplication.shared.recordPermission
+    return status == .granted
+  }
 
   public func isMicrophoneFreeToUse() -> Bool {
+    guard isMicrophonePermissionGranted() else { return false }
+    guard isMicrophoneAccessibleToUse() else { return false }
+    return true
+  }
+
+  public func isMicrophoneAccessibleToUse() -> Bool {
     let session = AVAudioSession.sharedInstance()
 
     do {
