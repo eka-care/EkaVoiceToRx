@@ -11,7 +11,7 @@ public struct VoiceToRxStatusResponse: Codable {
 
 public struct VoiceToRxStatusData: Codable {
   public var output: [VoiceToRxOutput]?
-  public let templateResults: TemplateResults?
+  public var templateResults: TemplateResults?
   public let additionalData: VoiceToRxContextParams?
   public let audioMatrix: AudioMatrix?
   
@@ -25,7 +25,7 @@ public struct VoiceToRxStatusData: Codable {
 
 public struct TemplateResults: Codable {
 
-  public let custom: [VoiceToRxOutput]?
+  public var custom: [VoiceToRxOutput]?
   
   enum CodingKeys: String, CodingKey {
     case custom

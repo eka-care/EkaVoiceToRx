@@ -296,18 +296,18 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let outputs = response.data?.output, !outputs.isEmpty else {
+        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
           /// Status fetch event
           statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
           completion(.success((false, "")))
           return
         }
-        let allSuccessful = outputs.allSatisfy { $0.status == "success" }
-        let value = outputs.first(where: { $0.value != nil })?.value ?? ""
+        let allSuccessful = templateResults.allSatisfy { $0.status == "success" }
+        let value = templateResults.first(where: { $0.value != nil })?.value ?? ""
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
-        let clinicalNotesValue = outputs
+        let clinicalNotesValue = templateResults
           .filter { $0.templateID == "clinical_notes_template" }
           .compactMap { $0.value }
           .joined(separator: "\n")
@@ -373,18 +373,18 @@ extension VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let outputs = response.data?.output, !outputs.isEmpty else {
+        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
           /// Status fetch event
           //statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
           completion(.success((false, "")))
           return
         }
-        let allSuccessful = outputs.allSatisfy { $0.status == "success" }
-        let value = outputs.first(where: { $0.value != nil })?.value ?? ""
+        let allSuccessful = templateResults.allSatisfy { $0.status == "success" }
+        let value = templateResults.first(where: { $0.value != nil })?.value ?? ""
        // statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
-        let clinicalNotesValue = outputs
+        let clinicalNotesValue = templateResults
           .filter { $0.templateID == "clinical_notes_template" }
           .compactMap { $0.value }
           .joined(separator: "\n")
