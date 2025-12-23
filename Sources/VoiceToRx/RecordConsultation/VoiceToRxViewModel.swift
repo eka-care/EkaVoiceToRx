@@ -187,6 +187,13 @@ public final class VoiceToRxViewModel: ObservableObject {
     guard microphoneAvailable else {
       return false
     }
+    
+    var patientDetails: PatientDetails? = nil
+    
+    if let oid = V2RxInitConfigurations.shared.subOwnerOID, oid != "" {
+      patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
+    }
+      
     /// Create session
     let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
