@@ -175,6 +175,26 @@ public final class VoiceToRxViewModel: ObservableObject {
       return false
     }
     
+    // If recording is already active, don't reinitialize the microphone/audio engine
+    // Just update the conversation type and state if needed
+    if audioEngine.isRunning {
+      voiceConversationType = VoiceConversationType(rawValue: conversationType)
+      await MainActor.run { [weak self] in
+        guard let self else { return }
+        // If paused, resume; otherwise just ensure we're in listening state
+        if case .paused = screenState {
+          do {
+            try resumeRecording()
+          } catch {
+            debugPrint("Failed to resume recording: \(error)")
+          }
+        } else {
+          screenState = .listening(conversationType: VoiceConversationType(rawValue: conversationType) ?? .dictation)
+        }
+      }
+      return true
+    }
+    
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
     setupRecordSession()
@@ -222,7 +242,12 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {
     guard let sessionID else { return }
+    // If audio engine is already running, don't reinitialize
+    guard !audioEngine.isRunning else { return }
+    
     let inputNode = audioEngine.inputNode
+    // Remove any existing tap before installing a new one (safe to call even if no tap exists)
+    inputNode.removeTap(onBus: 0)
     let inputNodeOutputFormat = inputNode.outputFormat(forBus: 0)
     let deviceSampleRate = inputNodeOutputFormat.sampleRate
     /// Set Record Config parameters
