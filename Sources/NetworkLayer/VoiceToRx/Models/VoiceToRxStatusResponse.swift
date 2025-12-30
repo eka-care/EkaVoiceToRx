@@ -60,7 +60,6 @@ public enum TemplateType: Codable, Equatable {
   case custom
   case markdown
   case transcript
-  case eka_emr
   case other(String)
 
   public init(from decoder: Decoder) throws {
@@ -77,7 +76,6 @@ private extension TemplateType {
     case "custom": self = .custom
     case "markdown": self = .markdown
     case "transcript": self = .transcript
-    case "eka_emr": self = .eka_emr
     default: self = .other(rawValue)
     }
   }
