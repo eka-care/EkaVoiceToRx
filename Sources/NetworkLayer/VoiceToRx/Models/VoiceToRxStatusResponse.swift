@@ -56,5 +56,5 @@ public struct AudioMatrix: Codable {
 }
 
 public enum TemplateType: String, Codable {
-  case json, custom, markdown
+  case json, custom, markdown, transcript
 }
