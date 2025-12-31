@@ -169,7 +169,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Bool {
+  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Result<Bool,Error> {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
       return false
