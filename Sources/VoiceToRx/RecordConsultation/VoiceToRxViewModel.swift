@@ -172,7 +172,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Result<Bool,Error> {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
-      return false
+      return .failure(EkaScribeError.microphoneNotAllowed)
     }
     
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
@@ -198,7 +198,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         screenState = .deletedRecording
         voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
-      return false
+      return .failure(EkaScribeError.freeSessionExpired)
     }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
@@ -216,8 +216,9 @@ public final class VoiceToRxViewModel: ObservableObject {
       try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
       debugPrint("Audio Engine did not start \(error)")
+      return .failure(EkaScribeError.audioEngineDidNotStart)
     }
-    return true
+    return .success(true)
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {
@@ -490,4 +491,11 @@ extension VoiceToRxViewModel {
       }
     }
   }
+}
+
+enum EkaScribeError: Error {
+  case microphoneNotAllowed
+  case freeSessionExpired
+  case audioEngineDidNotStart
+  case floatingButtonAlreadyInitiated
 }

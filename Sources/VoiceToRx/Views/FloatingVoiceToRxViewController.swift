@@ -103,35 +103,37 @@ public class FloatingVoiceToRxViewController: UIViewController {
     templates: [OutputFormatTemplate],
     modelType: String = "pro",
     liveActivityDelegate: LiveActivityDelegate?
-  ) async {
-    // Prevent multiple windows from being created
+  ) async -> Result<Bool,Error> {
     guard !isWindowActive && !isInitializing else {
       debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
-      return
+      return .failure(EkaScribeError.floatingButtonAlreadyInitiated)
     }
     
     isInitializing = true
     defer { isInitializing = false }
     
-    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
-    guard success else {
-      debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
-      return
-    }
+    let response = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
     
-    isWindowActive = true
-    window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
-    window.isHidden = false
-    window.rootViewController = self
-    loadView(viewModel: viewModel)
-    await MainActor.run { [weak self] in
-      guard let self else { return }
-      subscribeToScreenStates()
-      self.liveActivityDelegate = liveActivityDelegate
-    }
-    getAmazonCredentials()
-    Task {
-      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+    
+    switch response {
+    case .success(_):
+      isWindowActive = true
+      window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
+      window.isHidden = false
+      window.rootViewController = self
+      loadView(viewModel: viewModel)
+      await MainActor.run { [weak self] in
+        guard let self else { return }
+        subscribeToScreenStates()
+        self.liveActivityDelegate = liveActivityDelegate
+      }
+      getAmazonCredentials()
+      Task {
+        await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+      }
+      return .success(true)
+    case .failure(let failure):
+      return .failure(failure)
     }
   }
   
