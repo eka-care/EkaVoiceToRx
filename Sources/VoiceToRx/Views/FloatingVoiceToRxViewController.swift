@@ -106,7 +106,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   ) async -> Result<Bool,Error> {
     guard !isWindowActive && !isInitializing else {
       debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
-      return .failure(EkaScribeError.floatingButtonAlreadyInitiated)
+      return .failure(EkaScribeError.floatingButtonAlreadyPresented)
     }
     
     isInitializing = true
