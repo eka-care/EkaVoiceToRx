@@ -169,10 +169,10 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Bool {
+  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Error? {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
-      return false
+      return EkaScribeError.microphonePermissionDenied
     }
     
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
@@ -198,7 +198,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         screenState = .deletedRecording
         voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
-      return false
+      return EkaScribeError.freeSessionLimitReached
     }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
@@ -216,8 +216,9 @@ public final class VoiceToRxViewModel: ObservableObject {
       try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
       debugPrint("Audio Engine did not start \(error)")
+      return EkaScribeError.audioEngineStartFailed
     }
-    return true
+    return nil
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {

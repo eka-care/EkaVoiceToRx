@@ -103,36 +103,32 @@ public class FloatingVoiceToRxViewController: UIViewController {
     templates: [OutputFormatTemplate],
     modelType: String = "pro",
     liveActivityDelegate: LiveActivityDelegate?
-  ) async {
-    // Prevent multiple windows from being created
+  ) async -> Error? {
     guard !isWindowActive && !isInitializing else {
       debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
-      return
+      return EkaScribeError.floatingButtonAlreadyPresented
     }
-    
+ 
     isInitializing = true
     defer { isInitializing = false }
     
-    let success = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
-    guard success else {
-      debugPrint("FloatingVoiceToRxViewController: Failed to start recording. Aborting window creation.")
-      return
+    guard let response = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType) else {
+      isWindowActive = true
+      window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
+      window.isHidden = false
+      window.rootViewController = self
+      loadView(viewModel: viewModel)
+      await MainActor.run { [weak self] in
+        guard let self else { return }
+        subscribeToScreenStates()
+        self.liveActivityDelegate = liveActivityDelegate
+      }
+      getAmazonCredentials()
+        await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
+      return nil
     }
     
-    isWindowActive = true
-    window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
-    window.isHidden = false
-    window.rootViewController = self
-    loadView(viewModel: viewModel)
-    await MainActor.run { [weak self] in
-      guard let self else { return }
-      subscribeToScreenStates()
-      self.liveActivityDelegate = liveActivityDelegate
-    }
-    getAmazonCredentials()
-    Task {
-      await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
-    }
+    return response
   }
   
   public func hideFloatingButton() {
