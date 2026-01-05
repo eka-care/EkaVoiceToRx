@@ -103,20 +103,16 @@ public class FloatingVoiceToRxViewController: UIViewController {
     templates: [OutputFormatTemplate],
     modelType: String = "pro",
     liveActivityDelegate: LiveActivityDelegate?
-  ) async -> Result<Bool,Error> {
+  ) async -> Error? {
     guard !isWindowActive && !isInitializing else {
       debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
-      return .failure(EkaScribeError.floatingButtonAlreadyPresented)
+      return EkaScribeError.floatingButtonAlreadyPresented
     }
-    
+ 
     isInitializing = true
     defer { isInitializing = false }
     
-    let response = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
-    
-    
-    switch response {
-    case .success(_):
+    guard let response = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType) else {
       isWindowActive = true
       window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
       window.isHidden = false
@@ -128,13 +124,11 @@ public class FloatingVoiceToRxViewController: UIViewController {
         self.liveActivityDelegate = liveActivityDelegate
       }
       getAmazonCredentials()
-      Task {
         await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
-      }
-      return .success(true)
-    case .failure(let failure):
-      return .failure(failure)
+      return nil
     }
+    
+    return response
   }
   
   public func hideFloatingButton() {
