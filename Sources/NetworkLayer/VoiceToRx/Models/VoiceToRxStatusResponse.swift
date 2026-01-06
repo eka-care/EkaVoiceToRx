@@ -26,11 +26,9 @@ public struct VoiceToRxStatusData: Codable {
 public struct TemplateResults: Codable {
 
   public var custom: [VoiceToRxOutput]?
-  public var transcript: [VoiceToRxOutput]?
   
   enum CodingKeys: String, CodingKey {
     case custom
-    case transcript
   }
 }
 
@@ -55,30 +53,6 @@ public struct AudioMatrix: Codable {
     public let quality: Double?
 }
 
-public enum TemplateType: Codable, Equatable {
-  case json
-  case custom
-  case markdown
-  case transcript
-  case eka_emr
-  case other(String)
-
-  public init(from decoder: Decoder) throws {
-    let value = try decoder.singleValueContainer().decode(String.self)
-
-    self = TemplateType(rawValue: value)
-  }
-}
-
-private extension TemplateType {
-  init(rawValue: String) {
-    switch rawValue {
-    case "json": self = .json
-    case "custom": self = .custom
-    case "markdown": self = .markdown
-    case "transcript": self = .transcript
-    case "eka_emr": self = .eka_emr
-    default: self = .other(rawValue)
-    }
-  }
+public enum TemplateType: String, Codable {
+  case json, custom, markdown
 }
