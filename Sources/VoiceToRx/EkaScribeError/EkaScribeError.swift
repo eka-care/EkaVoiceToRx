@@ -6,7 +6,7 @@
 //
 
 
-enum EkaScribeError: Error {
+public enum EkaScribeError: Error {
   case microphonePermissionDenied
   case floatingButtonAlreadyPresented
   case freeSessionLimitReached
