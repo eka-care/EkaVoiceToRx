@@ -39,7 +39,7 @@ final class FileHelper {
 
   public static func deleteOldFullAudioFiles(for ownerId: String) -> Int {
     guard !ownerId.isEmpty else {
-      debugPrint("#BB Cannot delete full audio files: ownerId is empty")
+      debugPrint("Cannot delete full audio files: ownerId is empty")
       return 0
     }
     
@@ -67,14 +67,14 @@ final class FileHelper {
            fileManager.fileExists(atPath: fullAudioPath.path) {
           removeFile(at: fullAudioPath)
           deletedCount += 1
-          debugPrint("#BB Deleted old full audio file for ownerId '\(ownerId)': \(fullAudioPath.path)")
+          debugPrint("Deleted old full audio file for ownerId '\(ownerId)': \(fullAudioPath.path)")
           
           if let remainingFiles = getFileURLs(in: sessionDir), remainingFiles.isEmpty {
             do {
               try fileManager.removeItem(at: sessionDir)
-              debugPrint("#BBDeleted empty session directory: \(sessionDir.path)")
+              debugPrint("Deleted empty session directory: \(sessionDir.path)")
             } catch {
-              debugPrint("#BB Failed to delete empty session directory: \(error.localizedDescription)")
+              debugPrint("Failed to delete empty session directory: \(error.localizedDescription)")
             }
           }
         }
