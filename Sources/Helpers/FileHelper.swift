@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import CoreData
 
 final class FileHelper {
   public static func getDocumentDirectoryURL() -> URL {
@@ -49,17 +48,14 @@ final class FileHelper {
     var deletedCount = 0
     
     do {
-      // Get all session directories
       let sessionDirectories = try fileManager.contentsOfDirectory(
         at: documentsDirectory,
         includingPropertiesForKeys: [.isDirectoryKey],
         options: [.skipsHiddenFiles]
       )
       
-      // Get session IDs for this ownerId from database
-      let sessionIdsForOwner = getSessionIds(for: ownerId)
+      let sessionIdsForOwner = VoiceToRxRepo.shared.getSessionIds(for: ownerId)
       
-      // Find and delete full_audio.m4a_ files for sessions belonging to this ownerId
       for sessionDir in sessionDirectories {
         let resourceValues = try? sessionDir.resourceValues(forKeys: [.isDirectoryKey])
         guard resourceValues?.isDirectory == true else { continue }
@@ -67,14 +63,12 @@ final class FileHelper {
         let sessionIdString = sessionDir.lastPathComponent
         let fullAudioPath = sessionDir.appendingPathComponent("full_audio.m4a_")
         
-        // Check if this session belongs to the ownerId and file exists
         if sessionIdsForOwner.contains(sessionIdString),
            fileManager.fileExists(atPath: fullAudioPath.path) {
           removeFile(at: fullAudioPath)
           deletedCount += 1
           debugPrint("#BB Deleted old full audio file for ownerId '\(ownerId)': \(fullAudioPath.path)")
           
-          // Try to delete the session directory if it's empty
           if let remainingFiles = getFileURLs(in: sessionDir), remainingFiles.isEmpty {
             do {
               try fileManager.removeItem(at: sessionDir)
@@ -95,48 +89,5 @@ final class FileHelper {
     }
     
     return deletedCount
-  }
-  
-  /// Gets all session IDs for a specific ownerId by querying the database
-  /// - Parameter ownerId: The owner ID to find sessions for
-  /// - Returns: Set of session ID strings
-  private static func getSessionIds(for ownerId: String) -> Set<String> {
-    var sessionIds: Set<String> = []
-    
-    let databaseManager = VoiceConversationDatabaseManager.shared
-    let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
-    
-    do {
-      let conversations = try databaseManager.container.viewContext.fetch(fetchRequest)
-      
-      for conversation in conversations {
-        guard let sessionID = conversation.sessionID else { continue }
-        
-        // Decode sessionData to get ownerId
-        if let sessionData = conversation.sessionData,
-           let contextParams = decodeSessionData(sessionData),
-           contextParams.doctor?.id == ownerId {
-          sessionIds.insert(sessionID.uuidString)
-        }
-      }
-    } catch {
-      debugPrint("Error fetching sessions for ownerId '\(ownerId)': \(error.localizedDescription)")
-    }
-    
-    return sessionIds
-  }
-  
-  /// Decodes sessionData binary data to VoiceToRxContextParams
-  /// - Parameter data: Binary data from CoreData
-  /// - Returns: Decoded VoiceToRxContextParams or nil
-  private static func decodeSessionData(_ data: Data) -> VoiceToRxContextParams? {
-    let decoder = JSONDecoder()
-    do {
-      let contextParams = try decoder.decode(VoiceToRxContextParams.self, from: data)
-      return contextParams
-    } catch {
-      debugPrint("Failed to decode sessionData: \(error.localizedDescription)")
-      return nil
-    }
-  }
+  }  
 }
