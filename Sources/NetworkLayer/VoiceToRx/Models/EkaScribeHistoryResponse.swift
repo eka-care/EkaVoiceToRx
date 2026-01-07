@@ -68,6 +68,8 @@ public enum Flavour: String {
   case io
   case ip
   case web
+  case scribeAndroid = "scribe-android"
+  case scribeIos = "scribe-ios"
 }
 
 public enum Mode: String {
