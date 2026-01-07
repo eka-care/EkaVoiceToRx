@@ -354,47 +354,23 @@ public final class VoiceToRxRepo {
     }
   }
   
-  /// Gets all session IDs for a specific ownerId by querying the database
-  /// Uses optimized fetch with predicate if ownerId field exists, otherwise falls back to filtering
-//  public func getSessionIds(for ownerId: String) -> Set<String> {
-//    var sessionIds: Set<String> = []
-//    
-//    let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
-//    
-//    // Try to filter directly if ownerId attribute exists in the model
-//    // Note: This requires adding ownerId as a separate attribute in CoreData model
-//    // For now, we'll fetch and filter in memory, but this can be optimized later
-//    do {
-//      let conversations = try databaseManager.container.viewContext.fetch(fetchRequest)
-//      
-//      // Filter conversations in memory
-//      for conversation in conversations {
-//        guard let sessionID = conversation.sessionID else { continue }
-//        
-//        // Try to get ownerId from sessionData
-//        if let sessionData = conversation.sessionData,
-//           let contextParams = decodeSessionData(sessionData),
-//           contextParams.doctor?.id == ownerId {
-//          sessionIds.insert(sessionID.uuidString)
-//        }
-//      }
-//    } catch {
-//      debugPrint("Error fetching sessions for ownerId '\(ownerId)': \(error.localizedDescription)")
-//    }
-//    
-//    return sessionIds
-//  }
-//  
   public func getSessionIds(for ownerId: String) -> Set<String> {
     var sessionIds: Set<String> = []
     
     let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
-    fetchRequest.predicate = NSPredicate(format: "ownerId == %@", ownerId)
-    fetchRequest.propertiesToFetch = ["sessionID"]
     
     do {
       let conversations = try databaseManager.container.viewContext.fetch(fetchRequest)
-      sessionIds = Set(conversations.compactMap { $0.sessionID?.uuidString })
+      
+      for conversation in conversations {
+        guard let sessionID = conversation.sessionID else { continue }
+        
+        if let sessionData = conversation.sessionData,
+           let contextParams = decodeSessionData(sessionData),
+           contextParams.doctor?.id == ownerId {
+          sessionIds.insert(sessionID.uuidString)
+        }
+      }
     } catch {
       debugPrint("Error fetching sessions for ownerId '\(ownerId)': \(error.localizedDescription)")
     }
@@ -402,17 +378,16 @@ public final class VoiceToRxRepo {
     return sessionIds
   }
   
-  
-//  private func decodeSessionData(_ data: Data) -> VoiceToRxContextParams? {
-//    let decoder = JSONDecoder()
-//    do {
-//      let contextParams = try decoder.decode(VoiceToRxContextParams.self, from: data)
-//      return contextParams
-//    } catch {
-//      debugPrint("Failed to decode sessionData: \(error.localizedDescription)")
-//      return nil
-//    }
-//  }
+  private func decodeSessionData(_ data: Data) -> VoiceToRxContextParams? {
+    let decoder = JSONDecoder()
+    do {
+      let contextParams = try decoder.decode(VoiceToRxContextParams.self, from: data)
+      return contextParams
+    } catch {
+      debugPrint("Failed to decode sessionData: \(error.localizedDescription)")
+      return nil
+    }
+  }
 }
 
 // MARK: - Helper Extension
