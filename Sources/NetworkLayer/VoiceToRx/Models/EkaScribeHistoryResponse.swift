@@ -8,8 +8,8 @@
 import Foundation
 
 public struct EkaScribeHistoryResponse: Codable {
-    public let status: Status?
-    public let data: [ScribeData]?
+    public let status: Status
+    public let data: [ScribeData]
     public let retrievedCount: Int?
 
     enum CodingKeys: String, CodingKey {
@@ -90,17 +90,17 @@ public enum Status: String, Codable {
 }
 
 public enum UserStatus: String {
-    case commit = "commit"
+    case commit
     case userInit = "init"
-    case stopped = "stopped"
-    case cancelled = "cancelled"
+    case stopped
+    case cancelled
 }
 
 public enum ProcessingStatus: String {
-  case success = "success"
+  case success
   case inProgress = "in-progress"
   case systemFailure = "system_failure"
   case requestFailure = "request_failure"
-  case cancelled = "cancelled"
+  case cancelled
 }
 
