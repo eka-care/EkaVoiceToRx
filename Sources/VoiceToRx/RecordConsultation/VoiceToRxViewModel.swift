@@ -187,7 +187,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     if let ownerId = V2RxInitConfigurations.shared.ownerOID {
       let deletedCount = FileHelper.deleteOldFullAudioFiles(for: ownerId)
       if deletedCount > 0 {
-        debugPrint("#BB Deleted \(deletedCount) old full audio file(s) for ownerId '\(ownerId)' before starting new session")
+        debugPrint("Deleted \(deletedCount) old full audio file(s) for ownerId '\(ownerId)' before starting new session")
       }
     }
     
