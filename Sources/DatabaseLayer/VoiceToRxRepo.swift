@@ -353,6 +353,41 @@ public final class VoiceToRxRepo {
       }
     }
   }
+  
+  public func getSessionIds(for ownerId: String) async -> Set<String> {
+    let backgroundContext = databaseManager.backgroundContext
+    
+    var sessionIds: Set<String> = []
+    let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
+    
+    do {
+      let conversations = try backgroundContext.fetch(fetchRequest)
+      
+      for conversation in conversations {
+        guard let sessionID = conversation.sessionID else { continue }
+        
+        if let sessionData = conversation.sessionData,
+           let contextParams = decodeSessionData(sessionData),
+           contextParams.doctor?.id == ownerId {
+          sessionIds.insert(sessionID.uuidString)
+        }
+      }
+      return sessionIds
+    } catch {
+      return sessionIds
+    }
+  }
+  
+  private func decodeSessionData(_ data: Data) -> VoiceToRxContextParams? {
+    let decoder = JSONDecoder()
+    do {
+      let contextParams = try decoder.decode(VoiceToRxContextParams.self, from: data)
+      return contextParams
+    } catch {
+      debugPrint("Failed to decode sessionData: \(error.localizedDescription)")
+      return nil
+    }
+  }
 }
 
 // MARK: - Helper Extension
