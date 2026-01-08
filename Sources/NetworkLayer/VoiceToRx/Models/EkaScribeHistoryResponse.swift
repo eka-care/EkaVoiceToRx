@@ -20,7 +20,7 @@ public struct EkaScribeHistoryResponse: Codable {
 
 public struct ScribeData: Codable {
   public let bID: String?
-  public let createdAt: String?
+  private let createdAtString: String?
   private let flavourString: String?
   private let modeString: String?
   public let oid: String?
@@ -47,9 +47,14 @@ public struct ScribeData: Codable {
     .init(rawValue: userStatusString ?? "")
   }
   
+  public var createdAt: Date? {
+    guard let createdAtString else { return nil }
+    return ISO8601DateFormatter().date(from: createdAtString)
+  }
+  
   public enum CodingKeys: String, CodingKey {
     case bID = "b_id"
-    case createdAt = "created_at"
+    case createdAtString = "created_at"
     case flavourString = "flavour"
     case modeString = "mode"
     case oid
