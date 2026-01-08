@@ -354,13 +354,14 @@ public final class VoiceToRxRepo {
     }
   }
   
-  public func getSessionIds(for ownerId: String) -> Set<String> {
-    var sessionIds: Set<String> = []
+  public func getSessionIds(for ownerId: String) async -> Set<String> {
+    let backgroundContext = databaseManager.backgroundContext
     
+    var sessionIds: Set<String> = []
     let fetchRequest: NSFetchRequest<VoiceConversation> = VoiceConversation.fetchRequest()
     
     do {
-      let conversations = try databaseManager.container.viewContext.fetch(fetchRequest)
+      let conversations = try backgroundContext.fetch(fetchRequest)
       
       for conversation in conversations {
         guard let sessionID = conversation.sessionID else { continue }
@@ -371,11 +372,10 @@ public final class VoiceToRxRepo {
           sessionIds.insert(sessionID.uuidString)
         }
       }
+      return sessionIds
     } catch {
-      debugPrint("Error fetching sessions for ownerId '\(ownerId)': \(error.localizedDescription)")
+      return sessionIds
     }
-    
-    return sessionIds
   }
   
   private func decodeSessionData(_ data: Data) -> VoiceToRxContextParams? {
