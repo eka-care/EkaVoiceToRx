@@ -30,7 +30,12 @@ extension VoiceToRxViewModel {
     switch type {
     case .began:
       /// Interruption began, pause the recording
-      pauseRecording()
+      switch screenState {
+      case .listening:
+        pauseRecording()
+      default:
+        break
+      }
     case .ended:
       break
       /// Interruption ended, we can resume if required but currently we will let user do this

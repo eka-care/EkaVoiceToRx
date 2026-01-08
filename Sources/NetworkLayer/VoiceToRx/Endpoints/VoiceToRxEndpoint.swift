@@ -18,6 +18,25 @@ enum VoiceToRxEndpoint {
   case getVoiceToRxStatus(sessionID: String)
   /// History
   case getHistoryEkaScribe
+  /// Get templates
+  case getTemplates
+  /// Create template
+  case createTemplate(request: TemplateCreateAndEditRequest)
+  /// Edit template
+  case editTemplate(request: TemplateCreateAndEditRequest, templateID: String)
+  /// Delete template
+  case deleteTemplate(templateID: String)
+  /// Switch template
+  case switchTemplate(templateID: String, sessionID: String)
+  /// Upadate config
+  case updateConfig(request: ConfigRequest)
+  ///  Get config
+  case getConfig
+  /// Get templates from config
+  case getTemplateFromConfig
+  /// Update result data
+  case updateResultData(request: [UpdateResultRequest], sessionID: String)
+
 }
 
 extension VoiceToRxEndpoint: RequestProvider {
@@ -73,6 +92,116 @@ extension VoiceToRxEndpoint: RequestProvider {
       interceptor: NetworkRequestInterceptor()
       )
     .validate()
+      
+    case .getTemplates:
+      AF.request(
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template",
+        method: .get,
+        headers: HTTPHeaders(
+          [.contentType(
+            HTTPHeader.contentTypeJson.rawValue
+          )]
+        ),
+        interceptor: NetworkRequestInterceptor()
+      ).validate()
+      
+    case let .createTemplate(request):
+      AF.request(
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template",
+        method: .post,
+        parameters: request,
+        encoder: JSONParameterEncoder.default,
+        headers: HTTPHeaders(
+          [.contentType(
+            HTTPHeader.contentTypeJson.rawValue
+          )]
+        ),
+        interceptor: NetworkRequestInterceptor()
+      ).validate()
+      
+    case let .editTemplate(request, templateID):
+      AF.request(
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template/\(templateID)",
+        method: .put,
+        parameters: request,
+        encoder: JSONParameterEncoder.default,
+        headers: HTTPHeaders(
+          [.contentType(
+            HTTPHeader.contentTypeJson.rawValue
+          )]
+        ),
+        interceptor: NetworkRequestInterceptor()
+      ).validate()
+    
+    case let .deleteTemplate(templateID):
+      AF.request(
+        "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/template/\(templateID)",
+        method: .delete,
+        headers: HTTPHeaders(
+          [.contentType(
+            HTTPHeader.contentTypeJson.rawValue
+          )]
+        ),
+        interceptor: NetworkRequestInterceptor()
+      ).validate()
+      
+    case let .switchTemplate(templateID, sessionID):
+      AF.request(
+          "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v1/transaction/\(sessionID)/convert-to-template/\(templateID)",
+                 method: .post,
+                 headers: HTTPHeaders(
+                  [.contentType(
+                    HTTPHeader.contentTypeJson.rawValue
+                  )]
+                 ),
+                 interceptor: NetworkRequestInterceptor()
+      ).validate()
+      
+    case let .updateConfig(request):
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config/",
+                 method: .put,
+                 parameters: request,
+                 encoder: JSONParameterEncoder.default,
+                 headers: HTTPHeaders(
+                  [.contentType(
+                    HTTPHeader.contentTypeJson.rawValue
+                  )]
+                 ),
+                 interceptor: NetworkRequestInterceptor()).validate()
+      
+    case .getConfig:
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config",
+                 method: .get,
+                 headers: HTTPHeaders(
+                  [.contentType(
+                    HTTPHeader.contentTypeJson.rawValue
+                  )]
+                 ),
+                 interceptor: NetworkRequestInterceptor()).validate()
+      
+    case .getTemplateFromConfig:
+      AF.request("\(DomainConfigurations.apiEkaCareUrl)/voice/api/v2/config/?my_template=true",
+      method: .get,
+      headers: HTTPHeaders(
+       [.contentType(
+         HTTPHeader.contentTypeJson.rawValue
+       )]
+      ),
+      interceptor: NetworkRequestInterceptor()).validate()
+      
+    case let .updateResultData(request, sessionId):
+      AF.request(
+          "\(DomainConfigurations.apiEkaCareUrl)/voice/api/v3/status/\(sessionId)",
+          method: .patch,
+          parameters: request,
+          encoder: JSONParameterEncoder.default,
+          headers: HTTPHeaders(
+            [.contentType(
+              HTTPHeader.contentTypeJson.rawValue
+            )]
+          ),
+          interceptor: NetworkRequestInterceptor()
+        ).validate()
     }
   }
 }

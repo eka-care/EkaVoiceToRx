@@ -27,10 +27,30 @@ struct VoiceToRxInitRequest: Codable {
 }
 
 // MARK: - OutputFormatTemplate
-struct OutputFormatTemplate: Codable {
+public struct OutputFormatTemplate: Codable {
+  public enum TemplateType: String {
+    case defaultType = "default"
+    case customType = "custom"
+  }
+  
   let templateID: String
+  let templateType: String
+  let templateName: String
+  
+  public init(
+    templateID: String,
+    templateType: TemplateType,
+    templateName: String
+  ) {
+    self.templateID = templateID
+    self.templateType = templateType.rawValue
+    self.templateName = templateName
+  }
   
   enum CodingKeys: String, CodingKey {
     case templateID = "template_id"
+    case templateType = "template_type"
+    case templateName = "template_name"
   }
 }
+

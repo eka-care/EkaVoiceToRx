@@ -13,12 +13,13 @@ public final class VoiceToRxRepo {
   // MARK: - Properties
   
   private let databaseManager = VoiceConversationDatabaseManager.shared
-  let service = VoiceToRxApiService()
-  let maxRetries = 3
+  private let service = VoiceToRxApiService()
+  private let maxRetries = 3
+  public static let shared = VoiceToRxRepo()
   
   // MARK: - Init
   
-  public init() {}
+  private init() {}
   
   // MARK: - Create
   
@@ -28,7 +29,7 @@ public final class VoiceToRxRepo {
     conversationMode: VoiceConversationType,
     retryCount: Int = 0,
     intpuLanguage: [String],
-    templateId: [String],
+    templates: [OutputFormatTemplate],
     modelType: String,
     patientDetails: PatientDetails?
   ) async -> (VoiceConversation?, APIError?) {
@@ -48,7 +49,7 @@ public final class VoiceToRxRepo {
         message: "No model could be created"
       )
       if retryCount < 3 {
-        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
+        return await createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationMode, retryCount: retryCount + 1, intpuLanguage: intpuLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
       }
       return (nil, apiError)
     }
@@ -60,10 +61,7 @@ public final class VoiceToRxRepo {
           mode: conversationMode.rawValue,
           inputLanguage: intpuLanguage,
           s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
-          outputFormatTemplate: [
-            OutputFormatTemplate(templateID: templateId.first ?? ""),
-            OutputFormatTemplate(templateID: templateId.last ?? "")
-          ],
+          outputFormatTemplate: templates,
           transfer: "vaded",
           modelType: modelType,
           patientDetails: patientDetails
@@ -298,21 +296,21 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let outputs = response.data?.output, !outputs.isEmpty else {
+        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
           /// Status fetch event
           statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
           completion(.success((false, "")))
           return
         }
-        let allSuccessful = outputs.allSatisfy { $0.status == "success" }
-        let value = outputs.first(where: { $0.value != nil })?.value ?? ""
+        let allSuccessful = templateResults.allSatisfy { $0.status == "success" }
+        let value = templateResults.first(where: { $0.value != nil })?.value ?? ""
         statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
-        let clinicalNotesValue = outputs
-            .filter { $0.templateID == "clinical_notes_template" }
-            .compactMap { $0.value }
-            .joined(separator: "\n")
+        let clinicalNotesValue = templateResults
+          .filter { $0.templateID == "clinical_notes_template" }
+          .compactMap { $0.value }
+          .joined(separator: "\n")
         
         print("#BB clinicalNotesValue is \(clinicalNotesValue)")
         databaseManager.updateVoiceConversation(
@@ -335,14 +333,25 @@ public final class VoiceToRxRepo {
   }
   
   public func getEkaScribeHistory(completion: @escaping (Result<EkaScribeHistoryResponse, Error>) -> Void) {
-      service.getHistoryEkaScribe { result, _ in
-          switch result {
-          case .success(let response):
-              completion(.success(response))
-          case .failure(let error):
-              completion(.failure(error))
-          }
+    service.getHistoryEkaScribe { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
       }
+    }
+  }
+  
+  public func fetchResultStatusResponse(sessionID: String, completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void)  {
+    service.getVoiceToRxStatus(sessionID: sessionID) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
   }
 }
 
@@ -364,18 +373,18 @@ extension VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let outputs = response.data?.output, !outputs.isEmpty else {
+        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
           /// Status fetch event
           //statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
           completion(.success((false, "")))
           return
         }
-        let allSuccessful = outputs.allSatisfy { $0.status == "success" }
-        let value = outputs.first(where: { $0.value != nil })?.value ?? ""
+        let allSuccessful = templateResults.allSatisfy { $0.status == "success" }
+        let value = templateResults.first(where: { $0.value != nil })?.value ?? ""
        // statusFetchEvent(sessionID: sessionID, status: .success, message: "All messages fetched successfully")
         
-        let clinicalNotesValue = outputs
+        let clinicalNotesValue = templateResults
           .filter { $0.templateID == "clinical_notes_template" }
           .compactMap { $0.value }
           .joined(separator: "\n")
@@ -391,4 +400,123 @@ extension VoiceToRxRepo {
       }
     }
   }
+  
+  public func updateResult(sessionID: String, request: UpdateResultRequest, completion: @escaping (Result<UpdateResultResponse, Error>, Int?) -> Void)  {
+    service.updateResultData(sessionID: sessionID, request: request) { result, status in
+      switch result {
+      case .success(let success):
+        completion(.success(success), status)
+      case .failure(let failure):
+        completion(.failure(failure), status)
+      }
+    }
+  }
 }
+
+// MARK: - Templates
+extension VoiceToRxRepo {
+  public func getTemplates(completion: @escaping (Result<TemplateResponse,Error>)-> Void) {
+    service.getTemplate { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+  
+  public func createTemplate(title: String, desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: [])
+    service.createTemplate(request: templateEditRequest) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+  
+  public func saveEditedTemplate(templateID: String, title: String, sessionID: [String], desc: String, completion: @escaping (Result<TemplateCreationResponse,Error>)-> Void) {
+    let templateEditRequest = TemplateCreateAndEditRequest(title: title, desc: desc, sectionIds: sessionID)
+    service.saveEditedTemplate(templateID: templateID, request: templateEditRequest) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+
+  public func deleteTemplate(templateID: String, completion: @escaping (Result<Void,Error>)-> Void) {
+    service.deleteTemplate(templateID: templateID) { result, _ in
+      switch result {
+      case .success(_):
+        completion(.success(()))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+  
+  public func switchTemplate(templateID: String, sessionID: String,completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void) {
+    service.switchTemplate(templateID: templateID, sessionID: sessionID) { result, _ in
+      switch result {
+      case .success(let success):
+        print("response -> \(success)")
+        self.service.getVoiceToRxStatus(sessionID: success.txnID) { trxnResult, _ in
+          switch trxnResult {
+          case .success(let data):
+            completion(.success(data))
+          case .failure(let error):
+            completion(.failure(error))
+          }
+        }
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+}
+
+// MARK: - Config
+extension VoiceToRxRepo {
+  public func getConfig(completion: @escaping (Result<ConfigResponse,Error>) -> Void ) {
+    service.getConfig { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let failure):
+        completion(.failure(failure))
+      }
+      
+    }
+  }
+  
+  public func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>) -> Void) {
+    service.getTemplateFromConfig { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let failure):
+        completion(.failure(failure))
+      }
+    }
+  }
+  
+  public func updateConfig(templates: [String], completion: @escaping (Result<String, Error>) -> Void) {
+    let templateData = MyTemplatesData(myTemplates: templates)
+    let request = ConfigRequest(data: templateData, requestType: "user")
+    service.updateConfig(request: request) { result, _ in
+      switch result {
+      case .success(let response):
+        completion(.success(response))
+      case .failure(let error):
+        completion(.failure(error))
+      }
+    }
+  }
+}
+

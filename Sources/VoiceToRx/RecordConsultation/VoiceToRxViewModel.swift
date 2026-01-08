@@ -88,12 +88,11 @@ public final class VoiceToRxViewModel: ObservableObject {
   private let vadAudioChunker = VADAudioChunker()
   lazy var audioChunkUploader = AudioChunkUploader(
     s3FileUploaderService: s3FileUploader,
-    voiceToRxRepo: voiceToRxRepo
+    voiceToRxRepo: VoiceToRxRepo.shared
   )
   var s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
-  private let voiceToRxRepo = VoiceToRxRepo()
   /// Raw int bytes accumulated till now
   private var pcmBuffersListRaw: [Int16] = []
   private var lastClipIndex: Int = 0
@@ -111,7 +110,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   private var emptyResponseCount = 0
   
-  // MARK: - Init
+   // MARK: - Init
   
   public init(
     voiceToRxInitConfig: V2RxInitConfigurations,
@@ -170,7 +169,11 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: String, inputLanguage: [String], templateId: [String], modelType: String) async -> Bool {
+  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Error? {
+    
+    guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
+      return EkaScribeError.microphonePermissionDenied
+    }
     
     voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
@@ -181,9 +184,13 @@ public final class VoiceToRxViewModel: ObservableObject {
       clearSession()
     }
     
-    let patientDetails = PatientDetails(oid: V2RxInitConfigurations.shared.subOwnerOID, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.subOwnerName)
+    var patientDetails: PatientDetails? = nil
+    
+    if let oid = V2RxInitConfigurations.shared.subOwnerOID, oid != "" {
+      patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
+    }
     /// Create session
-    let (voiceModel, error) = await voiceToRxRepo.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templateId: templateId, modelType: modelType, patientDetails: patientDetails)
+    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
@@ -191,7 +198,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         screenState = .deletedRecording
         voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
-      return false
+      return EkaScribeError.freeSessionLimitReached
     }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
@@ -209,8 +216,9 @@ public final class VoiceToRxViewModel: ObservableObject {
       try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
       debugPrint("Audio Engine did not start \(error)")
+      return EkaScribeError.audioEngineStartFailed
     }
-    return true
+    return nil
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {
@@ -282,7 +290,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         pcmBufferListRaw: pcmBuffersListRaw,
         sessionID: sessionID
       )
-      voiceToRxRepo.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
+      VoiceToRxRepo.shared.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
         /// Change screen state to processing
         DispatchQueue.main.async { [weak self] in
@@ -298,10 +306,10 @@ public final class VoiceToRxViewModel: ObservableObject {
   }
   
   private func addListenerOnUploadStatus(sessionID: UUID) {
-    voiceToRxRepo.observeUploadStatusChangesFor(sessionID: sessionID) { [weak self] in
+    VoiceToRxRepo.shared.observeUploadStatusChangesFor(sessionID: sessionID) { [weak self] in
       guard let self else { return }
       /// Call commit api
-      voiceToRxRepo.commitVoiceToRxSession(sessionID: sessionID) { [weak self] in
+      VoiceToRxRepo.shared.commitVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
         /// Start polling status api
         startStatusPolling()
@@ -335,7 +343,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   func deleteRecording(id: UUID?) {
     guard let id else { return }
-    voiceToRxRepo.deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: id))
+    VoiceToRxRepo.shared.deleteVoiceConversation(fetchRequest: QueryHelper.fetchRequest(for: id))
     screenState = .deletedRecording
   }
 }
@@ -407,7 +415,7 @@ extension VoiceToRxViewModel {
 
 extension VoiceToRxViewModel {
   public func deleteAllData() {
-    voiceToRxRepo.deleteAllVoices()
+    VoiceToRxRepo.shared.deleteAllVoices()
   }
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
@@ -447,7 +455,7 @@ extension VoiceToRxViewModel {
     pollingTimer?.invalidate()
     pollingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] timer in
       guard let self else { return }
-      voiceToRxRepo.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
+      VoiceToRxRepo.shared.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
         guard let self else { return }
         switch result {
         case .success(let isComplete, let value):
@@ -482,4 +490,5 @@ extension VoiceToRxViewModel {
         }
       }
     }
-  }}
+  }
+}

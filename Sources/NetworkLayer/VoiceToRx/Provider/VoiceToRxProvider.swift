@@ -37,6 +37,24 @@ protocol VoiceToRxProvider {
   
   /// History
   func getHistoryEkaScribe(_ completion: @escaping (Result<EkaScribeHistoryResponse, Error>, Int?) -> Void)
+  
+  func getTemplate(_ completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void)
+  
+  func createTemplate(request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void)
+  
+  func saveEditedTemplate(templateID: String, request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void)
+  
+  func deleteTemplate(templateID: String, completion: @escaping (Result<String, Error>, Int?) -> Void)
+  
+  func switchTemplate(templateID: String, sessionID: String, completion: @escaping (Result<ScribeTransactionResponse, Error>, Int?) -> Void)
+  
+  func updateConfig(request: ConfigRequest, completion: @escaping (Result<String, Error>, Int?) -> Void)
+  
+  func getConfig(completion: @escaping (Result<ConfigResponse,Error>, Int?) -> Void)
+  
+  func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void)
+  
+  func updateResultData(sessionID: String, request: UpdateResultRequest, completion: @escaping (Result<UpdateResultResponse, Error>, Int?) -> Void)
 }
 
 extension VoiceToRxProvider {
@@ -78,5 +96,42 @@ extension VoiceToRxProvider {
   /// History
   func getHistoryEkaScribe(_ completion: @escaping (Result<EkaScribeHistoryResponse, Error>, Int?) -> Void) {
     networkService.execute(VoiceToRxEndpoint.getHistoryEkaScribe, completion: completion)
+  }
+  
+  /// Get template
+  func getTemplate(_ completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.getTemplates, completion: completion)
+  }
+  
+  func createTemplate(request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.createTemplate(request: request), completion: completion)
+  }
+  
+  func saveEditedTemplate(templateID: String, request: TemplateCreateAndEditRequest,_ completion: @escaping (Result<TemplateCreationResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.editTemplate(request: request, templateID: templateID), completion: completion)
+  }
+  
+  func deleteTemplate(templateID: String, completion: @escaping (Result<String, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.deleteTemplate(templateID: templateID), completion: completion)
+  }
+  
+  func switchTemplate(templateID: String, sessionID: String, completion: @escaping (Result<ScribeTransactionResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.switchTemplate(templateID: templateID, sessionID: sessionID), completion: completion)
+  }
+  
+  func updateConfig(request: ConfigRequest, completion: @escaping (Result<String, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.updateConfig(request: request), completion: completion)
+  }
+  
+  func getConfig(completion: @escaping (Result<ConfigResponse,Error>,Int?) -> Void ) {
+    networkService.execute(VoiceToRxEndpoint.getConfig, completion: completion)
+  }
+  
+  func getTemplateFromConfig(completion: @escaping (Result<TemplateResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.getTemplateFromConfig, completion: completion)
+  }
+  
+  func updateResultData(sessionID: String, request: UpdateResultRequest, completion: @escaping (Result<UpdateResultResponse, Error>, Int?) -> Void) {
+    networkService.execute(VoiceToRxEndpoint.updateResultData(request: [request], sessionID: sessionID), completion: completion)
   }
 }
