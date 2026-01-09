@@ -1,57 +1,12 @@
 # EkaVoiceToRx
 
+
+
 A Swift package for voice-to-prescription functionality with floating UI components, audio recording, and real-time transcription capabilities for medical consultation applications.
-
-![Swift Version](https://img.shields.io/badge/Swift-5.10+-orange.svg)
-
-![Platform](https://img.shields.io/badge/Platform-iOS%2017.0+-blue.svg)
-
-![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ## Overview
 
 EkaVoiceToRx empowers healthcare applications with advanced voice recording and transcription capabilities. It provides a seamless integration for medical consultation workflows, enabling doctors to record patient interactions and automatically generate prescriptions through AI-powered voice analysis.
-
-### Key Features
-
-- 🎙️ **Voice Activity Detection (VAD)** - Intelligent audio recording with automatic speech detection
-
-- 🔄 **Real-time Transcription** - Live audio-to-text conversion during consultations
-
-- 📱 **Floating UI Interface** - Picture-in-picture recording interface that stays accessible
-
-- 🏥 **Medical Context Aware** - Specialized for healthcare terminology and prescription generation
-
-- 📊 **Session Management** - Complete recording session lifecycle management
-
-- ☁️ **Cloud Integration** - Automatic audio upload and processing via Amazon S3
-
-- 🔐 **Token Management** - Secure authentication with automatic token refresh
-
-- 📋 **Template Support** - Multiple output format templates (SOAP, Prescription, etc.)
-
-- 🌐 **Multi-language Support** - Support for multiple languages (up to 2 per session)
-
-- 📈 **Real-time Monitoring** - Live audio quality metrics and voice activity flows
-
-- 📚 **Session History** - Access to past recording sessions
-
-- 🎯 **Model Selection** - Choose between Pro and Lite models for different use cases
-
-## Table of Contents
-
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [Core Components](#core-components)
-- [Integration Guide](#integration-guide)
-- [Configuration](#configuration)
-- [Authentication & Token Management](#authentication--token-management)
-- [Usage Examples](#usage-examples)
-- [Advanced Features](#advanced-features)
-- [Best Practices](#best-practices)
-- [API Reference](#api-reference)
-- [Troubleshooting](#troubleshooting)
 
 ## Requirements
 
@@ -634,81 +589,6 @@ AuthTokenHolder.shared.bid = JWTDecoder.shared.businessId
 
 The SDK automatically handles token refresh when tokens expire. Ensure `AuthTokenHolder` is updated with refreshed tokens when your app refreshes them.
 
-## Usage Examples
-
-### Basic Recording Session
-
-```swift
-// Prepare output format templates
-let templates = [
-    OutputFormatTemplate(
-        templateID: "template-id-here",
-        templateType: .defaultType,
-        templateName: "SOAP Note"
-    )
-]
-
-// Start a consultation recording
-let error = await viewModel.startRecording(
-    conversationType: "consultation",
-    inputLanguage: ["en-IN"],
-    templates: templates,
-    modelType: "pro"
-)
-
-if let error = error {
-    print("Error starting recording: \(error)")
-}
-```
-
-### Recording with Multiple Templates
-
-```swift
-// Select multiple templates (max 2)
-let templates = [
-    OutputFormatTemplate(
-        templateID: "soap-template-id",
-        templateType: .defaultType,
-        templateName: "SOAP Note"
-    ),
-    OutputFormatTemplate(
-        templateID: "prescription-template-id",
-        templateType: .customType,
-        templateName: "Prescription"
-    )
-]
-
-await viewModel.startRecording(
-    conversationType: "consultation",
-    inputLanguage: ["en-IN", "hi-IN"], // Multiple languages (max 2)
-    templates: templates,
-    modelType: "pro"
-)
-```
-
-### Dictation Mode
-
-```swift
-// For direct prescription dictation
-let dictationTemplates = [
-    OutputFormatTemplate(
-        templateID: "prescription-template-id",
-        templateType: .defaultType,
-        templateName: "Prescription"
-    )
-]
-
-await viewModel.startRecording(
-    conversationType: "dictation",
-    inputLanguage: ["en-IN"],
-    templates: dictationTemplates,
-    modelType: "lite" // Lite model is faster for dictation
-)
-
-// This mode is optimized for single-speaker medical dictation
-// Less background noise filtering, more focused on medical terminology
-```
-
 ### Session Management
 
 ```swift
@@ -830,83 +710,6 @@ class RecordingMonitor {
     }
 }
 ```
-
-### Model Selection
-
-Choose between Pro and Lite models based on your needs:
-
-```swift
-// Pro Model - Higher accuracy, slower processing
-// Best for: Final consultations, complex cases, high-quality requirements
-await viewModel.startRecording(
-    conversationType: "consultation",
-    inputLanguage: ["en-IN"],
-    templates: templates,
-    modelType: "pro"
-)
-
-// Lite Model - Faster processing, good accuracy
-// Best for: Quick notes, dictation, real-time requirements
-await viewModel.startRecording(
-    conversationType: "dictation",
-    inputLanguage: ["en-IN"],
-    templates: templates,
-    modelType: "lite"
-)
-```
-
-### Multi-language Support
-
-Record sessions in multiple languages (up to 2):
-
-```swift
-// Start recording with multiple languages
-let templates = [
-    OutputFormatTemplate(
-        templateID: "template-id",
-        templateType: .defaultType,
-        templateName: "SOAP Note"
-    )
-]
-
-await viewModel.startRecording(
-    conversationType: "consultation",
-    inputLanguage: ["en-IN", "hi-IN"], // English and Hindi (max 2)
-    templates: templates,
-    modelType: "pro"
-)
-```
-
-### Multiple Output Formats
-
-Generate multiple document formats simultaneously (up to 2):
-
-```swift
-// Select multiple templates
-let templates = [
-    OutputFormatTemplate(
-        templateID: "soap-template-id",
-        templateType: .defaultType,
-        templateName: "SOAP Note"
-    ),
-    OutputFormatTemplate(
-        templateID: "prescription-template-id",
-        templateType: .customType,
-        templateName: "Prescription"
-    )
-]
-
-await viewModel.startRecording(
-    conversationType: "consultation",
-    inputLanguage: ["en-IN"],
-    templates: templates,
-    modelType: "pro"
-)
-
-// Results are delivered through delegate callbacks
-// Check FloatingVoiceToRxDelegate.onResultValueReceived
-```
-
 ## Best Practices
 
 ### Memory Management
@@ -1125,6 +928,559 @@ public class AuthTokenHolder {
     public var authToken: String?
     public var refreshToken: String?
     public var bid: String?
+}
+```
+### VoiceToRxRepo
+
+The `VoiceToRxRepo` class is the central repository for managing voice-to-prescription sessions. It handles session lifecycle, database operations, API calls, and provides access to templates and configuration.
+
+```swift
+public final class VoiceToRxRepo {
+    public static let shared: VoiceToRxRepo
+}
+```
+#### Status and Results Methods
+
+##### Fetch Result Status Response
+
+Fetches the full status response for a session, including all template results, transcript data, structured Rx, and metadata. This provides comprehensive information about the processing status of all templates in a session.
+
+```swift
+public func fetchResultStatusResponse(
+    sessionID: String,
+    completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void
+)
+```
+
+**Parameters:**
+- `sessionID`: String representation of the session UUID
+- `completion`: Completion handler with full status response
+
+**Response Structure:**
+The response includes:
+- `data.templateResults.custom`: Array of custom template outputs with status, value, and errors
+- `data.templateResults.transcript`: Array of transcript outputs
+- `data.audioMatrix`: Audio quality metrics
+- Each template result contains:
+  - `templateID`: Template identifier
+  - `name`: Template name
+  - `status`: Processing status (`success`, `in-progress`, `failure`)
+  - `value`: Processed output content
+  - `errors`: Array of error messages if processing failed
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.fetchResultStatusResponse(sessionID: sessionID.uuidString) { result in
+    switch result {
+    case .success(let response):
+        // Access custom template results
+        if let customTemplates = response.data?.templateResults?.custom {
+            for template in customTemplates {
+                print("Template ID: \(template.templateID ?? "N/A")")
+                print("Template Name: \(template.name ?? "N/A")")
+                print("Status: \(template.status ?? "N/A")")
+                
+                if let value = template.value {
+                    print("Output: \(value)")
+                }
+                
+                if !template.errors.isEmpty {
+                    print("Errors:")
+                    for error in template.errors {
+                        print("  - \(error.msg ?? "Unknown error")")
+                    }
+                }
+            }
+        }
+        
+        // Access transcript results
+        if let transcripts = response.data?.templateResults?.transcript {
+            for transcript in transcripts {
+                print("Transcript: \(transcript.value ?? "")")
+            }
+        }
+        
+        // Access audio quality metrics
+        if let audioMatrix = response.data?.audioMatrix {
+            print("Audio Quality: \(audioMatrix.quality ?? 0.0)")
+        }
+    case .failure(let error):
+        print("Error fetching status: \(error.localizedDescription)")
+    }
+}
+```
+
+#### History Methods
+
+##### Get EkaScribe History
+
+Retrieves the history of all voice-to-prescription sessions for the current user. This API returns a list of all past sessions with their status, patient details, and metadata.
+
+```swift
+public func getEkaScribeHistory(
+    completion: @escaping (Result<EkaScribeHistoryResponse, Error>) -> Void
+)
+```
+
+**Response Structure:**
+- `status`: Overall status of the response (`success`, `cancelled`, `in-progress`, `system_failure`)
+- `data`: Array of `ScribeData` objects containing session information
+- `retrievedCount`: Number of sessions retrieved
+
+**ScribeData Properties:**
+- `uuid`: Unique session identifier
+- `txnID`: Transaction ID
+- `bID`: Business ID
+- `oid`: Owner ID
+- `createdAt`: Session creation timestamp
+- `processingStatus`: Current processing status (`success`, `in-progress`, `system_failure`, `request_failure`, `cancelled`)
+- `userStatus`: User action status (`init`, `stopped`, `commit`, `cancelled`)
+- `mode`: Session mode (`consultation`, `dictation`)
+- `flavour`: Platform flavour (`scribe-ios`, `scribe-android`, `web`, etc.)
+- `patientDetails`: Patient information (oid, age, biologicalSex, username)
+- `version`: API version used
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.getEkaScribeHistory { result in
+    switch result {
+    case .success(let response):
+        print("Retrieved \(response.retrievedCount ?? 0) sessions")
+        print("Overall status: \(response.status.rawValue)")
+        
+        for session in response.data {
+            print("Session UUID: \(session.uuid ?? "N/A")")
+            print("Transaction ID: \(session.txnID ?? "N/A")")
+            print("Processing Status: \(session.processingStatus?.rawValue ?? "N/A")")
+            print("User Status: \(session.userStatus?.rawValue ?? "N/A")")
+            print("Mode: \(session.mode?.rawValue ?? "N/A")")
+            print("Created At: \(session.createdAt ?? "N/A")")
+            
+            if let patient = session.patientDetails {
+                print("Patient: \(patient.username ?? "N/A"), Age: \(patient.age ?? 0)")
+            }
+        }
+    case .failure(let error):
+        print("Error fetching history: \(error.localizedDescription)")
+    }
+}
+```
+
+##### Get Session IDs
+
+Retrieves all session IDs for a specific owner (doctor).
+
+```swift
+public func getSessionIds(for ownerId: String) async -> Set<String>
+```
+
+**Example:**
+
+```swift
+let sessionIds = await VoiceToRxRepo.shared.getSessionIds(for: doctorOID)
+print("Found \(sessionIds.count) sessions")
+```
+
+#### Template Management Methods
+
+##### Get Templates
+
+Retrieves all available templates that can be used for voice-to-prescription sessions. This includes both default templates and custom templates created by the user.
+
+```swift
+public func getTemplates(
+    completion: @escaping (Result<TemplateResponse, Error>) -> Void
+)
+```
+
+**Response Structure:**
+- `items`: Array of `Template` objects
+
+**Template Properties:**
+- `id`: Unique template identifier
+- `title`: Template title/name
+- `desc`: Template description
+- `sectionIds`: Array of section IDs included in the template
+- `defaultTemplate`: Boolean indicating if this is a default template
+- `isFavorite`: Boolean indicating if the template is marked as favorite
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.getTemplates { result in
+    switch result {
+    case .success(let response):
+        print("Found \(response.items.count) templates")
+        
+        for template in response.items {
+            print("Template ID: \(template.id)")
+            print("Title: \(template.title)")
+            print("Description: \(template.desc ?? "No description")")
+            print("Is Default: \(template.defaultTemplate)")
+            print("Is Favorite: \(template.isFavorite ?? false)")
+            
+            if let sectionIds = template.sectionIds {
+                print("Sections: \(sectionIds.joined(separator: ", "))")
+            }
+        }
+    case .failure(let error):
+        print("Error fetching templates: \(error.localizedDescription)")
+    }
+}
+```
+
+##### Create Template
+
+Creates a new template.
+
+```swift
+public func createTemplate(
+    title: String,
+    desc: String,
+    completion: @escaping (Result<TemplateCreationResponse, Error>) -> Void
+)
+```
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.createTemplate(
+    title: "Custom SOAP Note",
+    desc: "A custom SOAP note template"
+) { result in
+    switch result {
+    case .success(let response):
+        print("Template created: \(response.id)")
+    case .failure(let error):
+        print("Error: \(error)")
+    }
+}
+```
+
+##### Save Edited Template
+
+Saves changes to an existing template. Updates the template's title, description, and associated section IDs.
+
+```swift
+public func saveEditedTemplate(
+    templateID: String,
+    title: String,
+    sessionID: [String],
+    desc: String,
+    completion: @escaping (Result<TemplateCreationResponse, Error>) -> Void
+)
+```
+
+**Parameters:**
+- `templateID`: The ID of the template to update
+- `title`: New title for the template
+- `sessionID`: Array of section IDs to associate with the template (these are section identifiers, not session IDs)
+- `desc`: New description for the template
+- `completion`: Completion handler with the updated template response
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.saveEditedTemplate(
+    templateID: "template-123",
+    title: "Updated SOAP Note Template",
+    sessionID: ["section-subjective", "section-objective", "section-assessment", "section-plan"],
+    desc: "Updated SOAP note template with all sections"
+) { result in
+    switch result {
+    case .success(let response):
+        print("Template updated successfully")
+        print("Updated Template ID: \(response.id)")
+    case .failure(let error):
+        print("Error updating template: \(error.localizedDescription)")
+    }
+}
+```
+
+##### Delete Template
+
+Deletes a template permanently. This action cannot be undone. Only custom templates can be deleted; default templates cannot be removed.
+
+```swift
+public func deleteTemplate(
+    templateID: String,
+    completion: @escaping (Result<Void, Error>) -> Void
+)
+```
+
+**Parameters:**
+- `templateID`: The ID of the template to delete
+- `completion`: Completion handler indicating success or failure
+
+**Note:** Default templates cannot be deleted. Attempting to delete a default template will result in an error.
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.deleteTemplate(templateID: "template-123") { result in
+    switch result {
+    case .success:
+        print("Template deleted successfully")
+        // Refresh template list
+        VoiceToRxRepo.shared.getTemplates { result in
+            // Handle updated template list
+        }
+    case .failure(let error):
+        print("Error deleting template: \(error.localizedDescription)")
+        // Check if it's a default template error
+    }
+}
+```
+
+##### Switch Template
+
+Switches the template for an active session. This allows you to change the output format template for a session that is currently in progress. After switching, the session will be reprocessed with the new template.
+
+```swift
+public func switchTemplate(
+    templateID: String,
+    sessionID: String,
+    completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void
+)
+```
+
+**Parameters:**
+- `templateID`: The ID of the new template to use
+- `sessionID`: String representation of the session UUID
+- `completion`: Completion handler with the updated status response
+
+**Note:** This operation will trigger reprocessing of the session with the new template. The response includes the updated status with the new template results.
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.switchTemplate(
+    templateID: "new-template-id",
+    sessionID: sessionID.uuidString
+) { result in
+    switch result {
+    case .success(let response):
+        print("Template switched successfully")
+        
+        // Check the updated template results
+        if let customTemplates = response.data?.templateResults?.custom {
+            for template in customTemplates {
+                print("New Template: \(template.name ?? ""), Status: \(template.status ?? "")")
+            }
+        }
+    case .failure(let error):
+        print("Error switching template: \(error.localizedDescription)")
+    }
+}
+```
+
+#### Configuration Methods
+
+##### Get Config
+
+Retrieves the current configuration including supported languages, templates, user preferences, settings, and maximum selection limits. This is useful for populating UI dropdowns and validating user selections.
+
+```swift
+public func getConfig(
+    completion: @escaping (Result<ConfigResponse, Error>) -> Void
+)
+```
+
+**Response Structure:**
+- `data.supportedLanguages`: Array of supported language options
+- `data.supportedOutputFormats`: Array of supported output format options
+- `data.consultationModes`: Array of available consultation modes
+- `data.maxSelection`: Maximum number of items that can be selected for each category
+- `data.settings`: User settings including model training consent
+- `data.selectedPreferences`: Currently selected user preferences
+- `data.myTemplates`: User's favorite/custom templates
+- `data.userDetails`: User profile information
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.getConfig { result in
+    switch result {
+    case .success(let response):
+        let config = response.data
+        
+        // Get supported languages
+        if let languages = config.supportedLanguages {
+            print("Supported Languages:")
+            for language in languages {
+                print("  - \(language.name) (ID: \(language.id))")
+            }
+        }
+        
+        // Get supported output formats
+        if let formats = config.supportedOutputFormats {
+            print("Supported Output Formats:")
+            for format in formats {
+                print("  - \(format.name) (ID: \(format.id))")
+            }
+        }
+        
+        // Get consultation modes
+        if let modes = config.consultationModes {
+            print("Consultation Modes:")
+            for mode in modes {
+                print("  - \(mode.name) (ID: \(mode.id))")
+            }
+        }
+        
+        // Get maximum selection limits
+        if let maxSelection = config.maxSelection {
+            print("Max Selection Limits:")
+            print("  Languages: \(maxSelection.supportedLanguages ?? 0)")
+            print("  Output Formats: \(maxSelection.supportedOutputFormats ?? 0)")
+            print("  Consultation Modes: \(maxSelection.consultationModes ?? 0)")
+        }
+        
+        // Get user's selected preferences
+        if let preferences = config.selectedPreferences {
+            print("Selected Preferences:")
+            print("  Auto Download: \(preferences.autoDownload ?? false)")
+            print("  Model Type: \(preferences.modelType ?? "N/A")")
+            print("  Consultation Mode: \(preferences.consultationMode ?? "N/A")")
+        }
+        
+        // Get user's favorite templates
+        if let myTemplates = config.myTemplates {
+            print("My Templates:")
+            for template in myTemplates {
+                print("  - \(template.name) (ID: \(template.id))")
+            }
+        }
+        
+        // Get user details
+        if let userDetails = config.userDetails {
+            print("User Details:")
+            print("  Business ID: \(userDetails.bID ?? "N/A")")
+            print("  Is Paid Doctor: \(userDetails.isPaidDoc ?? false)")
+        }
+    case .failure(let error):
+        print("Error fetching config: \(error.localizedDescription)")
+    }
+}
+```
+
+##### Get Template From Config
+
+Retrieves templates from the user's configuration. This returns only the templates that are configured in the user's preferences (favorite templates), as opposed to `getTemplates()` which returns all available templates.
+
+```swift
+public func getTemplateFromConfig(
+    completion: @escaping (Result<TemplateResponse, Error>) -> Void
+)
+```
+
+**Difference from `getTemplates()`:**
+- `getTemplates()`: Returns ALL available templates (default + custom)
+- `getTemplateFromConfig()`: Returns only templates from user's configuration (favorite/selected templates)
+
+**Example:**
+
+```swift
+VoiceToRxRepo.shared.getTemplateFromConfig { result in
+    switch result {
+    case .success(let response):
+        print("Found \(response.items.count) templates in configuration")
+        
+        for template in response.items {
+            print("Template: \(template.title)")
+            print("  ID: \(template.id)")
+            print("  Is Default: \(template.defaultTemplate)")
+            print("  Is Favorite: \(template.isFavorite ?? false)")
+        }
+    case .failure(let error):
+        print("Error fetching templates from config: \(error.localizedDescription)")
+    }
+}
+```
+
+##### Update Config
+
+Updates the user's configuration, particularly their favorite/selected templates. This allows users to customize which templates appear in their template list.
+
+```swift
+public func updateConfig(
+    templates: [String],
+    completion: @escaping (Result<String, Error>) -> Void
+)
+```
+
+**Parameters:**
+- `templates`: Array of template IDs to set as user's favorite templates
+- `completion`: Completion handler with success message or error
+
+**Note:** This updates the `myTemplates` field in the user's configuration. The templates array should contain valid template IDs that exist in the system.
+
+**Example:**
+
+```swift
+// Update user's favorite templates
+VoiceToRxRepo.shared.updateConfig(
+    templates: ["template-id-1", "template-id-2", "template-id-3"]
+) { result in
+    switch result {
+    case .success(let message):
+        print("Configuration updated successfully: \(message)")
+        
+        // Refresh config to see updated templates
+        VoiceToRxRepo.shared.getConfig { configResult in
+            if case .success(let config) = configResult {
+                if let myTemplates = config.data.myTemplates {
+                    print("Updated favorite templates:")
+                    for template in myTemplates {
+                        print("  - \(template.name)")
+                    }
+                }
+            }
+        }
+    case .failure(let error):
+        print("Error updating config: \(error.localizedDescription)")
+    }
+}
+```
+
+#### Helper Methods
+
+##### Get Template ID
+
+Retrieves the template ID associated with a session from the local database. This is a helper method that queries the local CoreData store for the transcription/template ID stored with a session.
+
+```swift
+public func getTemplateID(for sessionID: UUID) -> String
+```
+
+**Parameters:**
+- `sessionID`: UUID of the session to query
+
+**Returns:**
+- `String`: The template ID stored in the session's transcription field, or an empty string if not found
+
+**Note:** This method queries the local database, not the API. If the session doesn't exist locally or doesn't have a template ID stored, it returns an empty string.
+
+**Example:**
+
+```swift
+let templateID = VoiceToRxRepo.shared.getTemplateID(for: sessionID)
+
+if !templateID.isEmpty {
+    print("Template ID for session: \(templateID)")
+    
+    // Use the template ID to fetch template details
+    VoiceToRxRepo.shared.getTemplates { result in
+        if case .success(let response) = result {
+            if let template = response.items.first(where: { $0.id == templateID }) {
+                print("Template found: \(template.title)")
+            }
+        }
+    }
+} else {
+    print("No template ID found for this session")
 }
 ```
 
@@ -1353,5 +1709,3 @@ Enable detailed logging for troubleshooting:
 - **Documentation**: Check this guide and inline code documentation
 - **Sample Project**: Request access to the sample integration project
 - **Technical Support**: Contact the EkaVoiceToRx team for integration assistance
-
-
