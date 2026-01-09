@@ -180,6 +180,8 @@ public final class VoiceToRxViewModel: ObservableObject {
       guard let self else { return }
       sessionID = voiceModel.sessionID
     }
+    
+    getAmazonCredentials()
     /// Change the screen state to listening
     await MainActor.run { [weak self] in
       guard let self else { return }
