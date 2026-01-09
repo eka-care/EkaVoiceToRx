@@ -123,7 +123,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         subscribeToScreenStates()
         self.liveActivityDelegate = liveActivityDelegate
       }
-      getAmazonCredentials()
+
         await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
       return nil
     }
