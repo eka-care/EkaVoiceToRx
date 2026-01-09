@@ -48,7 +48,54 @@ final class VoiceConversationDatabaseManager {
   
   private var notificationToken: NSObjectProtocol?
   /// A peristent history token used for fetching transactions from the store.
-  private var lastToken: NSPersistentHistoryToken?
+  /// Thread-safe storage: tokens are archived to Data for thread-safe access
+  /// NSPersistentHistoryToken objects are not thread-safe and must be archived/unarchived
+  private var _lastTokenData: Data?
+  private let tokenQueue = DispatchQueue(label: "com.ekavoice.persistentHistoryToken")
+  
+  /// Thread-safe getter: unarchives token from Data
+  /// NSPersistentHistoryToken must be archived/unarchived for thread-safe access
+  private func getLastToken() -> NSPersistentHistoryToken? {
+    return tokenQueue.sync {
+      guard let data = _lastTokenData else { return nil }
+      // Use NSKeyedUnarchiver for thread-safe token retrieval
+      // This ensures the token is valid on the thread where it's unarchived
+      guard let unarchiver = try? NSKeyedUnarchiver(forReadingFrom: data) else {
+        return nil
+      }
+      unarchiver.requiresSecureCoding = true
+      defer { unarchiver.finishDecoding() }
+      return unarchiver.decodeObject(of: NSPersistentHistoryToken.self, forKey: NSKeyedArchiveRootObjectKey)
+    }
+  }
+  
+  /// Thread-safe setter: archives token to Data
+  /// NSPersistentHistoryToken must be archived for thread-safe storage
+  private func setLastToken(_ token: NSPersistentHistoryToken?) {
+    tokenQueue.sync {
+      if let token = token {
+        // Use NSKeyedArchiver for thread-safe token storage
+        // This ensures the token can be safely passed between threads
+        let archiver = NSKeyedArchiver(requiringSecureCoding: true)
+        archiver.encode(token, forKey: NSKeyedArchiveRootObjectKey)
+        archiver.finishEncoding()
+        _lastTokenData = archiver.encodedData
+      } else {
+        _lastTokenData = nil
+      }
+    }
+  }
+  /// Flag to prevent concurrent persistent history fetches (thread-safe)
+  private var _isFetchingHistory = false
+  private let historyFetchQueue = DispatchQueue(label: "com.ekavoice.persistentHistoryFetch")
+  private var isFetchingHistory: Bool {
+    get {
+      return historyFetchQueue.sync { _isFetchingHistory }
+    }
+    set {
+      historyFetchQueue.sync { _isFetchingHistory = newValue }
+    }
+  }
   /// To get upload completion callbacks
   private var uploadCompletionCallbacks: [UUID: () -> Void] = [:]
   /// Session ids which are being listened to for is file uploaded changes
@@ -96,53 +143,42 @@ extension VoiceConversationDatabaseManager {
     return taskContext
   }
   
-  /// Used to fetch persistent history changes from the store.
-//  func fetchPersistentHistory() async {
-//    do {
-//      try await fetchPersistentHistoryTransactionsAndChanges()
-//    } catch {
-//      debugPrint("\(error.localizedDescription)")
-//    }
-//  }
-  
-  /// Fetches persistent history transactions and merges them into the view context.
-//  func fetchPersistentHistoryTransactionsAndChanges() async throws {
-//    backgroundContext.name = "persistentHistoryContext"
-//    try await backgroundContext.perform { [weak self] in
-//      guard let self else { return }
-//      // Execute the persistent history change since the last transaction.
-//      /// - Tag: fetchHistory
-//      let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
-//      let historyResult = try backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
-//      if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
-//         !history.isEmpty {
-//        self.mergePersistentHistoryChanges(from: history)
-//        return
-//      }
-//    }
-//  }
   func fetchPersistentHistory() {
-    Task(priority: .background) { [weak self] in
+    historyFetchQueue.async { [weak self] in
       guard let self else { return }
+      
+      guard !self._isFetchingHistory else {
+        return
+      }
+      
+      self._isFetchingHistory = true
+      defer {
+        self._isFetchingHistory = false
+      }
+      
       self.fetchPersistentHistoryTransactionsAndChanges()
     }
   }
   
   func fetchPersistentHistoryTransactionsAndChanges() {
-    Task(priority: .background) { @MainActor [weak self] in
+    backgroundContext.perform { [weak self] in
       guard let self else { return }
       
-      backgroundContext.perform {
-        let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: self.lastToken)
-        do {
-          let historyResult = try self.backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
-          if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
-             !history.isEmpty {
-            self.mergePersistentHistoryChanges(from: history)
-          }
-        } catch {
-          print("⚠️ Persistent history fetch failed: \(error)")
+      // Get token on the background context's thread - unarchived from thread-safe storage
+      let token = self.getLastToken()
+      
+      // Create the change request with the token
+      // The token is now valid on this thread since we unarchived it here
+      let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: token)
+      
+      do {
+        let historyResult = try self.backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
+        if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
+           !history.isEmpty {
+          self.mergePersistentHistoryChanges(from: history)
         }
+      } catch {
+        print("⚠️ Persistent history fetch failed: \(error)")
       }
     }
   }
@@ -154,10 +190,16 @@ extension VoiceConversationDatabaseManager {
     /// - Tag: mergeChanges
     let viewContext = container.viewContext
     viewContext.perform {
+      // Get the last transaction token to update atomically
+      guard let lastTransaction = history.last else { return }
+      
       for transaction in history {
         viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
-        self.lastToken = transaction.token
       }
+      
+      // Update token once with the last transaction's token (thread-safe via archiving)
+      // The token is valid on this thread, we archive it for thread-safe storage
+      self.setLastToken(lastTransaction.token)
     }
   }
   
