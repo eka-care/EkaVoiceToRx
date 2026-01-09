@@ -384,9 +384,3 @@ extension FloatingVoiceToRxViewController {
     }.store(in: &cancellables)
   }
 }
-
-extension FloatingVoiceToRxViewController {
-  private func getAmazonCredentials() {
-    viewModel?.getAmazonCredentials()
-  }
-}
