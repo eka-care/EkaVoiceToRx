@@ -10,39 +10,6 @@ import AVFoundation
 import FirebaseFirestore
 import SwiftyJSON
 
-public enum RecordConsultationState: Equatable {
-  case retry
-  case startRecording
-  case listening(conversationType: VoiceConversationType)
-  case paused
-  case processing
-  case resultDisplay(success: Bool, value: String?)
-  case deletedRecording
-  
-  public static func == (lhs: RecordConsultationState, rhs: RecordConsultationState) -> Bool {
-    switch (lhs, rhs) {
-    case
-      (.retry, .retry),
-      (.startRecording, .startRecording),
-      (.processing, .processing),
-      (.deletedRecording, .deletedRecording),
-      (.paused, .paused):
-      return true
-    case (.listening(let lhsType), .listening(let rhsType)):
-      return lhsType == rhsType
-    case (.resultDisplay(let lhsSuccess), .resultDisplay(let rhsSuccess)):
-      return lhsSuccess == rhsSuccess
-    default:
-      return false
-    }
-  }
-}
-
-public enum VoiceConversationType: String {
-  case conversation = "consultation"
-  case dictation = "dictation"
-}
-
 final class RecordingConfiguration {
   
   static let shared = RecordingConfiguration()
@@ -169,13 +136,13 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: String, inputLanguage: [String], templates: [OutputFormatTemplate], modelType: String) async -> Error? {
+  public func startRecording(conversationType: VoiceConversationType, inputLanguage: [InputLanguageType], templates: [OutputFormatTemplate], modelType: ModelType) async -> Error? {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
       return EkaScribeError.microphonePermissionDenied
     }
     
-    voiceConversationType = VoiceConversationType(rawValue: conversationType)
+    //voiceConversationType = VoiceConversationType(rawValue: conversationType)
     /// Setup record session
     setupRecordSession()
     /// Clear any previous session data if present
@@ -196,7 +163,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
     }
     /// Create session
-    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: VoiceConversationType(rawValue: conversationType) ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
+    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
@@ -216,7 +183,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Change the screen state to listening
     await MainActor.run { [weak self] in
       guard let self else { return }
-      screenState = .listening(conversationType: VoiceConversationType(rawValue: conversationType) ?? .dictation)
+      screenState = .listening(conversationType: conversationType)
     }
     do {
       try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
