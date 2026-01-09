@@ -28,9 +28,9 @@ public final class VoiceToRxRepo {
     contextParams: VoiceToRxContextParams?,
     conversationMode: VoiceConversationType,
     retryCount: Int = 0,
-    intpuLanguage: [String],
+    intpuLanguage: [InputLanguageType],
     templates: [OutputFormatTemplate],
-    modelType: String,
+    modelType: ModelType,
     patientDetails: PatientDetails?
   ) async -> (VoiceConversation?, APIError?) {
     var apiError: APIError?
@@ -59,11 +59,11 @@ public final class VoiceToRxRepo {
         request: VoiceToRxInitRequest(
           additionalData: contextParams,
           mode: conversationMode.rawValue,
-          inputLanguage: intpuLanguage,
+          inputLanguage: intpuLanguage.map { $0.rawValue },
           s3URL: RecordingS3UploadConfiguration.getS3Url(sessionID: sessionID),
           outputFormatTemplate: templates,
           transfer: "vaded",
-          modelType: modelType,
+          modelType: modelType.rawValue,
           patientDetails: patientDetails
         )
       ) { [weak self] result, statusCode in
