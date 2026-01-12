@@ -106,8 +106,17 @@ extension Networking {
         } else if let apiError = try? JSONDecoder().decode(APIError.self, from: data) {
           completion(.failure(apiError), statusCode)
         } else {
-          // decoding failed and no fallback returned
-          debugPrint("Failed to decode both T and APIError")
+          let fallbackError = APIError(
+            status: "error",
+            error: APIErrorDetail(
+              code: "DECODE_ERROR",
+              message: "Failed to decode response",
+              display_message: "Failed to decode response"
+            ),
+            txn_id: nil,
+            b_id: nil
+          )
+          completion(.failure(fallbackError), statusCode)
         }
         
       case .failure:
@@ -115,7 +124,17 @@ extension Networking {
            let apiError = try? JSONDecoder().decode(APIError.self, from: data) {
           completion(.failure(apiError), statusCode)
         } else {
-          debugPrint("Failed to decode APIError from failed response")
+          let fallbackError = APIError(
+            status: "error",
+            error: APIErrorDetail(
+              code: "NETWORK_ERROR",
+              message: "Network request failed and could not decode error response",
+              display_message: "Network request failed and could not decode error response"
+            ),
+            txn_id: nil,
+            b_id: nil
+          )
+          completion(.failure(fallbackError), statusCode)
         }
       }
     }

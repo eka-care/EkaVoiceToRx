@@ -105,18 +105,19 @@ final class VoiceConversationDatabaseManager {
   
   private init() {
     /// Observe Core Data remote change notifications on the queue where the changes were made.
-    notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { [weak self] note in
+    notificationToken = NotificationCenter.default.addObserver(forName: .NSPersistentStoreRemoteChange, object: nil, queue: nil) { [weak self] _ in
       guard let self else { return }
    //   Task { [weak self] in
    //     guard let self else { return }
-        self.fetchPersistentHistory()
+        fetchPersistentHistory()
    //   }
     }
     
     NotificationCenter.default.addObserver(forName: .NSManagedObjectContextObjectsDidChange, object: nil, queue: nil) { [weak self] notification in
       guard let self else { return }
-      for sessionID in self.watchedSessionIDs {
-        self.checkUploadStatus(for: sessionID)
+      
+      for sessionID in watchedSessionIDs {
+        checkUploadStatus(for: sessionID)
       }
     }
   }
@@ -147,16 +148,16 @@ extension VoiceConversationDatabaseManager {
     historyFetchQueue.async { [weak self] in
       guard let self else { return }
       
-      guard !self._isFetchingHistory else {
+      guard !_isFetchingHistory else {
         return
       }
       
-      self._isFetchingHistory = true
+      _isFetchingHistory = true
       defer {
-        self._isFetchingHistory = false
+        _isFetchingHistory = false
       }
       
-      self.fetchPersistentHistoryTransactionsAndChanges()
+      fetchPersistentHistoryTransactionsAndChanges()
     }
   }
   
@@ -165,17 +166,17 @@ extension VoiceConversationDatabaseManager {
       guard let self else { return }
       
       // Get token on the background context's thread - unarchived from thread-safe storage
-      let token = self.getLastToken()
+      let token = getLastToken()
       
       // Create the change request with the token
       // The token is now valid on this thread since we unarchived it here
       let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: token)
       
       do {
-        let historyResult = try self.backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
+        let historyResult = try backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
         if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
            !history.isEmpty {
-          self.mergePersistentHistoryChanges(from: history)
+          mergePersistentHistoryChanges(from: history)
         }
       } catch {
         print("⚠️ Persistent history fetch failed: \(error)")
@@ -188,18 +189,19 @@ extension VoiceConversationDatabaseManager {
   private func mergePersistentHistoryChanges(from history: [NSPersistentHistoryTransaction]) {
     // Update view context with objectIDs from history change request.
     /// - Tag: mergeChanges
-    let viewContext = container.viewContext
-    viewContext.perform {
+    container.viewContext.perform { [weak self] in
+      guard let self else { return }
+      
       // Get the last transaction token to update atomically
       guard let lastTransaction = history.last else { return }
       
       for transaction in history {
-        viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
+        container.viewContext.mergeChanges(fromContextDidSave: transaction.objectIDNotification())
       }
       
       // Update token once with the last transaction's token (thread-safe via archiving)
       // The token is valid on this thread, we archive it for thread-safe storage
-      self.setLastToken(lastTransaction.token)
+      setLastToken(lastTransaction.token)
     }
   }
   
@@ -363,7 +365,7 @@ extension VoiceConversationDatabaseManager {
       let isFileUploadStatus = chunks.compactMap { $0.isFileUploaded }
       print("File upload status of files for sessionID \(sessionID) -> \(isFileUploadStatus)")
       if chunks.allSatisfy({$0.isFileUploaded}),
-         let callback = self.uploadCompletionCallbacks.removeValue(forKey: sessionID) {
+         let callback = uploadCompletionCallbacks.removeValue(forKey: sessionID) {
         watchedSessionIDs.remove(sessionID)
         callback()
       }
