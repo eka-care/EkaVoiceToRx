@@ -969,5 +969,3 @@ If results are not available after processing:
 EkaScribe is available under the MIT license. See the LICENSE file for more info.
 
 ---
-
-*Made with ❤️ by the Eka.Care team*
