@@ -29,9 +29,9 @@ The SDK requires **iOS 17.0+** and provides a simple, straightforward API for vo
 
 - [Requirements](#requirements)
 - [Installation](#installation)
-- [Configuration](#configuration)
-- [Core Components](#core-components)
 - [Integration Guide](#integration-guide)
+- [Core Components](#core-components)
+- [Configuration](#configuration)
 - [Recording Management](#recording-management)
 - [Template Management](#template-management)
 - [Session History](#session-history)
@@ -90,6 +90,200 @@ After adding the package, import it in your Swift files:
 
 ```swift
 import EkaVoiceToRx
+```
+
+## Integration Guide
+
+Follow these steps to integrate the SDK into your app:
+
+### Step 1: Configure Authentication and Doctor Information
+
+Set up authentication tokens and doctor information when your app launches. This should be done once at app startup:
+
+```swift
+import SwiftUI
+import EkaVoiceToRx
+
+@main
+struct YourApp: App {
+    init() {
+        configureEkaScribe()
+    }
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+    
+    private func configureEkaScribe() {
+        // 1. Set authentication tokens (required)
+        AuthTokenHolder.shared.authToken = "your_auth_token"
+        AuthTokenHolder.shared.refreshToken = "your_refresh_token"
+        AuthTokenHolder.shared.bid = "your_business_id"
+        
+        // 2. Configure doctor/user information (required)
+        let config = V2RxInitConfigurations.shared
+        config.clientId = "your_client_id"
+        config.ownerName = "Dr. Smith"
+        config.ownerOID = "doctor_oid_123"
+        config.ownerUUID = "doctor_uuid_456"
+    }
+}
+```
+
+**Important**: Make sure to set authentication tokens and doctor information before making any SDK calls.
+
+### Step 2: Initialize the View Model
+
+Create a `VoiceToRxViewModel` instance in your SwiftUI view or UIKit view controller:
+
+**SwiftUI:**
+```swift
+@StateObject private var viewModel = VoiceToRxViewModel(
+    voiceToRxInitConfig: .shared,
+    voiceToRxDelegate: nil
+)
+```
+
+**UIKit:**
+```swift
+private let viewModel = VoiceToRxViewModel(
+    voiceToRxInitConfig: .shared,
+    voiceToRxDelegate: nil
+)
+```
+
+### Step 3: Check Microphone Permission
+
+Before starting recording, always check microphone availability:
+
+```swift
+let micStatus = MicrophoneManager.checkMicrophoneStatus()
+
+switch micStatus {
+case .available:
+    // Proceed with recording
+    await startRecording()
+case .microphonePermissionDenied:
+    // Show permission alert
+    showPermissionAlert = true
+case .microphoneIsInUse:
+    // Show microphone in use alert
+    showMicrophoneInUseAlert = true
+}
+```
+
+### Step 4: Start Recording
+
+Start a recording session with your desired configuration:
+
+```swift
+private func startRecording() async {
+    // 1. Configure templates
+    let outputFormat = [
+        OutputFormatTemplate(
+            templateID: "template-id-here",
+            templateType: .defaultType,
+            templateName: "SOAP Notes"
+        )
+    ]
+    
+    // 2. Set patient information (if applicable)
+    V2RxInitConfigurations.shared.subOwnerOID = patientOID
+    V2RxInitConfigurations.shared.subOwnerName = patientName
+    
+    // 3. Start recording
+    let error = await viewModel.startRecording(
+        conversationType: .conversation,
+        inputLanguage: [.english, .hindi],
+        templates: outputFormat,
+        modelType: .lite
+    )
+    
+    // 4. Handle errors
+    if let error = error {
+        await MainActor.run {
+            handleRecordingError(error)
+        }
+    }
+}
+```
+
+## Core Components
+
+### VoiceToRxViewModel
+
+The central view model that manages the entire voice recording and processing workflow.
+
+```swift
+public class VoiceToRxViewModel: ObservableObject {
+    @Published public var screenState: RecordConsultationState
+    @Published public var filesProcessed: Set<String>
+    @Published public var uploadedFiles: Set<String>
+    
+    public var sessionID: UUID?
+    public var contextParams: VoiceToRxContextParams?
+    
+    public init(
+        voiceToRxInitConfig: V2RxInitConfigurations,
+        voiceToRxDelegate: VoiceToRxDelegate?
+    )
+}
+```
+
+#### Recording States
+
+The `screenState` property tracks the current state of the recording session:
+
+```swift
+public enum RecordConsultationState {
+    case retry                          // Ready to retry after error
+    case startRecording                 // Initial state, ready to start
+    case listening(conversationType: VoiceConversationType) // Currently recording
+    case paused                         // Recording paused
+    case processing                     // Processing audio/generating prescription
+    case resultDisplay(success: Bool, value: String?)  // Results available
+    case deletedRecording              // Recording deleted
+}
+```
+
+#### Conversation Types
+
+```swift
+public enum VoiceConversationType: String, CaseIterable {
+    case conversation = "consultation"  // Doctor-patient conversation
+    case dictation                     // Direct prescription dictation
+}
+```
+
+#### Model Types
+
+```swift
+public enum ModelType {
+    case pro      // High accuracy model
+    case lite     // Faster, lighter model
+}
+```
+
+#### Input Languages
+
+```swift
+public enum InputLanguageType {
+    case english
+    case hindi
+    case tamil
+    case telugu
+    case kannada
+    case malayalam
+    case bengali
+    case gujarati
+    case marathi
+    case punjabi
+    case urdu
+    case odia
+    case assamese
+}
 ```
 
 ## Configuration
@@ -188,200 +382,6 @@ AuthTokenHolder.shared.refreshToken = "your_refresh_token"
 AuthTokenHolder.shared.bid = "your_business_id"
 ```
 
-## Core Components
-
-### VoiceToRxViewModel
-
-The central view model that manages the entire voice recording and processing workflow.
-
-```swift
-public class VoiceToRxViewModel: ObservableObject {
-    @Published public var screenState: RecordConsultationState
-    @Published public var filesProcessed: Set<String>
-    @Published public var uploadedFiles: Set<String>
-    
-    public var sessionID: UUID?
-    public var contextParams: VoiceToRxContextParams?
-    
-    public init(
-        voiceToRxInitConfig: V2RxInitConfigurations,
-        voiceToRxDelegate: VoiceToRxDelegate?
-    )
-}
-```
-
-#### Recording States
-
-The `screenState` property tracks the current state of the recording session:
-
-```swift
-public enum RecordConsultationState {
-    case retry                          // Ready to retry after error
-    case startRecording                 // Initial state, ready to start
-    case listening(conversationType: VoiceConversationType) // Currently recording
-    case paused                         // Recording paused
-    case processing                     // Processing audio/generating prescription
-    case resultDisplay(success: Bool, value: String?)  // Results available
-    case deletedRecording              // Recording deleted
-}
-```
-
-#### Conversation Types
-
-```swift
-public enum VoiceConversationType: String, CaseIterable {
-    case conversation = "consultation"  // Doctor-patient conversation
-    case dictation                     // Direct prescription dictation
-}
-```
-
-#### Model Types
-
-```swift
-public enum ModelType {
-    case pro      // High accuracy model
-    case lite     // Faster, lighter model
-}
-```
-
-#### Input Languages
-
-```swift
-public enum InputLanguageType {
-    case english
-    case hindi
-    // Add more languages as needed
-}
-```
-
-## Integration Guide
-
-Follow these steps to integrate the SDK into your app:
-
-### Step 1: Initialize the View Model
-
-Create a `VoiceToRxViewModel` instance in your SwiftUI view or UIKit view controller:
-
-**SwiftUI:**
-```swift
-@StateObject private var viewModel = VoiceToRxViewModel(
-    voiceToRxInitConfig: .shared,
-    voiceToRxDelegate: nil
-)
-```
-
-**UIKit:**
-```swift
-private let viewModel = VoiceToRxViewModel(
-    voiceToRxInitConfig: .shared,
-    voiceToRxDelegate: nil
-)
-```
-
-### Step 2: Observe State Changes
-
-Monitor the `screenState` property to update your UI reactively. This is essential for keeping your UI in sync with the recording state:
-
-**SwiftUI:**
-```swift
-.onChange(of: viewModel.screenState) { oldState, newState in
-    handleStateChange(newState)
-}
-
-private func handleStateChange(_ newState: RecordConsultationState) {
-    switch newState {
-    case .startRecording:
-        // Ready to start recording
-        isReady = true
-    case .listening:
-        // Currently recording
-        isRecording = true
-    case .paused:
-        // Recording paused
-        isPaused = true
-    case .processing:
-        // Processing audio
-        showProcessingIndicator = true
-    case .resultDisplay(success: let success, value: let value):
-        // Results available
-        if success {
-            resultText = value ?? ""
-            showResults = true
-        } else {
-            showError = true
-        }
-    default:
-        break
-    }
-}
-```
-
-**UIKit (using Combine):**
-```swift
-viewModel.$screenState
-    .receive(on: DispatchQueue.main)
-    .sink { [weak self] newState in
-        self?.handleStateChange(newState)
-    }
-    .store(in: &cancellables)
-```
-
-### Step 3: Check Microphone Permission
-
-Before starting recording, always check microphone availability:
-
-```swift
-let micStatus = MicrophoneManager.checkMicrophoneStatus()
-
-switch micStatus {
-case .available:
-    // Proceed with recording
-    await startRecording()
-case .microphonePermissionDenied:
-    // Show permission alert
-    showPermissionAlert = true
-case .microphoneIsInUse:
-    // Show microphone in use alert
-    showMicrophoneInUseAlert = true
-}
-```
-
-### Step 4: Start Recording
-
-Start a recording session with your desired configuration:
-
-```swift
-private func startRecording() async {
-    // 1. Configure templates
-    let outputFormat = [
-        OutputFormatTemplate(
-            templateID: "template-id-here",
-            templateType: .defaultType,
-            templateName: "SOAP Notes"
-        )
-    ]
-    
-    // 2. Set patient information (if applicable)
-    V2RxInitConfigurations.shared.subOwnerOID = patientOID
-    V2RxInitConfigurations.shared.subOwnerName = patientName
-    
-    // 3. Start recording
-    let error = await viewModel.startRecording(
-        conversationType: .conversation,
-        inputLanguage: [.english, .hindi],
-        templates: outputFormat,
-        modelType: .lite
-    )
-    
-    // 4. Handle errors
-    if let error = error {
-        await MainActor.run {
-            handleRecordingError(error)
-        }
-    }
-}
-```
-
 ## Recording Management
 
 ### Starting Recording
@@ -453,14 +453,14 @@ Monitor the `screenState` for result availability. Results are automatically pro
 
 ```swift
 case .resultDisplay(success: let success, value: let value):
-    if success {
+            if success {
         // Get the result text
         let resultText = value ?? ""
         // Get the session ID for future reference
         let sessionID = viewModel.sessionID?.uuidString ?? ""
         // Display results to user
         showResults(resultText, sessionID: sessionID)
-    } else {
+            } else {
         // Handle error
         showError("Failed to process recording")
     }
@@ -691,12 +691,12 @@ if let error = error {
                 showGenericError(error.localizedDescription)
             }
         }
-    } else {
+            } else {
         // Handle generic errors (network, API, etc.)
         await MainActor.run {
             showGenericError(error.localizedDescription)
+            }
         }
-    }
 }
 ```
 
@@ -961,3 +961,13 @@ If results are not available after processing:
 - **SSH Repository**: `git@github.com:eka-care/EkaVoiceToRx.git`
 - **Documentation**: Check this guide and inline code documentation
 - **Technical Support**: Contact the EkaScribe team for integration assistance
+
+---
+
+## License
+
+EkaScribe is available under the MIT license. See the LICENSE file for more info.
+
+---
+
+*Made with ❤️ by the Eka.Care team*
