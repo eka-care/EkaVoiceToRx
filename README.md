@@ -549,15 +549,6 @@ VoiceToRxRepo.shared.getEkaScribeHistory { result in
     }
 }
 ```
-
-### Getting Template ID for Session
-
-Retrieve the template ID used for a specific session:
-
-```swift
-let templateID = VoiceToRxRepo.shared.getTemplateID(for: sessionId)
-```
-
 ## Result Management
 
 ### Fetching Full Result Response
