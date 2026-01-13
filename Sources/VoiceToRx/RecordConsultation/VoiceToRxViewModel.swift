@@ -82,11 +82,11 @@ public final class VoiceToRxViewModel: ObservableObject {
   public init(
     voiceToRxInitConfig: V2RxInitConfigurations,
     voiceToRxDelegate: FloatingVoiceToRxDelegate?
-  ) throws {
+  ) {
     self.voiceToRxDelegate = voiceToRxDelegate
-    self.audioChunkProcessor = try AudioChunkProcessor()
+    self.audioChunkProcessor = AudioChunkProcessor()
     deleteAllDataIfDBIsStale()
-    try setupRecordSession()
+    setupRecordSession()
     setupDependencies()
     setupContextParams()
     addInterruptionObserver()
@@ -327,7 +327,7 @@ public final class VoiceToRxViewModel: ObservableObject {
 // MARK: - Helper Functions
 
 extension VoiceToRxViewModel {
-  private func setupRecordSession() throws {
+  private func setupRecordSession() {
     recordingSession = AVAudioSession.sharedInstance()
     /// Form recording configuration using device information
     do {
@@ -336,7 +336,6 @@ extension VoiceToRxViewModel {
       try recordingSession?.setActive(true)
     } catch {
       debugPrint("Failed to set up recording session: \(error.localizedDescription)")
-      throw EkaScribeError.audioSessionSetupFailed
     }
   }
   

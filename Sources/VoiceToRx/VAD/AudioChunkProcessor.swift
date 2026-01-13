@@ -13,15 +13,15 @@ final class AudioChunkProcessor {
   
   private let vadDetector = VoiceActivityDetector()
   
-  init() throws {
-    try setVadDetectorSampleRate()
+  init() {
+    setVadDetectorSampleRate()
   }
   
-  func setVadDetectorSampleRate() throws {
+  func setVadDetectorSampleRate() {
     do {
       try vadDetector.setSampleRate(sampleRate: RecordingConfiguration.shared.requiredSampleRate)
     } catch {
-      throw EkaScribeError.vadDetectorFailed
+      debugPrint("VadDetector failed")
     }
   }
   
