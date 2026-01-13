@@ -560,24 +560,6 @@ let templateID = VoiceToRxRepo.shared.getTemplateID(for: sessionId)
 
 ## Result Management
 
-### Fetching Result Status
-
-Get the current status and result value for a session:
-
-```swift
-VoiceToRxRepo.shared.fetchResultStatus(sessionID: sessionId) { result in
-    switch result {
-    case .success(let (status, value)):
-        // status: current processing status
-        // value: result text if available
-        break
-    case .failure(let error):
-        print("Failed to fetch status: \(error.localizedDescription)")
-        break
-    }
-}
-```
-
 ### Fetching Full Result Response
 
 Get the complete result response with all template outputs:
@@ -954,18 +936,3 @@ If results are not available after processing:
 2. Verify session ID is available: `viewModel.sessionID`
 3. Use `VoiceToRxRepo.shared.fetchResultStatusResponse` to get full response
 4. Check network connectivity for result retrieval
-
-## Support Resources
-
-- **GitHub Repository**: [EkaVoiceToRx](https://github.com/eka-care/EkaVoiceToRx)
-- **SSH Repository**: `git@github.com:eka-care/EkaVoiceToRx.git`
-- **Documentation**: Check this guide and inline code documentation
-- **Technical Support**: Contact the EkaScribe team for integration assistance
-
----
-
-## License
-
-EkaScribe is available under the MIT license. See the LICENSE file for more info.
-
----
