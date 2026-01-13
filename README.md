@@ -46,7 +46,7 @@ The SDK requires **iOS 17.0+** and provides a simple, straightforward API for vo
 - **iOS**: 17.0+
 - **Swift**: 5.9+
 - **Xcode**: 15.0+
-- **Sdk Version**: 1.3.0+
+- **Sdk Version**: 1.3.1+
 
 ### System Permissions
 
@@ -81,7 +81,7 @@ Add EkaScribe to your project using Swift Package Manager:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/eka-care/EkaVoiceToRx.git", from: "1.3.0")
+    .package(url: "https://github.com/eka-care/EkaVoiceToRx.git", from: "1.3.1")
 ]
 ```
 
