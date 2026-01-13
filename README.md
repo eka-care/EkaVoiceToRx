@@ -154,27 +154,7 @@ private let viewModel = VoiceToRxViewModel(
 )
 ```
 
-### Step 3: Check Microphone Permission
-
-Before starting recording, always check microphone availability:
-
-```swift
-let micStatus = MicrophoneManager.checkMicrophoneStatus()
-
-switch micStatus {
-case .available:
-    // Proceed with recording
-    await startRecording()
-case .microphonePermissionDenied:
-    // Show permission alert
-    showPermissionAlert = true
-case .microphoneIsInUse:
-    // Show microphone in use alert
-    showMicrophoneInUseAlert = true
-}
-```
-
-### Step 4: Start Recording
+### Step 3: Start Recording
 
 Start a recording session with your desired configuration:
 
