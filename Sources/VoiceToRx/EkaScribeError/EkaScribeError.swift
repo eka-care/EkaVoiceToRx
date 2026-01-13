@@ -11,4 +11,7 @@ public enum EkaScribeError: Error {
   case floatingButtonAlreadyPresented
   case freeSessionLimitReached
   case audioEngineStartFailed
+  case vadDetectorFailed
+  case noSessionId
+  case audioSessionSetupFailed
 }

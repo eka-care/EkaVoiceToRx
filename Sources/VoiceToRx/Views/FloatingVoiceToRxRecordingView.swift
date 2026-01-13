@@ -69,7 +69,7 @@ struct FloatingVoiceToRxRecordingView: View {
               do {
                 try voiceToRxViewModel.resumeRecording()
               } catch {
-                debugPrint("Error while resuming recording")
+                debugPrint("Error while resuming recording: \(error.localizedDescription)")
               }
             }
         }

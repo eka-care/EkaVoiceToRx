@@ -80,18 +80,23 @@ public class FloatingVoiceToRxViewController: UIViewController {
         }
         return
       }
-      
-      await showFloatingButton(
-        viewModel: viewModel,
-        conversationType: conversationType,
-        inputLanguage: inputLanguage,
-        templates: templates,
-        modelType: modelType,
-        liveActivityDelegate: liveActivityDelegate
-      )
-      
-      await MainActor.run {
-        completion(self.isWindowActive)
+      do {
+        try await showFloatingButton(
+          viewModel: viewModel,
+          conversationType: conversationType,
+          inputLanguage: inputLanguage,
+          templates: templates,
+          modelType: modelType,
+          liveActivityDelegate: liveActivityDelegate
+        )
+        await MainActor.run {
+          completion(isWindowActive)
+        }
+      } catch {
+        debugPrint("Error showing floating button: \(error.localizedDescription)")
+        await MainActor.run {
+          completion(false)
+        }
       }
     }
   }
@@ -103,32 +108,28 @@ public class FloatingVoiceToRxViewController: UIViewController {
     templates: [OutputFormatTemplate],
     modelType: ModelType = .pro,
     liveActivityDelegate: LiveActivityDelegate?
-  ) async -> Error? {
+  ) async throws {
     guard !isWindowActive && !isInitializing else {
       debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
-      return EkaScribeError.floatingButtonAlreadyPresented
+      throw EkaScribeError.floatingButtonAlreadyPresented
     }
  
     isInitializing = true
     defer { isInitializing = false }
     
-    guard let response = await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType) else {
-      isWindowActive = true
-      window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
-      window.isHidden = false
-      window.rootViewController = self
-      loadView(viewModel: viewModel)
-      await MainActor.run { [weak self] in
-        guard let self else { return }
-        subscribeToScreenStates()
-        self.liveActivityDelegate = liveActivityDelegate
-      }
-
-        await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
-      return nil
-    }
+    try await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
     
-    return response
+    isWindowActive = true
+    window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
+    window.isHidden = false
+    window.rootViewController = self
+    loadView(viewModel: viewModel)
+    await MainActor.run { [weak self] in
+      guard let self else { return }
+      subscribeToScreenStates()
+      self.liveActivityDelegate = liveActivityDelegate
+    }
+    await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
   }
   
   public func hideFloatingButton() {
@@ -199,7 +200,11 @@ public class FloatingVoiceToRxViewController: UIViewController {
     debugPrint("handleDoneRecording called")
     Task { [weak self] in
       guard let self else { return }
-      await viewModel?.stopRecording()
+      do {
+        try await viewModel?.stopRecording()
+      } catch {
+        debugPrint("Error stopping recording: \(error.localizedDescription)")
+      }
       await liveActivityDelegate?.endLiveActivity()
     }
   }
