@@ -142,7 +142,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       return EkaScribeError.microphonePermissionDenied
     }
     
-    //voiceConversationType = VoiceConversationType(rawValue: conversationType)
+    voiceConversationType = conversationType
     /// Setup record session
     setupRecordSession()
     /// Clear any previous session data if present
