@@ -65,10 +65,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
   /// Convenience method to safely show floating button with completion handler
   public func showFloatingButtonSafely(
     viewModel: VoiceToRxViewModel,
-    conversationType: String,
-    inputLanguage: [String],
+    conversationType: VoiceConversationType,
+    inputLanguage: [InputLanguageType],
     templates: [OutputFormatTemplate],
-    modelType: String,
+    modelType: ModelType,
     liveActivityDelegate: LiveActivityDelegate?,
     completion: @escaping (Bool) -> Void
   ) {
@@ -98,10 +98,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   public func showFloatingButton(
     viewModel: VoiceToRxViewModel,
-    conversationType: String,
-    inputLanguage: [String],
+    conversationType: VoiceConversationType,
+    inputLanguage: [InputLanguageType],
     templates: [OutputFormatTemplate],
-    modelType: String = "pro",
+    modelType: ModelType = .pro,
     liveActivityDelegate: LiveActivityDelegate?
   ) async -> Error? {
     guard !isWindowActive && !isInitializing else {
@@ -123,7 +123,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
         subscribeToScreenStates()
         self.liveActivityDelegate = liveActivityDelegate
       }
-      getAmazonCredentials()
+
         await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
       return nil
     }
@@ -382,11 +382,5 @@ extension FloatingVoiceToRxViewController {
         }
       }
     }.store(in: &cancellables)
-  }
-}
-
-extension FloatingVoiceToRxViewController {
-  private func getAmazonCredentials() {
-    viewModel?.getAmazonCredentials()
   }
 }
