@@ -158,10 +158,35 @@ private let viewModel = VoiceToRxViewModel(
 
 Start a recording session with your desired configuration:
 
+#### Parameters
+
+The `startRecording()` method accepts the following parameters:
+
+- **conversationType** (`VoiceConversationType`): The type of conversation
+  - `.conversation` - Doctor-patient conversation
+  - `.dictation` - Direct prescription dictation
+
+- **inputLanguage** (`[InputLanguageType]`): Array of supported languages
+  - Available options: `.english`, `.hindi`, `.tamil`, `.telugu`, `.kannada`, `.malayalam`, `.bengali`, `.gujarati`, `.marathi`, `.punjabi`, `.urdu`, `.odia`, `.assamese`
+  - You can specify multiple languages for multilingual support
+
+- **templates** (`[OutputFormatTemplate]`): Array of output format templates
+  - Each template defines the output format (e.g., SOAP notes, prescriptions)
+  - Use `getTemplates()` API first to fetch available templates (see [Template Management](#template-management))
+
+- **modelType** (`ModelType`): The AI model to use for processing
+  - `.pro` - High accuracy model
+  - `.lite` - Faster, lighter model
+
 ```swift
+// Your implementation
 private func startRecording() async {
-    // 1. Configure templates
-    let outputFormat = [
+    // 1. Fetch available templates (recommended)
+    // See Template Management section for details on getTemplates API
+    // VoiceToRxRepo.shared.getTemplates { result in ... }
+    
+    // 2. Configure templates
+    let outputFormat: [OutputFormatTemplate] = [
         OutputFormatTemplate(
             templateID: "template-id-here",
             templateType: .defaultType,
@@ -169,19 +194,19 @@ private func startRecording() async {
         )
     ]
     
-    // 2. Set patient information (if applicable)
+    // 3. Set patient information (if applicable)
     V2RxInitConfigurations.shared.subOwnerOID = patientOID
     V2RxInitConfigurations.shared.subOwnerName = patientName
     
-    // 3. Start recording
+    // 4. Calling SDK function
     let error = await viewModel.startRecording(
-        conversationType: .conversation,
-        inputLanguage: [.english, .hindi],
+        conversationType: VoiceConversationType.conversation,
+        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
         templates: outputFormat,
-        modelType: .lite
+        modelType: ModelType.lite
     )
     
-    // 4. Handle errors
+    // 5. Handle errors
     if let error = error {
         await MainActor.run {
             handleRecordingError(error)
@@ -189,6 +214,8 @@ private func startRecording() async {
     }
 }
 ```
+
+**Note**: It's recommended to use the `getTemplates()` API first to fetch available templates before creating the `OutputFormatTemplate` array. See the [Template Management](#template-management) section for details.
 
 ## Core Components
 
@@ -366,17 +393,35 @@ AuthTokenHolder.shared.bid = "your_business_id"
 
 ### Starting Recording
 
+#### Parameters
+
+The `startRecording()` method accepts the following parameters:
+
+- **conversationType** (`VoiceConversationType`): The type of conversation
+  - `.conversation` - Doctor-patient conversation
+  - `.dictation` - Direct prescription dictation
+
+- **inputLanguage** (`[InputLanguageType]`): Array of supported languages
+  - Available options: `.english`, `.hindi`, `.tamil`, `.telugu`, `.kannada`, `.malayalam`, `.bengali`, `.gujarati`, `.marathi`, `.punjabi`, `.urdu`, `.odia`, `.assamese`
+  - You can specify multiple languages for multilingual support
+
+- **templates** (`[OutputFormatTemplate]`): Array of output format templates
+  - Each template defines the output format (e.g., SOAP notes, prescriptions)
+  - Use `getTemplates()` API first to fetch available templates (see [Template Management](#template-management))
+
+- **modelType** (`ModelType`): The AI model to use for processing
+  - `.pro` - High accuracy model
+  - `.lite` - Faster, lighter model
+
 ```swift
+// Your implementation
 private func startRecording() async {
-    // Check microphone status
-    let micStatus = MicrophoneManager.checkMicrophoneStatus()
-    guard micStatus == .available else {
-        // Handle permission error
-        return
-    }
+    // 1. Fetch available templates (recommended)
+    // See Template Management section for details on getTemplates API
+    // VoiceToRxRepo.shared.getTemplates { result in ... }
     
-    // Configure templates
-    let templates = [
+    // 2. Configure templates
+    let templates: [OutputFormatTemplate] = [
         OutputFormatTemplate(
             templateID: "your-template-id",
             templateType: .defaultType,
@@ -384,16 +429,16 @@ private func startRecording() async {
         )
     ]
     
-    // Set patient information
+    // 3. Set patient information
     V2RxInitConfigurations.shared.subOwnerOID = patientOID
     V2RxInitConfigurations.shared.subOwnerName = patientName
     
-    // Start recording
+    // 4. Calling SDK function
     let error = await viewModel.startRecording(
-        conversationType: .conversation,
-        inputLanguage: [.english, .hindi],
+        conversationType: VoiceConversationType.conversation,
+        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
         templates: templates,
-        modelType: .lite
+        modelType: ModelType.lite
     )
     
     if let error = error {
@@ -401,6 +446,8 @@ private func startRecording() async {
     }
 }
 ```
+
+**Note**: It's recommended to use the `getTemplates()` API first to fetch available templates before creating the `OutputFormatTemplate` array. See the [Template Management](#template-management) section for details.
 
 ### Pausing and Resuming
 
@@ -433,20 +480,28 @@ Monitor the `screenState` for result availability. Results are automatically pro
 
 ```swift
 case .resultDisplay(success: let success, value: let value):
-            if success {
-        // Get the result text
-        let resultText = value ?? ""
+    if success {
+        // Get the result text (base64 encoded)
+        let base64EncodedText = value ?? ""
+        
+        // Decode base64 to get the actual result
+        guard let decodedData = Data(base64Encoded: base64EncodedText),
+              let resultText = String(data: decodedData, encoding: .utf8) else {
+            showError("Failed to decode result")
+            return
+        }
+        
         // Get the session ID for future reference
         let sessionID = viewModel.sessionID?.uuidString ?? ""
         // Display results to user
         showResults(resultText, sessionID: sessionID)
-            } else {
+    } else {
         // Handle error
         showError("Failed to process recording")
     }
 ```
 
-**Note**: The `value` parameter contains the formatted output based on your selected template. For more detailed results including multiple template outputs, use `VoiceToRxRepo.shared.fetchResultStatusResponse()`.
+**Note**: The `value` parameter contains base64-encoded formatted output based on your selected template. You need to decode it before displaying to users. For more detailed results including multiple template outputs, use `VoiceToRxRepo.shared.fetchResultStatusResponse()`.
 
 ## Template Management
 
@@ -494,20 +549,28 @@ VoiceToRxRepo.shared.updateConfig(
 Pass templates when starting a recording:
 
 ```swift
-let templates = [
-    OutputFormatTemplate(
-        templateID: "template-id",
-        templateType: .defaultType,
-        templateName: "Template Name"
+// Your implementation
+private func startRecordingWithTemplates() async {
+    // 1. Fetch available templates first (recommended)
+    // VoiceToRxRepo.shared.getTemplates { result in ... }
+    
+    // 2. Configure templates
+    let templates: [OutputFormatTemplate] = [
+        OutputFormatTemplate(
+            templateID: "template-id",
+            templateType: .defaultType,
+            templateName: "Template Name"
+        )
+    ]
+    
+    // 3. Calling SDK function
+    await viewModel.startRecording(
+        conversationType: VoiceConversationType.conversation,
+        inputLanguage: [InputLanguageType.english],
+        templates: templates,
+        modelType: ModelType.pro
     )
-]
-
-await viewModel.startRecording(
-    conversationType: .conversation,
-    inputLanguage: [.english],
-    templates: templates,
-    modelType: .pro
-)
+}
 ```
 
 ## Session History
@@ -531,6 +594,32 @@ VoiceToRxRepo.shared.getEkaScribeHistory { result in
 ```
 ## Result Management
 
+### Fetching Result Status
+
+Get the result status for a session:
+
+```swift
+VoiceToRxRepo.shared.fetchResultStatus(sessionID: sessionID) { result in
+    switch result {
+    case .success(let (status, value)):
+        // Note: The value is base64 encoded and needs to be decoded before display
+        if let encodedValue = value,
+           let decodedData = Data(base64Encoded: encodedValue),
+           let decodedText = String(data: decodedData, encoding: .utf8) {
+            // Use decodedText for display
+            print("Status: \(status)")
+            print("Decoded result: \(decodedText)")
+        }
+        break
+    case .failure(let error):
+        print("Failed to fetch status: \(error.localizedDescription)")
+        break
+    }
+}
+```
+
+**Note**: The `value` parameter returned by `fetchResultStatus` is base64 encoded and must be decoded before displaying to users.
+
 ### Fetching Full Result Response
 
 Get the complete result response with all template outputs:
@@ -539,10 +628,19 @@ Get the complete result response with all template outputs:
 VoiceToRxRepo.shared.fetchResultStatusResponse(sessionID: sessionID) { result in
     switch result {
     case .success(let response):
-        // response.data.templateResults.custom - custom template results
-        // response.data.templateResults.transcript - transcript results
-        // response.data.output - general output
+        // Note: All values in the response are base64 encoded and need to be decoded before display
+        // response.data.templateResults.custom - custom template results (base64 encoded)
+        // response.data.templateResults.transcript - transcript results (base64 encoded)
+        // response.data.output - general output (base64 encoded)
         // response.data.audioMatrix - audio quality metrics
+        
+        // Example: Decoding a result value
+        if let encodedValue = response.data?.templateResults?.custom?.first?.value,
+           let decodedData = Data(base64Encoded: encodedValue),
+           let decodedText = String(data: decodedData, encoding: .utf8) {
+            // Use decodedText for display
+            print("Decoded result: \(decodedText)")
+        }
         break
     case .failure(let error):
         print("Failed to fetch response: \(error.localizedDescription)")
@@ -550,6 +648,8 @@ VoiceToRxRepo.shared.fetchResultStatusResponse(sessionID: sessionID) { result in
     }
 }
 ```
+
+**Important**: All API response values are base64 encoded and must be decoded before displaying to users.
 
 ### Switching Templates
 
@@ -613,14 +713,21 @@ public enum EkaScribeError: Error {
 Here's a complete example of handling errors when starting a recording:
 
 ```swift
-let error = await viewModel.startRecording(
-    conversationType: .conversation,
-    inputLanguage: [.english, .hindi],
-    templates: templates,
-    modelType: .lite
-)
+// Your implementation
+private func handleRecording() async {
+    let templates: [OutputFormatTemplate] = [
+        // Your templates
+    ]
+    
+    // Calling SDK function
+    let error = await viewModel.startRecording(
+        conversationType: VoiceConversationType.conversation,
+        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
+        templates: templates,
+        modelType: ModelType.lite
+    )
 
-if let error = error {
+    if let error = error {
     if let scribeError = error as? EkaScribeError {
         switch scribeError {
         case .freeSessionLimitReached:
@@ -733,11 +840,18 @@ public func fetchResultStatus(
     sessionID: String,
     completion: @escaping (Result<(String, String?), Error>) -> Void
 )
+// Note: Returns base64-encoded values. Decode before displaying:
+// if let encodedValue = result.0,
+//    let decodedData = Data(base64Encoded: encodedValue),
+//    let decodedText = String(data: decodedData, encoding: .utf8) {
+//     // Use decodedText
+// }
 
 public func fetchResultStatusResponse(
     sessionID: String,
     completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void
 )
+// Note: All response values are base64 encoded. Decode before displaying.
 
 public func switchTemplate(
     templateID: String,
@@ -860,12 +974,25 @@ Always observe `screenState` changes to keep your UI in sync:
 Always handle errors from async operations:
 
 ```swift
-let error = await viewModel.startRecording(...)
+// Your implementation
+private func startRecording() async {
+    let templates: [OutputFormatTemplate] = [
+        // Your templates
+    ]
+    
+    // Calling SDK function
+    let error = await viewModel.startRecording(
+        conversationType: VoiceConversationType.conversation,
+        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
+        templates: templates,
+        modelType: ModelType.lite
+    )
 
-if let error = error {
-    // Handle error appropriately
-    await MainActor.run {
-        showError(error)
+    if let error = error {
+        // Handle error appropriately
+        await MainActor.run {
+            showError(error)
+        }
     }
 }
 ```
