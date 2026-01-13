@@ -204,7 +204,9 @@ private func startRecording() async {
         await MainActor.run {
             handleRecordingError(error)
         }
+     return
     }
+   // Successfully started recording  
 }
 ```
 
@@ -219,11 +221,6 @@ The central view model that manages the entire voice recording and processing wo
 ```swift
 public class VoiceToRxViewModel: ObservableObject {
     @Published public var screenState: RecordConsultationState
-    @Published public var filesProcessed: Set<String>
-    @Published public var uploadedFiles: Set<String>
-    
-    public var sessionID: UUID?
-    public var contextParams: VoiceToRxContextParams?
     
     public init(
         voiceToRxInitConfig: V2RxInitConfigurations,
@@ -579,32 +576,6 @@ VoiceToRxRepo.shared.getEkaScribeHistory { result in
 ```
 ## Result Management
 
-### Fetching Result Status
-
-Get the result status for a session:
-
-```swift
-VoiceToRxRepo.shared.fetchResultStatus(sessionID: sessionID) { result in
-    switch result {
-    case .success(let (status, value)):
-        // Note: The value is base64 encoded and needs to be decoded before display
-        if let encodedValue = value,
-           let decodedData = Data(base64Encoded: encodedValue),
-           let decodedText = String(data: decodedData, encoding: .utf8) {
-            // Use decodedText for display
-            print("Status: \(status)")
-            print("Decoded result: \(decodedText)")
-        }
-        break
-    case .failure(let error):
-        print("Failed to fetch status: \(error.localizedDescription)")
-        break
-    }
-}
-```
-
-**Note**: The `value` parameter returned by `fetchResultStatus` is base64 encoded and must be decoded before displaying to users.
-
 ### Fetching Full Result Response
 
 Get the complete result response with all template outputs:
@@ -633,8 +604,7 @@ VoiceToRxRepo.shared.fetchResultStatusResponse(sessionID: sessionID) { result in
     }
 }
 ```
-
-**Important**: All API response values are base64 encoded and must be decoded before displaying to users.
+**Note**: The `value` parameter returned by `fetchResultStatus` is base64 encoded and must be decoded before displaying to users.
 
 ### Switching Templates
 
@@ -745,28 +715,6 @@ private func handleRecording() async {
 }
 ```
 
-### Verifying Configuration
-
-Before starting a recording, verify all required configurations are set:
-
-```swift
-func verifyConfiguration() -> Bool {
-    let config = V2RxInitConfigurations.shared
-    
-    guard config.ownerOID != nil else {
-        print("Error: Doctor OID is required")
-        return false
-    }
-    
-    guard AuthTokenHolder.shared.authToken != nil else {
-        print("Error: Auth token is required")
-        return false
-    }
-    
-    return true
-}
-```
-
 ## API Reference
 
 ### VoiceToRxViewModel
@@ -775,10 +723,6 @@ func verifyConfiguration() -> Bool {
 
 ```swift
 @Published public var screenState: RecordConsultationState
-@Published public var filesProcessed: Set<String>
-@Published public var uploadedFiles: Set<String>
-public var sessionID: UUID?
-public var contextParams: VoiceToRxContextParams?
 ```
 
 #### Methods
