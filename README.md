@@ -162,21 +162,13 @@ Start a recording session with your desired configuration:
 
 The `startRecording()` method accepts the following parameters:
 
-- **conversationType** (`VoiceConversationType`): The type of conversation
-  - `.conversation` - Doctor-patient conversation
-  - `.dictation` - Direct prescription dictation
+- **conversationType** (`VoiceConversationType`): The type of conversation (see [Conversation Types](#conversation-types))
 
-- **inputLanguage** (`[InputLanguageType]`): Array of supported languages
-  - Available options: `.english`, `.hindi`, `.tamil`, `.telugu`, `.kannada`, `.malayalam`, `.bengali`, `.gujarati`, `.marathi`, `.punjabi`, `.urdu`, `.odia`, `.assamese`
-  - You can specify multiple languages for multilingual support
+- **inputLanguage** (`[InputLanguageType]`): Array of supported languages (see [Input Languages](#input-languages))
 
-- **templates** (`[OutputFormatTemplate]`): Array of output format templates
-  - Each template defines the output format (e.g., SOAP notes, prescriptions)
-  - Use `getTemplates()` API first to fetch available templates (see [Template Management](#template-management))
+- **templates** (`[OutputFormatTemplate]`): Array of output format templates (see [Template Management](#template-management))
 
-- **modelType** (`ModelType`): The AI model to use for processing
-  - `.pro` - High accuracy model
-  - `.lite` - Faster, lighter model
+- **modelType** (`ModelType`): The AI model to use for processing (see [Model Types](#model-types))
 
 ```swift
 // Your implementation
@@ -397,21 +389,13 @@ AuthTokenHolder.shared.bid = "your_business_id"
 
 The `startRecording()` method accepts the following parameters:
 
-- **conversationType** (`VoiceConversationType`): The type of conversation
-  - `.conversation` - Doctor-patient conversation
-  - `.dictation` - Direct prescription dictation
+- **conversationType** (`VoiceConversationType`): The type of conversation (see [Conversation Types](#conversation-types))
 
-- **inputLanguage** (`[InputLanguageType]`): Array of supported languages
-  - Available options: `.english`, `.hindi`, `.tamil`, `.telugu`, `.kannada`, `.malayalam`, `.bengali`, `.gujarati`, `.marathi`, `.punjabi`, `.urdu`, `.odia`, `.assamese`
-  - You can specify multiple languages for multilingual support
+- **inputLanguage** (`[InputLanguageType]`): Array of supported languages (see [Input Languages](#input-languages))
 
-- **templates** (`[OutputFormatTemplate]`): Array of output format templates
-  - Each template defines the output format (e.g., SOAP notes, prescriptions)
-  - Use `getTemplates()` API first to fetch available templates (see [Template Management](#template-management))
+- **templates** (`[OutputFormatTemplate]`): Array of output format templates (see [Template Management](#template-management))
 
-- **modelType** (`ModelType`): The AI model to use for processing
-  - `.pro` - High accuracy model
-  - `.lite` - Faster, lighter model
+- **modelType** (`ModelType`): The AI model to use for processing (see [Model Types](#model-types))
 
 ```swift
 // Your implementation
