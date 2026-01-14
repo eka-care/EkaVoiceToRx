@@ -765,17 +765,6 @@ public func getTemplateID(for sessionId: String) -> String?
 #### Result Management
 
 ```swift
-public func fetchResultStatus(
-    sessionID: String,
-    completion: @escaping (Result<(String, String?), Error>) -> Void
-)
-// Note: Returns base64-encoded values. Decode before displaying:
-// if let encodedValue = result.0,
-//    let decodedData = Data(base64Encoded: encodedValue),
-//    let decodedText = String(data: decodedData, encoding: .utf8) {
-//     // Use decodedText
-// }
-
 public func fetchResultStatusResponse(
     sessionID: String,
     completion: @escaping (Result<VoiceToRxStatusResponse, Error>) -> Void
