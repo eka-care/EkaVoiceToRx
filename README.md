@@ -174,39 +174,39 @@ The `startRecording()` method accepts the following parameters:
 ```swift
 // Your implementation
 private func startRecording() async {
-    // 1. Fetch available templates (recommended)
-    // See Template Management section for details on getTemplates API
-    // VoiceToRxRepo.shared.getTemplates { result in ... }
-    
-    // 2. Configure templates
-    let outputFormat: [OutputFormatTemplate] = [
-        OutputFormatTemplate(
-            templateID: "template-id-here",
-            templateType: .defaultType,
-            templateName: "SOAP Notes"
+    do {
+        // 1. Fetch available templates (recommended)
+        // See Template Management section for details on getTemplates API
+        // VoiceToRxRepo.shared.getTemplates { result in ... }
+        
+        // 2. Configure templates
+        let outputFormat: [OutputFormatTemplate] = [
+            OutputFormatTemplate(
+                templateID: "template-id-here",
+                templateType: .defaultType,
+                templateName: "SOAP Notes"
+            )
+        ]
+        
+        // 3. Set patient information (if applicable)
+        V2RxInitConfigurations.shared.subOwnerOID = patientOID
+        V2RxInitConfigurations.shared.subOwnerName = patientName
+        
+        // 4. Calling SDK function
+        try await viewModel.startRecording(
+            conversationType: VoiceConversationType.conversation,
+            inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
+            templates: outputFormat,
+            modelType: ModelType.lite
         )
-    ]
-    
-    // 3. Set patient information (if applicable)
-    V2RxInitConfigurations.shared.subOwnerOID = patientOID
-    V2RxInitConfigurations.shared.subOwnerName = patientName
-    
-    // 4. Calling SDK function
-    let error = await viewModel.startRecording(
-        conversationType: VoiceConversationType.conversation,
-        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
-        templates: outputFormat,
-        modelType: ModelType.lite
-    )
-    
-    // 5. Handle errors
-    if let error = error {
+        
+        // Successfully started recording
+    } catch {
+        // Handle errors
         await MainActor.run {
             handleRecordingError(error)
         }
-     return
     }
-   // Successfully started recording  
 }
 ```
 
@@ -396,37 +396,13 @@ The `startRecording()` method accepts the following parameters:
 - **modelType** (`ModelType`): The AI model to use for processing (see [Model Types](#model-types))
 
 ```swift
-// Your implementation
-private func startRecording() async {
-    // 1. Fetch available templates (recommended)
-    // See Template Management section for details on getTemplates API
-    // VoiceToRxRepo.shared.getTemplates { result in ... }
-    
-    // 2. Configure templates
-    let templates: [OutputFormatTemplate] = [
-        OutputFormatTemplate(
-            templateID: "your-template-id",
-            templateType: .defaultType,
-            templateName: "Template Name"
-        )
-    ]
-    
-    // 3. Set patient information
-    V2RxInitConfigurations.shared.subOwnerOID = patientOID
-    V2RxInitConfigurations.shared.subOwnerName = patientName
-    
-    // 4. Calling SDK function
-    let error = await viewModel.startRecording(
-        conversationType: VoiceConversationType.conversation,
-        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
-        templates: templates,
-        modelType: ModelType.lite
-    )
-    
-    if let error = error {
-        // Handle error
-    }
-}
+// Start recording
+try await viewModel.startRecording(
+conversationType: VoiceConversationType.conversation,
+inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
+templates: templates,
+modelType: ModelType.lite
+ )
 ```
 
 **Note**: It's recommended to use the `getTemplates()` API first to fetch available templates before creating the `OutputFormatTemplate` array. See the [Template Management](#template-management) section for details.
@@ -451,8 +427,13 @@ do {
 ```swift
 // Stop recording and process
 Task {
-    await viewModel.stopRecording()
-    // The viewModel will transition to .processing, then .resultDisplay
+    do {
+        try await viewModel.stopRecording()
+        // The viewModel will transition to .processing, then .resultDisplay
+    } catch {
+        // Handle error
+        print("Failed to stop recording: \(error.localizedDescription)")
+    }
 }
 ```
 
@@ -533,25 +514,32 @@ Pass templates when starting a recording:
 ```swift
 // Your implementation
 private func startRecordingWithTemplates() async {
-    // 1. Fetch available templates first (recommended)
-    // VoiceToRxRepo.shared.getTemplates { result in ... }
-    
-    // 2. Configure templates
-    let templates: [OutputFormatTemplate] = [
-        OutputFormatTemplate(
-            templateID: "template-id",
-            templateType: .defaultType,
-            templateName: "Template Name"
+    do {
+        // 1. Fetch available templates first (recommended)
+        // VoiceToRxRepo.shared.getTemplates { result in ... }
+        
+        // 2. Configure templates
+        let templates: [OutputFormatTemplate] = [
+            OutputFormatTemplate(
+                templateID: "template-id",
+                templateType: .defaultType,
+                templateName: "Template Name"
+            )
+        ]
+        
+        // 3. Calling SDK function
+        try await viewModel.startRecording(
+            conversationType: VoiceConversationType.conversation,
+            inputLanguage: [InputLanguageType.english],
+            templates: templates,
+            modelType: ModelType.pro
         )
-    ]
-    
-    // 3. Calling SDK function
-    await viewModel.startRecording(
-        conversationType: VoiceConversationType.conversation,
-        inputLanguage: [InputLanguageType.english],
-        templates: templates,
-        modelType: ModelType.pro
-    )
+    } catch {
+        // Handle error
+        await MainActor.run {
+            handleError(error)
+        }
+    }
 }
 ```
 
@@ -578,7 +566,7 @@ VoiceToRxRepo.shared.getEkaScribeHistory { result in
 
 ### Fetching Full Result Response
 
-Get the complete result response with all template outputs:
+Get the complete result response with selected template outputs:
 
 ```swift
 VoiceToRxRepo.shared.fetchResultStatusResponse(sessionID: sessionID) { result in
@@ -659,7 +647,9 @@ public enum EkaScribeError: Error {
     case freeSessionLimitReached
     case microphonePermissionDenied
     case microphoneIsInUse
-    // ... other error cases
+    case vadDetectorFailed
+    case noSessionId
+    case audioSessionSetupFailed
 }
 ```
 
@@ -670,48 +660,44 @@ Here's a complete example of handling errors when starting a recording:
 ```swift
 // Your implementation
 private func handleRecording() async {
-    let templates: [OutputFormatTemplate] = [
-        // Your templates
-    ]
-    
-    // Calling SDK function
-    let error = await viewModel.startRecording(
-        conversationType: VoiceConversationType.conversation,
-        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
-        templates: templates,
-        modelType: ModelType.lite
-    )
-
-    if let error = error {
-    if let scribeError = error as? EkaScribeError {
-        switch scribeError {
-        case .freeSessionLimitReached:
-            // Show upgrade prompt
-            await MainActor.run {
+    do {
+        let templates: [OutputFormatTemplate] = [
+            // Your templates
+        ]
+        
+        // Calling SDK function
+        try await viewModel.startRecording(
+            conversationType: VoiceConversationType.conversation,
+            inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
+            templates: templates,
+            modelType: ModelType.lite
+        )
+        
+        // Successfully started recording
+    } catch let error as EkaScribeError {
+        // Handle SDK-specific errors
+        await MainActor.run {
+            switch error {
+            case .freeSessionLimitReached:
+                // Show upgrade prompt
                 showUpgradeAlert()
-            }
-        case .microphonePermissionDenied:
-            // Show permission alert
-            await MainActor.run {
+            case .microphonePermissionDenied:
+                // Show permission alert
                 showPermissionAlert()
-            }
-        case .microphoneIsInUse:
-            // Show microphone in use alert
-            await MainActor.run {
+            case .microphoneIsInUse:
+                // Show microphone in use alert
                 showMicrophoneInUseAlert()
-            }
-        default:
-            // Handle other SDK-specific errors
-            await MainActor.run {
+            default:
+                // Handle other SDK-specific errors
                 showGenericError(error.localizedDescription)
             }
         }
-            } else {
+    } catch {
         // Handle generic errors (network, API, etc.)
         await MainActor.run {
             showGenericError(error.localizedDescription)
-            }
         }
+    }
 }
 ```
 
@@ -734,9 +720,9 @@ public func startRecording(
     inputLanguage: [InputLanguageType],
     templates: [OutputFormatTemplate],
     modelType: ModelType
-) async -> Error?
+) async throws
 
-public func stopRecording() async
+public func stopRecording() async throws
 public func pauseRecording()
 public func resumeRecording() throws
 
@@ -759,7 +745,6 @@ public func updateConfig(templates: [String], completion: @escaping (Result<Void
 
 ```swift
 public func getEkaScribeHistory(completion: @escaping (Result<ScribeHistoryResponse, Error>) -> Void)
-public func getTemplateID(for sessionId: String) -> String?
 ```
 
 #### Result Management
@@ -889,40 +874,32 @@ Always observe `screenState` changes to keep your UI in sync:
 
 ### Error Handling
 
-Always handle errors from async operations:
+Always handle errors from async operations using try-catch:
 
 ```swift
 // Your implementation
 private func startRecording() async {
-    let templates: [OutputFormatTemplate] = [
-        // Your templates
-    ]
-    
-    // Calling SDK function
-    let error = await viewModel.startRecording(
-        conversationType: VoiceConversationType.conversation,
-        inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
-        templates: templates,
-        modelType: ModelType.lite
-    )
-
-    if let error = error {
+    do {
+        let templates: [OutputFormatTemplate] = [
+            // Your templates
+        ]
+        
+        // Calling SDK function
+        try await viewModel.startRecording(
+            conversationType: VoiceConversationType.conversation,
+            inputLanguage: [InputLanguageType.english, InputLanguageType.hindi],
+            templates: templates,
+            modelType: ModelType.lite
+        )
+        
+        // Successfully started recording
+    } catch {
         // Handle error appropriately
         await MainActor.run {
             showError(error)
         }
     }
 }
-```
-
-### Configuration
-
-Set patient-specific configuration before each recording session:
-
-```swift
-// Before starting recording
-V2RxInitConfigurations.shared.subOwnerOID = patientOID
-V2RxInitConfigurations.shared.subOwnerName = patientName
 ```
 
 ## Troubleshooting
