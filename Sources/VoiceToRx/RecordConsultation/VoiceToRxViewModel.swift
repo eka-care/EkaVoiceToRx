@@ -51,7 +51,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   private var docOid: String?
   
-  private let audioChunkProcessor = AudioChunkProcessor()
+  private let audioChunkProcessor: AudioChunkProcessor
   private let vadAudioChunker = VADAudioChunker()
   lazy var audioChunkUploader = AudioChunkUploader(
     s3FileUploaderService: s3FileUploader,
@@ -84,6 +84,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     voiceToRxDelegate: FloatingVoiceToRxDelegate?
   ) {
     self.voiceToRxDelegate = voiceToRxDelegate
+    self.audioChunkProcessor = AudioChunkProcessor()
     deleteAllDataIfDBIsStale()
     setupRecordSession()
     setupDependencies()
@@ -136,15 +137,15 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: VoiceConversationType, inputLanguage: [InputLanguageType], templates: [OutputFormatTemplate], modelType: ModelType) async -> Error? {
+  public func startRecording(conversationType: VoiceConversationType, inputLanguage: [InputLanguageType], templates: [OutputFormatTemplate], modelType: ModelType) async throws {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
-      return EkaScribeError.microphonePermissionDenied
+      throw EkaScribeError.microphonePermissionDenied
     }
     
     voiceConversationType = conversationType
     /// Setup record session
-    setupRecordSession()
+    try setupRecordSession()
     /// Clear any previous session data if present
     await MainActor.run { [weak self] in
       guard let self else { return }
@@ -163,7 +164,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
     }
     /// Create session
-    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
+    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
@@ -171,7 +172,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         screenState = .deletedRecording
         voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
-      return EkaScribeError.freeSessionLimitReached
+      throw EkaScribeError.freeSessionLimitReached
     }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
@@ -188,12 +189,10 @@ public final class VoiceToRxViewModel: ObservableObject {
       screenState = .listening(conversationType: conversationType)
     }
     do {
-      try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
+      let _ = try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
-      debugPrint("Audio Engine did not start \(error)")
-      return EkaScribeError.audioEngineStartFailed
+      throw EkaScribeError.audioEngineStartFailed
     }
-    return nil
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {
@@ -204,7 +203,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Set Record Config parameters
     RecordingConfiguration.shared.formDeviceConfig(deviceSampleRate: deviceSampleRate)
     /// Set Vad record config parameters
-    audioChunkProcessor.setVadDetectorSampleRate()
+    
+     try audioChunkProcessor.setVadDetectorSampleRate()
     
     inputNode.installTap(
       onBus: 0,
@@ -231,9 +231,9 @@ public final class VoiceToRxViewModel: ObservableObject {
           chunkIndex: &chunkIndex,
           audioChunkUploader: audioChunkUploader,
           pcmBufferListRaw: &pcmBuffersListRaw
-        ) { amplitude in
-          DispatchQueue.main.async {
-            self.amplitude = amplitude
+        ) { newAmplitude in
+          DispatchQueue.main.async { [weak self] in
+            self?.amplitude = newAmplitude
           }
         }
       }
@@ -245,8 +245,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Stop Recording
   
-  public func stopRecording() async {
-    guard let sessionID else { return }
+  public func stopRecording() async throws {
+    guard let sessionID else { throw EkaScribeError.noSessionId }
     /// Stop audio engine
     stopAudioRecording()
     /// Process whatever is remainingt
@@ -277,6 +277,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       }
     } catch {
       debugPrint("Error in processing last audio chunk \(error.localizedDescription)")
+      throw error
     }
   }
   
@@ -330,11 +331,11 @@ extension VoiceToRxViewModel {
     recordingSession = AVAudioSession.sharedInstance()
     /// Form recording configuration using device information
     do {
-      try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth, .defaultToSpeaker])
+      try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP, .defaultToSpeaker])
       try recordingSession?.setPreferredSampleRate(Double(RecordingConfiguration.shared.requiredSampleRate))
       try recordingSession?.setActive(true)
     } catch {
-      print("Failed to set up recording session: \(error.localizedDescription)")
+      debugPrint("Failed to set up recording session: \(error.localizedDescription)")
     }
   }
   

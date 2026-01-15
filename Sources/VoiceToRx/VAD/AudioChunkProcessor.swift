@@ -21,7 +21,7 @@ final class AudioChunkProcessor {
     do {
       try vadDetector.setSampleRate(sampleRate: RecordingConfiguration.shared.requiredSampleRate)
     } catch {
-      print("Error in setting up vad detector")
+      debugPrint("VadDetector failed")
     }
   }
   
@@ -114,8 +114,8 @@ final class AudioChunkProcessor {
       let activity = try vadDetector.process(frame: bufferPointer, length: length)
       return activity
     } catch {
-      debugPrint("Error process audio with vad")
+      debugPrint("Error processing audio with VAD: \(error.localizedDescription)")
+      return nil
     }
-    return nil
   }
 }

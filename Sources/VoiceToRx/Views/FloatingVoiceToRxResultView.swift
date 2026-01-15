@@ -21,7 +21,6 @@ struct FloatingVoiceToRxResultView: View {
     self.onValueReceived = onValueReceived
     
     if let value {
-      print("#BB floating voice button value is \(value)")
       onValueReceived(value)
     }
   }
