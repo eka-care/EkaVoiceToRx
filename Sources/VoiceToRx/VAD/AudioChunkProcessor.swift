@@ -9,7 +9,7 @@ import libfvad
 import Foundation
 import AVFoundation
 
-final class AudioChunkProcessor {
+final class AudioChunkProcessor: Sendable {
   
   private let vadDetector = VoiceActivityDetector()
   
