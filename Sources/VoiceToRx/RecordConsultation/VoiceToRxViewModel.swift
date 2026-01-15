@@ -145,7 +145,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     
     voiceConversationType = conversationType
     /// Setup record session
-    try setupRecordSession()
+    setupRecordSession()
     /// Clear any previous session data if present
     await MainActor.run { [weak self] in
       guard let self else { return }
@@ -434,7 +434,7 @@ extension VoiceToRxViewModel {
       VoiceToRxRepo.shared.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
         guard let self else { return }
         switch result {
-        case .success(let isComplete, let value):
+        case .success((let isComplete, let value)):
           if isComplete {
             timer.invalidate()
             self.pollingTimer = nil
