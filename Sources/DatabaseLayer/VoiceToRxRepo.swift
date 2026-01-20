@@ -296,7 +296,14 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
+        
+        var templateResults = response.data?.templateResults?.custom
+        if (templateResults?.isEmpty ?? true) {
+          templateResults = response.data?.output
+        }
+        
+        
+        guard let templateResults else {
           /// Status fetch event
           statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
