@@ -53,7 +53,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
     fatalError()
   }
   
-  public init() {
+  private init() {
     super.init(nibName: nil, bundle: nil)
   }
   
@@ -125,10 +125,10 @@ public class FloatingVoiceToRxViewController: UIViewController {
     window.rootViewController = self
     loadView(viewModel: viewModel)
     await MainActor.run { [weak self] in
-      guard let self else { return }
-      subscribeToScreenStates()
-      self.liveActivityDelegate = liveActivityDelegate
+      self?.subscribeToScreenStates()
+      self?.liveActivityDelegate = liveActivityDelegate
     }
+    isInitializing = false
     await liveActivityDelegate?.startLiveActivity(patientName: V2RxInitConfigurations.shared.subOwnerName ?? "Patient")
   }
   
