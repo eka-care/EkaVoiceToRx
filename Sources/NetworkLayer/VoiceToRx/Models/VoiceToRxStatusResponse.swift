@@ -25,10 +25,12 @@ public struct VoiceToRxStatusData: Codable {
 
 public struct TemplateResults: Codable {
 
+  public var integration: [VoiceToRxOutput]?
   public var custom: [VoiceToRxOutput]?
   public var transcript: [VoiceToRxOutput]?
   
   enum CodingKeys: String, CodingKey {
+    case integration
     case custom
     case transcript
   }
