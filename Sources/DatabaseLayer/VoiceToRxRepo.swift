@@ -406,7 +406,7 @@ extension VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
+        guard let templateResults = response.data?.templateResults?.integration, !templateResults.isEmpty else {
           /// Status fetch event
           //statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
