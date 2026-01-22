@@ -112,8 +112,9 @@ extension NetworkRequestInterceptor {
       urlRequest.headers.add(name: "Accept", value: "application/x-protobuf")
     }
     let clientId = V2RxInitConfigurations.shared.clientId ?? (UIDevice.current.userInterfaceIdiom == .phone ? "doctor-app-ios" : "doctor-ipad-ios")
+    let flavour = V2RxInitConfigurations.shared.flavour ?? (UIDevice.current.userInterfaceIdiom == .phone ? "io" : "ip")
     urlRequest.headers.add(name: "client-id", value: clientId)
-    urlRequest.headers.add(name: "flavour", value: UIDevice.current.userInterfaceIdiom == .phone ? "io" : "ip")
+    urlRequest.headers.add(name: "flavour", value: flavour)
     urlRequest.headers.add(name: "locale", value: String(Locale.preferredLanguages.first?.prefix(2) ?? "en"))
     
     /// Device information
