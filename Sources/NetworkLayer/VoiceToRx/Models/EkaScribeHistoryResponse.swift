@@ -74,7 +74,9 @@ public enum Flavour: String {
   case ip
   case web
   case scribeAndroid = "scribe-android"
-  case scribeIOS = "scribe-ios"
+  case iosScribe = "iOS-scribe"
+  case iPadScribe = "iPad-scribe"
+  case macScribe = "mac-scribe"
 }
 
 public enum Mode: String {
