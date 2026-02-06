@@ -167,12 +167,24 @@ public class FloatingVoiceToRxViewController: UIViewController {
         title: V2RxInitConfigurations.shared.subOwnerName ?? "Patient",
         voiceToRxViewModel: viewModel,
         delegate: self,
-        onTapStop: handleStopButton,
-        onTapClose: hideFloatingButton,
-        onTapDone: handleDoneRecording,
-        onTapNotYet: handleNotYetRecording,
-        onTapCancel: handleCancelRecording,
-        onDropdownStateChange: handleDropdownStateChange
+        onTapStop: { [weak self] in
+          self?.handleStopButton()
+        },
+        onTapClose: { [weak self] in
+          self?.hideFloatingButton()
+        },
+        onTapDone: { [weak self] in
+          self?.handleDoneRecording()
+        },
+        onTapNotYet: { [weak self] in
+          self?.handleNotYetRecording()
+        },
+        onTapCancel: { [weak self] in
+          self?.handleCancelRecording()
+        },
+        onDropdownStateChange: { [weak self] isDropdownOpen in
+          self?.handleDropdownStateChange(isDropdownOpen: isDropdownOpen)
+        }
       )
     ).view else {
       return

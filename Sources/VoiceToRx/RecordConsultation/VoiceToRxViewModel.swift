@@ -252,16 +252,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Stop audio engine
     stopAudioRecording()
     /// Process whatever is remainingt
-    do {
-      try await audioChunkProcessor.processAudioChunk(
-        audioEngine: audioEngine,
-        vadAudioChunker: vadAudioChunker,
-        sessionID: sessionID,
-        lastClipIndex: &lastClipIndex,
-        chunkIndex: &chunkIndex,
-        audioChunkUploader: audioChunkUploader,
-        pcmBufferListRaw: &pcmBuffersListRaw
-      )
+    defer {
       /// Upload full audio
       audioChunkUploader.uploadFullAudio(
         pcmBufferListRaw: pcmBuffersListRaw,
@@ -279,6 +270,17 @@ public final class VoiceToRxViewModel: ObservableObject {
         let eventLog = EventLog(eventType: .stopRecordingViewModel, status: .success, platform: .network)
         V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       }
+    }
+    do {
+      try await audioChunkProcessor.processAudioChunk(
+        audioEngine: audioEngine,
+        vadAudioChunker: vadAudioChunker,
+        sessionID: sessionID,
+        lastClipIndex: &lastClipIndex,
+        chunkIndex: &chunkIndex,
+        audioChunkUploader: audioChunkUploader,
+        pcmBufferListRaw: &pcmBuffersListRaw
+      )
     } catch {
       let eventLog = EventLog(eventType: .stopRecordingViewModel,message: error.localizedDescription, status: .failure, platform: .network)
       V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
