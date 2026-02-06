@@ -52,7 +52,7 @@ public enum EventType: String {
   case microPhonePermissionDenied
   
   
-  var eventName: String {
+public var eventName: String {
     switch self {
     case .create:
       return "VoiceToRx_CREATE"
