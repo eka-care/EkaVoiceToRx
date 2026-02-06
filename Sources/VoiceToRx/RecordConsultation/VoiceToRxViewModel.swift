@@ -140,6 +140,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   public func startRecording(conversationType: VoiceConversationType, inputLanguage: [InputLanguageType], templates: [OutputFormatTemplate], modelType: ModelType) async throws {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
+      let eventLog = EventLog(eventType: .microPhonePermissionDenied, message: "mic permission denied", status: .failure, platform: .network)
       throw EkaScribeError.microphonePermissionDenied
     }
     
@@ -191,6 +192,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     do {
       let _ = try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
+      let errorlog = EventLog(eventType: .audioEngineFailed,message: error.localizedDescription, status: .failure, platform: .network)
       throw EkaScribeError.audioEngineStartFailed
     }
   }
@@ -274,8 +276,12 @@ public final class VoiceToRxViewModel: ObservableObject {
         }
         /// Add listener after stop api
         addListenerOnUploadStatus(sessionID: sessionID)
+        let eventLog = EventLog(eventType: .stopRecordingViewModel, status: .success, platform: .network)
+        V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       }
     } catch {
+      let eventLog = EventLog(eventType: .stopRecordingViewModel,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       debugPrint("Error in processing last audio chunk \(error.localizedDescription)")
       throw error
     }
@@ -305,6 +311,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   public func pauseRecording() {
     screenState = .paused
     audioEngine.pause()
+    let eventlog = EventLog(eventType: .pauseRecording, status: .success, platform: .network)
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
   }
   
   // MARK: - Resume
@@ -314,7 +322,14 @@ public final class VoiceToRxViewModel: ObservableObject {
     guard let voiceConversationType else { return }
     screenState = .listening(conversationType: voiceConversationType)
     audioEngine.prepare()
-    try audioEngine.start()
+    do {
+      try audioEngine.start()
+    } catch {
+      let eventlog = EventLog(eventType: .resumeRecording,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
+    }
+    let eventlog = EventLog(eventType: .resumeRecording, status: .success, platform: .network)
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
   }
   
   func deleteRecording(id: UUID?) {

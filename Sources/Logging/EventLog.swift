@@ -42,8 +42,17 @@ public enum EventType: String {
   case stop
   case commit
   case fetchStatus
+  case startRecordingFloatingButton
+  case endRecordingFloatingButton
+  case pauseRecording
+  case resumeRecording
+  case startRecordingViewModel
+  case stopRecordingViewModel
+  case audioEngineFailed
+  case microPhonePermissionDenied
   
-  public var eventName: String {
+  
+  var eventName: String {
     switch self {
     case .create:
       return "VoiceToRx_CREATE"
@@ -61,6 +70,22 @@ public enum EventType: String {
       return "VoiceToRx_COMMIT"
     case .fetchStatus:
       return "VoiceToRx_STATUS"
+    case .startRecordingViewModel:
+      return "VoiceToRx_RECORD_START"
+    case .stopRecordingViewModel:
+      return "VoiceToRx_RECORD_STOP"
+    case .startRecordingFloatingButton:
+      return "VoiceToRx_RECORD_START_FLOATING_BUTTON"
+    case .endRecordingFloatingButton:
+      return "VoiceToRx_RECORD_END_FLOATING_BUTTON"
+    case .pauseRecording:
+      return "VoiceToRx_RECORD_PAUSE"
+    case .resumeRecording:
+      return "VoiceToRx_RECORD_RESUME"
+    case .audioEngineFailed:
+      return "VoiceToRx_AUDIO_ENGINE_FAILED"
+    case .microPhonePermissionDenied:
+      return "VoiceToRx_Mic_Permission_Denied"
     }
   }
 }
@@ -76,3 +101,4 @@ public enum EventPlatform: String {
   case database
   case network
 }
+

@@ -116,8 +116,15 @@ public class FloatingVoiceToRxViewController: UIViewController {
  
     isInitializing = true
     defer { isInitializing = false }
+    do {
+      try await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
+    } catch {
+      let eventlog = EventLog(eventType: .startRecordingFloatingButton,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
+    }
     
-    try await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
+    let eventlog = EventLog(eventType: .startRecordingFloatingButton, status: .success, platform: .network)
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
     
     isWindowActive = true
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
@@ -203,8 +210,12 @@ public class FloatingVoiceToRxViewController: UIViewController {
       do {
         try await viewModel?.stopRecording()
       } catch {
+        let eventlog = EventLog(eventType: .endRecordingFloatingButton, message: error.localizedDescription,status: .failure, platform: .network)
+        V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
         debugPrint("Error stopping recording: \(error.localizedDescription)")
       }
+      let eventlog = EventLog(eventType: .endRecordingFloatingButton, status: .success, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
       await liveActivityDelegate?.endLiveActivity()
     }
   }
