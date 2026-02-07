@@ -109,7 +109,7 @@ final class VoiceConversationDatabaseManager {
       guard let self else { return }
    //   Task { [weak self] in
    //     guard let self else { return }
-        fetchPersistentHistory()
+   //     fetchPersistentHistory()
    //   }
     }
     
@@ -172,15 +172,15 @@ extension VoiceConversationDatabaseManager {
       // The token is now valid on this thread since we unarchived it here
       let changeRequest = NSPersistentHistoryChangeRequest.fetchHistory(after: token)
       
-      do {
-        let historyResult = try backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
-        if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
-           !history.isEmpty {
-          mergePersistentHistoryChanges(from: history)
-        }
-      } catch {
-        print("⚠️ Persistent history fetch failed: \(error)")
-      }
+//      do {
+//        let historyResult = try backgroundContext.execute(changeRequest) as? NSPersistentHistoryResult
+//        if let history = historyResult?.result as? [NSPersistentHistoryTransaction],
+//           !history.isEmpty {
+//          mergePersistentHistoryChanges(from: history)
+//        }
+//      } catch {
+//        print("⚠️ Persistent history fetch failed: \(error)")
+//      }
     }
   }
   
@@ -268,34 +268,45 @@ extension VoiceConversationDatabaseManager {
     sessionID: UUID,
     chunkArguement: VoiceChunkInfoArguementModel
   ) {
-    let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
-    guard let voice = try? container.viewContext.fetch(fetchRequest).first else {
-      return
-    }
-    // Check if chunk with given fileName already exists
-    if let existingChunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo>,
-       let existingChunk = existingChunks.first(where: { $0.fileName == chunkArguement.fileName }) {
-      existingChunk.update(from: chunkArguement)
-    } else {
-      let newChunk = VoiceChunkInfo(context: container.viewContext)
-      newChunk.update(from: chunkArguement)
-      voice.addToToVoiceChunkInfo(newChunk)
-    }
-    
-    do {
-      try container.viewContext.save()
-      logUpdateChunkEvent(
-        sessionID: sessionID,
-        fileName: chunkArguement.fileName,
-        status: .success
-      )
-    } catch {
-      logUpdateChunkEvent(
-        sessionID: sessionID,
-        fileName: chunkArguement.fileName,
-        status: .failure,
-        message: "Failed to update voice conversation: \(error.localizedDescription)"
-      )
+    // Serialize all Core Data operations to prevent concurrent Set mutations
+    // Use performAndWait to ensure thread-safe access to Core Data relationships
+    container.viewContext.performAndWait { [weak self] in
+      guard let self else { return }
+      
+      let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
+      guard let voice = try? self.container.viewContext.fetch(fetchRequest).first else {
+        return
+      }
+      
+      // Check if chunk with given fileName already exists
+      // Create a snapshot of the Set to avoid mutation during enumeration
+      // This prevents "Collection was mutated while being enumerated" crashes
+      let existingChunksSet = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> ?? Set<VoiceChunkInfo>()
+      let fileNameToFind = chunkArguement.fileName
+      
+      if let existingChunk = existingChunksSet.first(where: { $0.fileName == fileNameToFind }) {
+        existingChunk.update(from: chunkArguement)
+      } else {
+        let newChunk = VoiceChunkInfo(context: self.container.viewContext)
+        newChunk.update(from: chunkArguement)
+        voice.addToToVoiceChunkInfo(newChunk)
+      }
+      
+      do {
+        try self.container.viewContext.save()
+        self.logUpdateChunkEvent(
+          sessionID: sessionID,
+          fileName: chunkArguement.fileName,
+          status: .success
+        )
+      } catch {
+        self.logUpdateChunkEvent(
+          sessionID: sessionID,
+          fileName: chunkArguement.fileName,
+          status: .failure,
+          message: "Failed to update voice conversation: \(error.localizedDescription)"
+        )
+      }
     }
   }
 }
@@ -355,19 +366,23 @@ extension VoiceConversationDatabaseManager {
 
 extension VoiceConversationDatabaseManager {
   func checkUploadStatus(for sessionID: UUID) {
-    DispatchQueue.main.async { [weak self] in
+    // Use performAndWait to ensure thread-safe access to Core Data relationships
+    container.viewContext.performAndWait { [weak self] in
       guard let self else { return }
-      let context = container.viewContext
       let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
-      guard let voice = try? context.fetch(fetchRequest).first,
-            let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> else { return }
+      guard let voice = try? self.container.viewContext.fetch(fetchRequest).first else { return }
       
+      // Create a snapshot of the Set to avoid mutation during enumeration
+      let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> ?? Set<VoiceChunkInfo>()
       let isFileUploadStatus = chunks.compactMap { $0.isFileUploaded }
       print("File upload status of files for sessionID \(sessionID) -> \(isFileUploadStatus)")
       if chunks.allSatisfy({$0.isFileUploaded}),
-         let callback = uploadCompletionCallbacks.removeValue(forKey: sessionID) {
-        watchedSessionIDs.remove(sessionID)
-        callback()
+         let callback = self.uploadCompletionCallbacks.removeValue(forKey: sessionID) {
+        self.watchedSessionIDs.remove(sessionID)
+        // Execute callback on main queue since it might update UI
+        DispatchQueue.main.async {
+          callback()
+        }
       }
     }
   }

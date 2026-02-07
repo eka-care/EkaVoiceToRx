@@ -52,7 +52,6 @@ public final class VoiceToRxViewModel: ObservableObject {
   private var docOid: String?
   
   private let audioChunkProcessor: AudioChunkProcessor
-  private let vadAudioChunker = VADAudioChunker()
   lazy var audioChunkUploader = AudioChunkUploader(
     s3FileUploaderService: s3FileUploader,
     voiceToRxRepo: VoiceToRxRepo.shared
@@ -60,10 +59,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   var s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
-  /// Raw int bytes accumulated till now
-  private var pcmBuffersListRaw: [Int16] = []
-  private var lastClipIndex: Int = 0
-  private var chunkIndex: Int = 1
+  /// Actor to serialize audio processing and prevent concurrent mutations
+  private let audioProcessingActor = AudioProcessingActor()
   private var recordingSession: AVAudioSession?
   private var audioEngine = AVAudioEngine()
   private var filesProcessedListenerReference: (any ListenerRegistration)?
@@ -141,6 +138,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
       let eventLog = EventLog(eventType: .microPhonePermissionDenied, message: "mic permission denied", status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       throw EkaScribeError.microphonePermissionDenied
     }
     
@@ -193,6 +191,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       let _ = try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
       let errorlog = EventLog(eventType: .audioEngineFailed,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: errorlog)
       throw EkaScribeError.audioEngineStartFailed
     }
   }
@@ -221,22 +220,23 @@ public final class VoiceToRxViewModel: ObservableObject {
         inputNodeOutputFormat: inputNodeOutputFormat
       ) else { return }
       
-      /// VAD processing
+      /// VAD processing - use actor to serialize access and prevent concurrent mutations
       Task(name: "com.eka.care.processAudioChunk") { [weak self] in
         guard let self else { return }
-        try await audioChunkProcessor.processAudioChunk(
-          audioEngine: audioEngine,
-          buffer: pcmBuffer,
-          vadAudioChunker: vadAudioChunker,
-          sessionID: sessionID,
-          lastClipIndex: &lastClipIndex,
-          chunkIndex: &chunkIndex,
-          audioChunkUploader: audioChunkUploader,
-          pcmBufferListRaw: &pcmBuffersListRaw
-        ) { newAmplitude in
-          DispatchQueue.main.async { [weak self] in
-            self?.amplitude = newAmplitude
+        do {
+          try await audioProcessingActor.processAudioChunk(
+            audioEngine: audioEngine,
+            buffer: pcmBuffer,
+            sessionID: sessionID,
+            audioChunkProcessor: audioChunkProcessor,
+            audioChunkUploader: audioChunkUploader
+          ) { newAmplitude in
+            DispatchQueue.main.async { [weak self] in
+              self?.amplitude = newAmplitude
+            }
           }
+        } catch {
+          debugPrint("Error processing audio chunk: \(error.localizedDescription)")
         }
       }
     }
@@ -254,10 +254,14 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Process whatever is remainingt
     defer {
       /// Upload full audio
-      audioChunkUploader.uploadFullAudio(
-        pcmBufferListRaw: pcmBuffersListRaw,
-        sessionID: sessionID
-      )
+      Task { [weak self] in
+        guard let self else { return }
+        let pcmBuffersListRaw = await audioProcessingActor.getPcmBuffersListRaw()
+        audioChunkUploader.uploadFullAudio(
+          pcmBufferListRaw: pcmBuffersListRaw,
+          sessionID: sessionID
+        )
+      }
       VoiceToRxRepo.shared.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
         /// Change screen state to processing
@@ -272,14 +276,13 @@ public final class VoiceToRxViewModel: ObservableObject {
       }
     }
     do {
-      try await audioChunkProcessor.processAudioChunk(
+      try await audioProcessingActor.processAudioChunk(
         audioEngine: audioEngine,
-        vadAudioChunker: vadAudioChunker,
+        buffer: nil,
         sessionID: sessionID,
-        lastClipIndex: &lastClipIndex,
-        chunkIndex: &chunkIndex,
+        audioChunkProcessor: audioChunkProcessor,
         audioChunkUploader: audioChunkUploader,
-        pcmBufferListRaw: &pcmBuffersListRaw
+        onAmplitudeUpdate: nil
       )
     } catch {
       let eventLog = EventLog(eventType: .stopRecordingViewModel,message: error.localizedDescription, status: .failure, platform: .network)
@@ -293,6 +296,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     VoiceToRxRepo.shared.observeUploadStatusChangesFor(sessionID: sessionID) { [weak self] in
       guard let self else { return }
       /// Call commit api
+      print("#BB commit api is getting called")
       VoiceToRxRepo.shared.commitVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
         /// Start polling status api
@@ -414,11 +418,10 @@ extension VoiceToRxViewModel {
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
     s3FileUploader = AmazonS3FileUploaderService()
-    vadAudioChunker.reset()
     audioChunkUploader.reset()
-    pcmBuffersListRaw = []
-    lastClipIndex = 0
-    chunkIndex = 1
+    Task {
+      await audioProcessingActor.reset()
+    }
     screenState = .startRecording
     emptyResponseCount = 0
   }
