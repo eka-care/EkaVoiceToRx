@@ -33,6 +33,7 @@ final class AudioBufferToM4AConverter {
     isFullAudio: Bool = false,
     fileExtension: String = AudioFileFormat.m4aFile.extensionString
   ) async throws -> URL {
+    
     let documentDirectoryURL = FileHelper.getDocumentDirectoryURL()
     
     let pcmFileName = "\(fileKey)\(AudioFileFormat.coreAudioFile.extensionString)"
@@ -55,7 +56,6 @@ final class AudioBufferToM4AConverter {
       )
       
       try outputAudioFile.write(from: pcmBuffer)
-      print("PCM file written successfully at \(outputPCMURL)")
       
       try await convertToM4A(sourceURL: outputPCMURL, destinationURL: outputM4AURL)
       
