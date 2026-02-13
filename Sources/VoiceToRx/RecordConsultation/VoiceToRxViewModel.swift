@@ -296,7 +296,6 @@ public final class VoiceToRxViewModel: ObservableObject {
     VoiceToRxRepo.shared.observeUploadStatusChangesFor(sessionID: sessionID) { [weak self] in
       guard let self else { return }
       /// Call commit api
-      print("#BB commit api is getting called")
       VoiceToRxRepo.shared.commitVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
         /// Start polling status api
