@@ -274,7 +274,7 @@ extension VoiceConversationDatabaseManager {
       guard let self else { return }
       
       let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
-      guard let voice = try? self.container.viewContext.fetch(fetchRequest).first else {
+      guard let voice = try? container.viewContext.fetch(fetchRequest).first else {
         return
       }
       
@@ -293,7 +293,7 @@ extension VoiceConversationDatabaseManager {
       }
       
       do {
-        try self.container.viewContext.save()
+        try container.viewContext.save()
         self.logUpdateChunkEvent(
           sessionID: sessionID,
           fileName: chunkArguement.fileName,
@@ -370,7 +370,7 @@ extension VoiceConversationDatabaseManager {
     container.viewContext.performAndWait { [weak self] in
       guard let self else { return }
       let fetchRequest = QueryHelper.fetchRequest(for: sessionID)
-      guard let voice = try? self.container.viewContext.fetch(fetchRequest).first else { return }
+      guard let voice = try? container.viewContext.fetch(fetchRequest).first else { return }
       
       // Create a snapshot of the Set to avoid mutation during enumeration
       let chunks = voice.toVoiceChunkInfo as? Set<VoiceChunkInfo> ?? Set<VoiceChunkInfo>()
