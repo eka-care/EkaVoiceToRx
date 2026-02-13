@@ -57,7 +57,6 @@ final class AudioBufferToM4AConverter {
       )
       
       try outputAudioFile.write(from: pcmBuffer)
-      print("#BB PCM file written successfully at \(outputPCMURL)")
       
       try await convertToM4A(sourceURL: outputPCMURL, destinationURL: outputM4AURL)
       
