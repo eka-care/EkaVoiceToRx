@@ -47,12 +47,18 @@ final class NetworkRequestInterceptor: Alamofire.RequestInterceptor {
     completion: @escaping (RetryResult) -> Void
   ) {
     guard let response = request.task?.response as? HTTPURLResponse,
-          response.statusCode == 401,
-          request.retryCount < retryLimit else {
+          response.statusCode == 401 else {
       /// Return the original error and don't retry the request.
       completion(.doNotRetryWithError(error))
       return
     }
+    
+    guard request.retryCount < retryLimit else {
+      V2RxInitConfigurations.shared.delegate?.logoutUser()
+      completion(.doNotRetryWithError(error))
+      return
+    }
+    
     debugPrint("401, attempting token refresh")
     /// Call refresh token api call
     refreshTokens(
@@ -97,6 +103,7 @@ extension NetworkRequestInterceptor {
         // Failure
       case .failure( _ ):
         completion(false, nil)
+        V2RxInitConfigurations.shared.delegate?.logoutUser()
         debugPrint("Retry refresh token failed")
       }
     }
