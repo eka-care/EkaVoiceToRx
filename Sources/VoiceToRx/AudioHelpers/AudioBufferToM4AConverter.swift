@@ -34,7 +34,6 @@ final class AudioBufferToM4AConverter {
     fileExtension: String = AudioFileFormat.m4aFile.extensionString
   ) async throws -> URL {
     
-    print("#BB writePcmuffer is getting called")
     let documentDirectoryURL = FileHelper.getDocumentDirectoryURL()
     
     let pcmFileName = "\(fileKey)\(AudioFileFormat.coreAudioFile.extensionString)"
