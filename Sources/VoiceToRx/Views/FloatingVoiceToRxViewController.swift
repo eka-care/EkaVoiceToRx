@@ -121,6 +121,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
     } catch {
       let eventlog = EventLog(eventType: .startRecordingFloatingButton,message: error.localizedDescription, status: .failure, platform: .network)
       V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
+      throw error
+      return
     }
     
     let eventlog = EventLog(eventType: .startRecordingFloatingButton, status: .success, platform: .network)
