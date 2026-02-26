@@ -9,7 +9,7 @@ import libfvad
 import Foundation
 import AVFoundation
 
-final class AudioChunkProcessor {
+final class AudioChunkProcessor: Sendable {
   
   private let vadDetector = VoiceActivityDetector()
   
@@ -21,7 +21,7 @@ final class AudioChunkProcessor {
     do {
       try vadDetector.setSampleRate(sampleRate: RecordingConfiguration.shared.requiredSampleRate)
     } catch {
-      print("Error in setting up vad detector")
+      debugPrint("VadDetector failed")
     }
   }
   
@@ -63,6 +63,9 @@ final class AudioChunkProcessor {
       let numberOfChunks: Int = RecordingConfiguration.shared.requiredAudioCaptureMinimumBufferSize / RecordingConfiguration.shared.sizedDownMinimumBufferSize
       
       /// Break down buffer of 100ms into smaller buffer of 20ms each for processing vad
+      var latestClipDecision = false
+      var latestClipPointIndex = 0
+      
       for i in 0..<numberOfChunks {
         let newPointer = p.baseAddress! + chunkSize*i
         
@@ -75,11 +78,24 @@ final class AudioChunkProcessor {
         )?.rawValue {
           let (clipDecision, clipPointIndex) = vadAudioChunker.process(vadFrame: Int(voiceActivityValue))
           if clipDecision {
-            endIndex = clipPointIndex*chunkSize
-            isClipFrame = true /// Frame is to be clipped here as clip decision is true
+            /// Only update if this is a new clip decision (not a stale one)
+            latestClipDecision = true
+            latestClipPointIndex = clipPointIndex
           }
         }
         pcmBufferListRaw.append(contentsOf: Array(UnsafeBufferPointer(start: newPointer, count: chunkSize)))
+      }
+      
+      /// Process clip decision after processing all chunks in the buffer
+      if latestClipDecision {
+        /// Calculate endIndex based on the current buffer position
+        /// clipPointIndex is in VAD sample units, convert to audio samples
+        let clipPointInSamples = latestClipPointIndex * chunkSize
+        /// Ensure we don't create a clip point that's before the last one
+        if clipPointInSamples > startIndex {
+          endIndex = min(clipPointInSamples, pcmBufferListRaw.count - 1)
+          isClipFrame = true
+        }
       }
     } else {
       isClipFrame = true /// Frame is to be clipped as this would be the last clipping
@@ -91,7 +107,12 @@ final class AudioChunkProcessor {
     }
     
     // Chunking and uploading to S3
-    if isClipFrame && (endIndex>0) {
+    // Only upload if we have a valid clip frame and the chunk is large enough
+    // Minimum chunk size: 1 second of audio (16000 samples at 16kHz) to prevent excessive small uploads
+    let minChunkSize = RecordingConfiguration.shared.requiredSampleRate
+    let chunkSize = endIndex - startIndex
+    
+    if isClipFrame && (endIndex > 0) && (chunkSize >= minChunkSize || !audioEngine.isRunning) {
       try await audioChunkUploader.createChunkM4AFileAndUploadToS3(
         startingFrame: startIndex,
         endingFrame: endIndex,
@@ -114,8 +135,8 @@ final class AudioChunkProcessor {
       let activity = try vadDetector.process(frame: bufferPointer, length: length)
       return activity
     } catch {
-      debugPrint("Error process audio with vad")
+      debugPrint("Error processing audio with VAD: \(error.localizedDescription)")
+      return nil
     }
-    return nil
   }
 }

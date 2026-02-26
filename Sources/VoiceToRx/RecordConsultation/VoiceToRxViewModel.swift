@@ -51,8 +51,7 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   private var docOid: String?
   
-  private let audioChunkProcessor = AudioChunkProcessor()
-  private let vadAudioChunker = VADAudioChunker()
+  private let audioChunkProcessor: AudioChunkProcessor
   lazy var audioChunkUploader = AudioChunkUploader(
     s3FileUploaderService: s3FileUploader,
     voiceToRxRepo: VoiceToRxRepo.shared
@@ -60,10 +59,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   var s3FileUploader = AmazonS3FileUploaderService()
   let s3Listener = AWSS3Listener()
   private let fileRetryService = VoiceToRxFileUploadRetry()
-  /// Raw int bytes accumulated till now
-  private var pcmBuffersListRaw: [Int16] = []
-  private var lastClipIndex: Int = 0
-  private var chunkIndex: Int = 1
+  /// Actor to serialize audio processing and prevent concurrent mutations
+  private let audioProcessingActor = AudioProcessingActor()
   private var recordingSession: AVAudioSession?
   private var audioEngine = AVAudioEngine()
   private var filesProcessedListenerReference: (any ListenerRegistration)?
@@ -84,6 +81,7 @@ public final class VoiceToRxViewModel: ObservableObject {
     voiceToRxDelegate: FloatingVoiceToRxDelegate?
   ) {
     self.voiceToRxDelegate = voiceToRxDelegate
+    self.audioChunkProcessor = AudioChunkProcessor()
     deleteAllDataIfDBIsStale()
     setupRecordSession()
     setupDependencies()
@@ -136,13 +134,15 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Start Recording
   
-  public func startRecording(conversationType: VoiceConversationType, inputLanguage: [InputLanguageType], templates: [OutputFormatTemplate], modelType: ModelType) async -> Error? {
+  public func startRecording(conversationType: VoiceConversationType, inputLanguage: [InputLanguageType], templates: [OutputFormatTemplate], modelType: ModelType) async throws {
     
     guard MicrophoneManager.checkMicrophoneStatus() == .available  else {
-      return EkaScribeError.microphonePermissionDenied
+      let eventLog = EventLog(eventType: .microPhonePermissionDenied, message: "mic permission denied", status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
+      throw EkaScribeError.microphonePermissionDenied
     }
     
-    //voiceConversationType = VoiceConversationType(rawValue: conversationType)
+    voiceConversationType = conversationType
     /// Setup record session
     setupRecordSession()
     /// Clear any previous session data if present
@@ -163,7 +163,7 @@ public final class VoiceToRxViewModel: ObservableObject {
       patientDetails = PatientDetails(oid: oid, age: nil, biologicalSex: nil, username: V2RxInitConfigurations.shared.name)
     }
     /// Create session
-    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType ?? .dictation, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
+    let (voiceModel, error) = await VoiceToRxRepo.shared.createVoiceToRxSession(contextParams: contextParams, conversationMode: conversationType, intpuLanguage: inputLanguage, templates: templates, modelType: modelType, patientDetails: patientDetails)
     guard let voiceModel else {
       /// Change the screen state to deleted recording
       await MainActor.run { [weak self] in
@@ -171,7 +171,7 @@ public final class VoiceToRxViewModel: ObservableObject {
         screenState = .deletedRecording
         voiceToRxDelegate?.onCreateVoiceToRxSession(id: nil, params: contextParams, error: error)
       }
-      return EkaScribeError.freeSessionLimitReached
+      throw EkaScribeError.freeSessionLimitReached
     }
     /// Delegate to publish everywhere that a session was created
     voiceToRxDelegate?.onCreateVoiceToRxSession(id: voiceModel.sessionID, params: contextParams, error: error)
@@ -188,12 +188,12 @@ public final class VoiceToRxViewModel: ObservableObject {
       screenState = .listening(conversationType: conversationType)
     }
     do {
-      try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
+      let _ = try setupAudioEngineAsync(sessionID: voiceModel.sessionID)
     } catch {
-      debugPrint("Audio Engine did not start \(error)")
-      return EkaScribeError.audioEngineStartFailed
+      let errorlog = EventLog(eventType: .audioEngineFailed,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: errorlog)
+      throw EkaScribeError.audioEngineStartFailed
     }
-    return nil
   }
   
   private func setupAudioEngineAsync(sessionID: UUID?) throws {
@@ -204,7 +204,8 @@ public final class VoiceToRxViewModel: ObservableObject {
     /// Set Record Config parameters
     RecordingConfiguration.shared.formDeviceConfig(deviceSampleRate: deviceSampleRate)
     /// Set Vad record config parameters
-    audioChunkProcessor.setVadDetectorSampleRate()
+    
+     audioChunkProcessor.setVadDetectorSampleRate()
     
     inputNode.installTap(
       onBus: 0,
@@ -219,22 +220,23 @@ public final class VoiceToRxViewModel: ObservableObject {
         inputNodeOutputFormat: inputNodeOutputFormat
       ) else { return }
       
-      /// VAD processing
-      Task { [weak self] in
+      /// VAD processing - use actor to serialize access and prevent concurrent mutations
+      Task(name: "com.eka.care.processAudioChunk") { [weak self] in
         guard let self else { return }
-        try await audioChunkProcessor.processAudioChunk(
-          audioEngine: audioEngine,
-          buffer: pcmBuffer,
-          vadAudioChunker: vadAudioChunker,
-          sessionID: sessionID,
-          lastClipIndex: &lastClipIndex,
-          chunkIndex: &chunkIndex,
-          audioChunkUploader: audioChunkUploader,
-          pcmBufferListRaw: &pcmBuffersListRaw
-        ) { amplitude in
-          DispatchQueue.main.async {
-            self.amplitude = amplitude
+        do {
+          try await audioProcessingActor.processAudioChunk(
+            audioEngine: audioEngine,
+            buffer: pcmBuffer,
+            sessionID: sessionID,
+            audioChunkProcessor: audioChunkProcessor,
+            audioChunkUploader: audioChunkUploader
+          ) { newAmplitude in
+            DispatchQueue.main.async { [weak self] in
+              self?.amplitude = newAmplitude
+            }
           }
+        } catch {
+          debugPrint("Error processing audio chunk: \(error.localizedDescription)")
         }
       }
     }
@@ -245,26 +247,21 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   // MARK: - Stop Recording
   
-  public func stopRecording() async {
-    guard let sessionID else { return }
+  public func stopRecording() async throws {
+    guard let sessionID else { throw EkaScribeError.noSessionId }
     /// Stop audio engine
     stopAudioRecording()
     /// Process whatever is remainingt
-    do {
-      try await audioChunkProcessor.processAudioChunk(
-        audioEngine: audioEngine,
-        vadAudioChunker: vadAudioChunker,
-        sessionID: sessionID,
-        lastClipIndex: &lastClipIndex,
-        chunkIndex: &chunkIndex,
-        audioChunkUploader: audioChunkUploader,
-        pcmBufferListRaw: &pcmBuffersListRaw
-      )
+    defer {
       /// Upload full audio
-      audioChunkUploader.uploadFullAudio(
-        pcmBufferListRaw: pcmBuffersListRaw,
-        sessionID: sessionID
-      )
+      Task { [weak self] in
+        guard let self else { return }
+        let pcmBuffersListRaw = await audioProcessingActor.getPcmBuffersListRaw()
+        audioChunkUploader.uploadFullAudio(
+          pcmBufferListRaw: pcmBuffersListRaw,
+          sessionID: sessionID
+        )
+      }
       VoiceToRxRepo.shared.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
         guard let self else { return }
         /// Change screen state to processing
@@ -274,9 +271,24 @@ public final class VoiceToRxViewModel: ObservableObject {
         }
         /// Add listener after stop api
         addListenerOnUploadStatus(sessionID: sessionID)
+        let eventLog = EventLog(eventType: .stopRecordingViewModel, status: .success, platform: .network)
+        V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       }
+    }
+    do {
+      try await audioProcessingActor.processAudioChunk(
+        audioEngine: audioEngine,
+        buffer: nil,
+        sessionID: sessionID,
+        audioChunkProcessor: audioChunkProcessor,
+        audioChunkUploader: audioChunkUploader,
+        onAmplitudeUpdate: nil
+      )
     } catch {
+      let eventLog = EventLog(eventType: .stopRecordingViewModel,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       debugPrint("Error in processing last audio chunk \(error.localizedDescription)")
+      throw error
     }
   }
   
@@ -304,6 +316,8 @@ public final class VoiceToRxViewModel: ObservableObject {
   public func pauseRecording() {
     screenState = .paused
     audioEngine.pause()
+    let eventlog = EventLog(eventType: .pauseRecording, status: .success, platform: .network)
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
   }
   
   // MARK: - Resume
@@ -313,7 +327,14 @@ public final class VoiceToRxViewModel: ObservableObject {
     guard let voiceConversationType else { return }
     screenState = .listening(conversationType: voiceConversationType)
     audioEngine.prepare()
-    try audioEngine.start()
+    do {
+      try audioEngine.start()
+    } catch {
+      let eventlog = EventLog(eventType: .resumeRecording,message: error.localizedDescription, status: .failure, platform: .network)
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
+    }
+    let eventlog = EventLog(eventType: .resumeRecording, status: .success, platform: .network)
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
   }
   
   func deleteRecording(id: UUID?) {
@@ -330,11 +351,11 @@ extension VoiceToRxViewModel {
     recordingSession = AVAudioSession.sharedInstance()
     /// Form recording configuration using device information
     do {
-      try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetooth, .defaultToSpeaker])
+      try recordingSession?.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP, .defaultToSpeaker])
       try recordingSession?.setPreferredSampleRate(Double(RecordingConfiguration.shared.requiredSampleRate))
       try recordingSession?.setActive(true)
     } catch {
-      print("Failed to set up recording session: \(error.localizedDescription)")
+      debugPrint("Failed to set up recording session: \(error.localizedDescription)")
     }
   }
   
@@ -396,11 +417,10 @@ extension VoiceToRxViewModel {
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
     s3FileUploader = AmazonS3FileUploaderService()
-    vadAudioChunker.reset()
     audioChunkUploader.reset()
-    pcmBuffersListRaw = []
-    lastClipIndex = 0
-    chunkIndex = 1
+    Task {
+      await audioProcessingActor.reset()
+    }
     screenState = .startRecording
     emptyResponseCount = 0
   }
@@ -433,7 +453,7 @@ extension VoiceToRxViewModel {
       VoiceToRxRepo.shared.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
         guard let self else { return }
         switch result {
-        case .success(let isComplete, let value):
+        case .success((let isComplete, let value)):
           if isComplete {
             timer.invalidate()
             self.pollingTimer = nil

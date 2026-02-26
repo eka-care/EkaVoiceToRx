@@ -296,7 +296,14 @@ public final class VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
+        
+        var templateResults = response.data?.templateResults?.custom
+        if (templateResults?.isEmpty ?? true) {
+          templateResults = response.data?.output
+        }
+        
+        
+        guard let templateResults else {
           /// Status fetch event
           statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
@@ -312,7 +319,6 @@ public final class VoiceToRxRepo {
           .compactMap { $0.value }
           .joined(separator: "\n")
         
-        print("#BB clinicalNotesValue is \(clinicalNotesValue)")
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
           conversationArguement: VoiceConversationArguementModel(transcription: clinicalNotesValue, stage: .result(success: true))
@@ -322,7 +328,6 @@ public final class VoiceToRxRepo {
       case .failure(let error):
         /// Status fetch event
         statusFetchEvent(sessionID: sessionID, status: .failure, message: "Error in getting voice to rx status -> \(error)")
-        debugPrint("❌ Error in getting voice to rx status -> \(error)")
         databaseManager.updateVoiceConversation(
           sessionID: sessionID,
           conversationArguement: VoiceConversationArguementModel(stage: .result(success: false))
@@ -408,7 +413,7 @@ extension VoiceToRxRepo {
       guard let self else { return }
       switch result {
       case .success(let response):
-        guard let templateResults = response.data?.templateResults?.custom, !templateResults.isEmpty else {
+        guard let templateResults = response.data?.templateResults?.integration, !templateResults.isEmpty else {
           /// Status fetch event
           //statusFetchEvent(sessionID: sessionID, status: .failure, message: "No output in response")
           print("❌ No output in response")
@@ -422,15 +427,12 @@ extension VoiceToRxRepo {
         let clinicalNotesValue = templateResults
           .filter { $0.templateID == "clinical_notes_template" }
           .compactMap { $0.value }
-          .joined(separator: "\n")
-        
-        print("#BB clinicalNotesValue is \(clinicalNotesValue)")
+          .joined(separator: "\n")        
         completion(.success((allSuccessful, value)))
         
       case .failure(let error):
         /// Status fetch event
     //    statusFetchEvent(sessionID: sessionID, status: .failure, message: "Error in getting voice to rx status -> \(error)")
-        debugPrint("❌ Error in getting voice to rx status -> \(error)")
         completion(.failure(error))
       }
     }

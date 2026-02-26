@@ -42,8 +42,9 @@ public final class V2RxInitConfigurations {
   /// Caller id
   public var appointmentID: String?
   
+  public var flavour: String?
   /// Delegate to get events
-  public weak var delegate: EventLoggerProtocol?
+  public weak var delegate: VoicerToRxCommunicationDelegate?
   
   // MARK: - Init
   

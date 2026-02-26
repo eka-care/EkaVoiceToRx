@@ -97,15 +97,31 @@ final class VADAudioChunker {
     
     /// Calculate the number of samples passed since the last clip point
     let samplePassed = (audioData.vadPastCount - audioData.lastClipIndex)
-    if shouldCreateClipPoint(prefLength: samplePassed > prefLengthSamples, threshold: longThsld) {
-      createClipPoint(at: audioData.vadPastCount - Int(audioData.silDurationAcc / 2))
-      shouldMakeClipPoint = true
-    } else if shouldCreateClipPoint(prefLength: samplePassed > despLengthSamples, threshold: shorThsld) {
-      createClipPoint(at: audioData.vadPastCount - Int(audioData.silDurationAcc / 2))
-      shouldMakeClipPoint = true
-    } else if samplePassed >= maxLengthSamples {
-      createClipPoint(at: audioData.vadPastCount)
-      shouldMakeClipPoint = true
+    
+    /// Minimum samples between clip points to prevent excessive chunking during silence
+    /// This ensures we don't create clip points too frequently (at least 10 seconds apart during silence)
+    /// This prevents the 200+ file upload issue during long silence periods
+    let minSamplesBetweenClips = Int(10.0 * Double(vadSampleRate))
+    let samplesSinceLastClip = audioData.vadPastCount - audioData.lastClipIndex
+    
+    /// Only consider creating a clip point if enough time has passed since the last one
+    if samplesSinceLastClip >= minSamplesBetweenClips {
+      if shouldCreateClipPoint(prefLength: samplePassed > prefLengthSamples, threshold: longThsld) {
+        createClipPoint(at: audioData.vadPastCount - Int(audioData.silDurationAcc / 2))
+        shouldMakeClipPoint = true
+        /// Reset silence accumulator after creating clip point to prevent immediate re-triggering
+        audioData.silDurationAcc = 0
+      } else if shouldCreateClipPoint(prefLength: samplePassed > despLengthSamples, threshold: shorThsld) {
+        createClipPoint(at: audioData.vadPastCount - Int(audioData.silDurationAcc / 2))
+        shouldMakeClipPoint = true
+        /// Reset silence accumulator after creating clip point to prevent immediate re-triggering
+        audioData.silDurationAcc = 0
+      } else if samplePassed >= maxLengthSamples {
+        createClipPoint(at: audioData.vadPastCount)
+        shouldMakeClipPoint = true
+        /// Reset silence accumulator after creating clip point to prevent immediate re-triggering
+        audioData.silDurationAcc = 0
+      }
     }
     
     updateAudioVadPast(vadFrame: vadFrame) 

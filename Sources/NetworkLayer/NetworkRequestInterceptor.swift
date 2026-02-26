@@ -47,12 +47,18 @@ final class NetworkRequestInterceptor: Alamofire.RequestInterceptor {
     completion: @escaping (RetryResult) -> Void
   ) {
     guard let response = request.task?.response as? HTTPURLResponse,
-          response.statusCode == 401,
-          request.retryCount < retryLimit else {
+          response.statusCode == 401 else {
       /// Return the original error and don't retry the request.
       completion(.doNotRetryWithError(error))
       return
     }
+    
+    guard request.retryCount < retryLimit else {
+      V2RxInitConfigurations.shared.delegate?.logoutUser()
+      completion(.doNotRetryWithError(error))
+      return
+    }
+    
     debugPrint("401, attempting token refresh")
     /// Call refresh token api call
     refreshTokens(
@@ -97,6 +103,7 @@ extension NetworkRequestInterceptor {
         // Failure
       case .failure( _ ):
         completion(false, nil)
+        V2RxInitConfigurations.shared.delegate?.logoutUser()
         debugPrint("Retry refresh token failed")
       }
     }
@@ -112,8 +119,9 @@ extension NetworkRequestInterceptor {
       urlRequest.headers.add(name: "Accept", value: "application/x-protobuf")
     }
     let clientId = V2RxInitConfigurations.shared.clientId ?? (UIDevice.current.userInterfaceIdiom == .phone ? "doctor-app-ios" : "doctor-ipad-ios")
+    let flavour = V2RxInitConfigurations.shared.flavour ?? (UIDevice.current.userInterfaceIdiom == .phone ? "io" : "ip")
     urlRequest.headers.add(name: "client-id", value: clientId)
-    urlRequest.headers.add(name: "flavour", value: UIDevice.current.userInterfaceIdiom == .phone ? "io" : "ip")
+    urlRequest.headers.add(name: "flavour", value: flavour)
     urlRequest.headers.add(name: "locale", value: String(Locale.preferredLanguages.first?.prefix(2) ?? "en"))
     
     /// Device information
