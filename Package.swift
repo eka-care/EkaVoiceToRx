@@ -26,7 +26,9 @@ let package = Package(
         .target(
             name: "EkaVoiceToRx",
             dependencies: [
-              .product(name: "AWSS3", package: "aws-sdk-ios-spm"),
+              .product(name: "AWSS3", package: "aws-sdk-swift"),
+              .product(name: "AWSClientRuntime", package: "aws-sdk-swift"),
+              .product(name: "AWSSDKIdentity", package: "aws-sdk-swift"),
               .product(name: "FirebaseFirestore", package: "firebase-ios-sdk"),
               .product(name: "SwiftyJSON", package: "SwiftyJSON"),
               .product(name: "libfvad", package: "libfvad"),

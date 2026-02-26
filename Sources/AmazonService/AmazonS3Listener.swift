@@ -7,6 +7,7 @@
 
 import Foundation
 import AWSS3
+import AWSClientRuntime
 
 /// A utility class to handle AWS S3 file operations such as checking existence and reading file content.
 final class AWSS3Listener {
@@ -85,25 +86,24 @@ final class AWSS3Listener {
   /// - Throws: An error if the file cannot be read or decoded.
   private func readS3File(bucket: String, key: String) async throws -> String {
     print("Read s3 is called")
-    let s3 = AWSS3.s3(forKey: RecordingS3UploadConfiguration.s3ClientKey)
-    
-    let request = AWSS3GetObjectRequest()!
-    request.bucket = bucket
-    request.key = key
-    
-    return try await withCheckedThrowingContinuation { continuation in
-      s3.getObject(request).continueWith { task in
-        if let error = task.error {
-          continuation.resume(throwing: error)
-        } else if let data = task.result?.body as? Data,
-                  let content = String(data: data, encoding: .utf8) {
-          continuation.resume(returning: content)
-        } else {
-          continuation.resume(throwing: NSError(domain: "S3", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid or empty S3 file data"]))
-        }
-        return nil
-      }
+    guard let s3 = AWSConfiguration.shared.getS3Client() else {
+      throw NSError(domain: "S3", code: -2, userInfo: [NSLocalizedDescriptionKey: "S3Client not configured"])
     }
+    
+    let input = GetObjectInput(bucket: bucket, key: key)
+    let output = try await s3.getObject(input: input)
+    
+    guard let body = output.body else {
+      throw NSError(domain: "S3", code: -3, userInfo: [NSLocalizedDescriptionKey: "Empty S3 file body"])
+    }
+    
+    // Attempt to fully read body into Data and then String
+    if let data = try await body.readData(),
+       let content = String(data: data, encoding: .utf8) {
+      return content
+    }
+    
+    throw NSError(domain: "S3", code: -4, userInfo: [NSLocalizedDescriptionKey: "Invalid or undecodable S3 file data"])
   }
   
   /// Checks whether a file exists at the specified bucket and key in S3.
@@ -115,25 +115,17 @@ final class AWSS3Listener {
   /// - Throws: An error if the S3 request fails (other than file-not-found).
   private func checkS3FileExists(bucket: String, key: String) async throws -> Bool {
     print("Check s3 files is called")
-    let s3 = AWSS3.s3(forKey: RecordingS3UploadConfiguration.s3ClientKey)
+    guard let s3 = AWSConfiguration.shared.getS3Client() else {
+      return false
+    }
     
-    let request = AWSS3HeadObjectRequest()!
-    request.bucket = bucket
-    request.key = key
-    
-    return try await withCheckedThrowingContinuation { continuation in
-      s3.headObject(request).continueWith { task in
-        if let error = task.error as NSError? {
-          if error.domain == AWSS3ErrorDomain && error.code == AWSS3ErrorType.noSuchKey.rawValue {
-            continuation.resume(returning: false)
-          } else {
-            continuation.resume(returning: false)
-          }
-        } else {
-          continuation.resume(returning: true)
-        }
-        return nil
-      }
+    do {
+      let input = HeadObjectInput(bucket: bucket, key: key)
+      _ = try await s3.headObject(input: input)
+      return true
+    } catch {
+      // If the object doesn't exist or any error occurs, treat as not found for now
+      return false
     }
   }
 }
