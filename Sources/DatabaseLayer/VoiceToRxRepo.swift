@@ -164,18 +164,19 @@ public final class VoiceToRxRepo {
     completion: @escaping () -> Void,
     retryCount: Int = 0
   ) {
-    guard let sessionID,
-          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-          VoiceConversationAPIStage.getEnum(from: model.stage ?? "") == .initialise /// Init should have been done
-    else {
-      stopVoiceEvent(
-        sessionID: sessionID,
-        status: .failure,
-        message: "Insufficient parameters -> Session id: \(sessionID?.uuidString ?? "") or no Model"
-      )
-      if retryCount < 3 {
-        stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
-      }
+    guard let sessionID else {
+      stopVoiceEvent(sessionID: nil, status: .failure, message: "Stop guard failed: missing sessionID")
+      completion()
+      return
+    }
+    guard let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
+      stopVoiceEvent(sessionID: sessionID, status: .failure, message: "Stop guard failed: getVoice returned nil for sessionID \(sessionID.uuidString)")
+      completion()
+      return
+    }
+    let currentStage = model.stage ?? ""
+    guard VoiceConversationAPIStage.getEnum(from: currentStage) == .initialise else {
+      stopVoiceEvent(sessionID: sessionID, status: .failure, message: "Stop guard failed: wrong stage (expected initialise, got '\(currentStage)')")
       completion()
       return
     }
@@ -219,18 +220,20 @@ public final class VoiceToRxRepo {
     retryCount: Int = 0,
     completion: @escaping () -> Void
   ) {
-    guard let sessionID,
-          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-          VoiceConversationAPIStage.getEnum(from: model.stage ?? "") == .stop
-    else {
-      commitVoiceEvent(
-        sessionID: sessionID,
-        status: .failure,
-        message: "Insufficient parameters -> Session id: \(sessionID?.uuidString ?? "") or no Model"
-      )
-      if retryCount < 3 {
-        commitVoiceToRxSession(sessionID: sessionID, retryCount: retryCount + 1, completion: completion)
-      }
+    guard let sessionID else {
+      commitVoiceEvent(sessionID: nil, status: .failure, message: "Commit guard failed: missing sessionID")
+      completion()
+      return
+    }
+    guard let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
+      commitVoiceEvent(sessionID: sessionID, status: .failure, message: "Commit guard failed: getVoice returned nil for sessionID \(sessionID.uuidString)")
+      completion()
+      return
+    }
+    let currentStage = model.stage ?? ""
+    guard VoiceConversationAPIStage.getEnum(from: currentStage) == .stop else {
+      commitVoiceEvent(sessionID: sessionID, status: .failure, message: "Commit guard failed: wrong stage (expected stop, got '\(currentStage)')")
+      completion()
       return
     }
     let fileNames = model.getFileNames()
@@ -273,21 +276,26 @@ public final class VoiceToRxRepo {
     completion: @escaping (Result<(Bool, String), Error>) -> Void,
     retryCount: Int = 0
   ) {
-    guard let sessionID,
-          let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)),
-          VoiceConversationAPIStage.getEnum(from: model.stage ?? "") == .commit
-    else {
-      /// Status fetch event
-      statusFetchEvent(sessionID: sessionID, status: .failure, message: "No model or session id")
+    guard let sessionID else {
+      statusFetchEvent(sessionID: nil, status: .failure, message: "Status fetch guard failed: missing sessionID")
+      completion(.failure(NSError(domain: "VoiceToRx", code: -1, userInfo: [NSLocalizedDescriptionKey: "Missing sessionID"])))
+      return
+    }
+    guard let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
+      statusFetchEvent(sessionID: sessionID, status: .failure, message: "Status fetch guard failed: getVoice returned nil for sessionID \(sessionID.uuidString)")
       if retryCount < 3 {
-        fetchVoiceToRxSessionStatus(
-          sessionID: sessionID,
-          completion: completion,
-          retryCount: retryCount + 1
-        )
+        fetchVoiceToRxSessionStatus(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
       } else {
-        /// Status fetch event
-        statusFetchEvent(sessionID: sessionID, status: .failure, message: "Invalid session or stage")
+        completion(.failure(NSError(domain: "VoiceToRx", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid session or stage"])))
+      }
+      return
+    }
+    let currentStage = model.stage ?? ""
+    guard VoiceConversationAPIStage.getEnum(from: currentStage) == .commit else {
+      statusFetchEvent(sessionID: sessionID, status: .failure, message: "Status fetch guard failed: wrong stage (expected commit, got '\(currentStage)')")
+      if retryCount < 3 {
+        fetchVoiceToRxSessionStatus(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
+      } else {
         completion(.failure(NSError(domain: "VoiceToRx", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid session or stage"])))
       }
       return

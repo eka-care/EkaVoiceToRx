@@ -41,11 +41,9 @@ extension VoiceToRxRepo {
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID else { return }
-    
     let eventLog = EventLog(
       params: [
-        "sessionID": sessionID.uuidString,
+        "sessionID": sessionID?.uuidString ?? "",
         "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .stop,
@@ -64,11 +62,9 @@ extension VoiceToRxRepo {
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID else { return }
-    
     let eventLog = EventLog(
       params: [
-        "sessionID": sessionID.uuidString,
+        "sessionID": sessionID?.uuidString ?? "",
         "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .commit,
@@ -87,11 +83,9 @@ extension VoiceToRxRepo {
     status: EventStatusMonitor,
     message: String? = nil
   ) {
-    guard let sessionID else { return }
-    
     let eventLog = EventLog(
       params: [
-        "sessionID": sessionID.uuidString,
+        "sessionID": sessionID?.uuidString ?? "",
         "bid": AuthTokenHolder.shared.bid ?? ""
       ],
       eventType: .fetchStatus,
