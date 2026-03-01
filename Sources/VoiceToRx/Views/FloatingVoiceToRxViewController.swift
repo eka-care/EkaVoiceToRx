@@ -219,6 +219,8 @@ public class FloatingVoiceToRxViewController: UIViewController {
   
   private func handleDoneRecording() {
     debugPrint("handleDoneRecording called")
+    let eventlog = EventLog(eventType: .endRecordingFloatingButton, status: .success, platform: .network)
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
     Task { [weak self] in
       guard let self else { return }
       do {
@@ -228,8 +230,6 @@ public class FloatingVoiceToRxViewController: UIViewController {
         V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
         debugPrint("Error stopping recording: \(error.localizedDescription)")
       }
-      let eventlog = EventLog(eventType: .endRecordingFloatingButton, status: .success, platform: .network)
-      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
       await liveActivityDelegate?.endLiveActivity()
     }
   }
