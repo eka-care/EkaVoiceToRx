@@ -176,6 +176,7 @@ public final class VoiceToRxRepo {
       if retryCount < 3 {
         stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
       }
+      completion()
       return
     }
     let fileNames = model.getFileNames()

@@ -416,6 +416,7 @@ extension VoiceToRxViewModel {
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
+    sessionID = nil
     s3FileUploader = AmazonS3FileUploaderService()
     audioChunkUploader.reset()
     Task {
