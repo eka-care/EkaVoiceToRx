@@ -262,17 +262,21 @@ public final class VoiceToRxViewModel: ObservableObject {
           sessionID: sessionID
         )
       }
-      VoiceToRxRepo.shared.stopVoiceToRxSession(sessionID: sessionID) { [weak self] in
+      VoiceToRxRepo.shared.stopVoiceToRxSession(sessionID: sessionID) { [weak self] error in
         guard let self else { return }
-        /// Change screen state to processing
         DispatchQueue.main.async { [weak self] in
           guard let self else { return }
-          screenState = .processing
+          if let error {
+            screenState = .resultDisplay(success: false, value: error.localizedDescription)
+            let eventLog = EventLog(eventType: .stopRecordingViewModel, message: error.localizedDescription, status: .failure, platform: .network)
+            V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
+          } else {
+            screenState = .processing
+            addListenerOnUploadStatus(sessionID: sessionID)
+            let eventLog = EventLog(eventType: .stopRecordingViewModel, status: .success, platform: .network)
+            V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
+          }
         }
-        /// Add listener after stop api
-        addListenerOnUploadStatus(sessionID: sessionID)
-        let eventLog = EventLog(eventType: .stopRecordingViewModel, status: .success, platform: .network)
-        V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       }
     }
     do {
@@ -416,6 +420,7 @@ extension VoiceToRxViewModel {
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
+    sessionID = nil
     s3FileUploader = AmazonS3FileUploaderService()
     audioChunkUploader.reset()
     Task {
