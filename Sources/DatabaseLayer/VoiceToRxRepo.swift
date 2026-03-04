@@ -8,6 +8,10 @@
 import Foundation
 import CoreData
 
+public struct VoiceToRxStopError: Error, LocalizedError {
+  public let message: String
+}
+
 public final class VoiceToRxRepo {
   
   // MARK: - Properties
@@ -161,23 +165,26 @@ public final class VoiceToRxRepo {
   
   public func stopVoiceToRxSession(
     sessionID: UUID?,
-    completion: @escaping () -> Void,
+    completion: @escaping (Error?) -> Void,
     retryCount: Int = 0
   ) {
     guard let sessionID else {
-      stopVoiceEvent(sessionID: nil, status: .failure, message: "Stop guard failed: missing sessionID")
-      completion()
+      let message = "Stop guard failed: missing sessionID"
+      stopVoiceEvent(sessionID: nil, status: .failure, message: message)
+      completion(VoiceToRxStopError(message: message))
       return
     }
     guard let model = databaseManager.getVoice(fetchRequest: QueryHelper.fetchRequest(for: sessionID)) else {
-      stopVoiceEvent(sessionID: sessionID, status: .failure, message: "Stop guard failed: getVoice returned nil for sessionID \(sessionID.uuidString)")
-      completion()
+      let message = "Stop guard failed: getVoice returned nil for sessionID \(sessionID.uuidString)"
+      stopVoiceEvent(sessionID: sessionID, status: .failure, message: message)
+      completion(VoiceToRxStopError(message: message))
       return
     }
     let currentStage = model.stage ?? ""
     guard VoiceConversationAPIStage.getEnum(from: currentStage) == .initialise else {
-      stopVoiceEvent(sessionID: sessionID, status: .failure, message: "Stop guard failed: wrong stage (expected initialise, got '\(currentStage)')")
-      completion()
+      let message = "Stop guard failed: wrong stage (expected initialise, got '\(currentStage)')"
+      stopVoiceEvent(sessionID: sessionID, status: .failure, message: message)
+      completion(VoiceToRxStopError(message: message))
       return
     }
     let fileNames = model.getFileNames()
@@ -201,14 +208,15 @@ public final class VoiceToRxRepo {
             stage: .stop
           )
         )
-        completion()
+        completion(nil)
       case .failure(let error):
         stopVoiceEvent(sessionID: sessionID, status: .failure, message: "Error in stop voice to rx \(error.localizedDescription)")
         debugPrint("Error in stop voice to rx \(error.localizedDescription)")
         if retryCount < 3 {
           stopVoiceToRxSession(sessionID: sessionID, completion: completion, retryCount: retryCount + 1)
+          return
         }
-        completion()
+        completion(error)
       }
     }
   }

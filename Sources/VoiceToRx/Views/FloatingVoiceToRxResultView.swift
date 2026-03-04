@@ -36,7 +36,7 @@ struct FloatingVoiceToRxResultView: View {
         Text(success ? "Smart notes are ready!" : "Audio analysis failed.")
           .textStyle(ekaFont: .calloutRegular, color: .black)
         
-        Text(success ? "Tap to View" : "Tap to try again ")
+        Text(success ? "Tap to View" : "Something went wrong.")
           .textStyle(ekaFont: .calloutBold, color: UIColor(resource: .primary500))
       }
       
