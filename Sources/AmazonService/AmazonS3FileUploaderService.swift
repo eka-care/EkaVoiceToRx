@@ -6,6 +6,9 @@
 //
 
 import AWSS3
+import Foundation
+import AWSClientRuntime
+import enum Smithy.ByteStream
 
 final class AmazonS3FileUploaderService {
   
@@ -73,11 +76,10 @@ final class AmazonS3FileUploaderService {
     bid: String?,
     completion: @escaping (Result<String, Error>) -> Void
   ) {
-    debugPrint("Key is \(key)")
+    print("Key is \(key)")
     
-    // ✅ Use dynamic active key instead of static key
-    guard let transferUtility = AWSConfiguration.shared.getTransferUtility() else {
-      let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "No active AWS Transfer Utility"])
+    guard let s3Client = AWSConfiguration.shared.getS3Client() else {
+      let error = NSError(domain: "S3Upload", code: -1, userInfo: [NSLocalizedDescriptionKey: "S3Client not configured"])
       completion(.failure(error))
       return
     }
@@ -88,41 +90,33 @@ final class AmazonS3FileUploaderService {
       return
     }
     
-    let expression = AWSS3TransferUtilityUploadExpression()
-    
-    if let bid = bid {
-      expression.setValue(bid, forRequestHeader: "x-amz-meta-bid")
+    var metadata: [String: String]? = nil
+    if bid != nil || sessionID != nil {
+      var meta: [String: String] = [:]
+      if let bid { meta["bid"] = bid }
+      if let sessionID { meta["txnid"] = sessionID }
+      metadata = meta
     }
-    if let sessionID = sessionID {
-      expression.setValue(sessionID, forRequestHeader: "x-amz-meta-txnid")
-    }
     
-    debugPrint("Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType)")
+    print("Upload information url -> \(url), bucket: \(bucketName), key: \(key), contentType: \(contentType)")
     
-    let uploadTask = transferUtility.uploadFile(
-      url,
-      bucket: bucketName,
-      key: key,
-      contentType: contentType,
-      expression: expression
-    ) { task, error in
-      if let error {
-        debugPrint("Upload completion handler error: \(error.localizedDescription)")
+    Task {
+      do {
+        let body = try ByteStream.from(fileHandle: .init(forReadingFrom: url))
+        let input = PutObjectInput(
+          body: body,
+          bucket: bucketName,
+          contentType: contentType,
+          key: key,
+          metadata: metadata
+        )
+        _ = try await s3Client.putObject(input: input)
+        debugPrint("Upload success for key: \(key)")
+        completion(.success(key))
+      } catch {
+        debugPrint("Upload failed: \(error.localizedDescription)")
         completion(.failure(error))
-        return
       }
-      debugPrint("Upload completion handler success for key: \(key)")
-      completion(.success(key))
-    }
-    
-    uploadTask.continueWith { t in
-      if let error = t.error {
-        debugPrint("Upload task creation failed: \(error.localizedDescription)")
-        completion(.failure(error))
-      } else if let result = t.result {
-        debugPrint("Upload task status: \(result.status.rawValue)")
-      }
-      return nil
     }
   }
 }
