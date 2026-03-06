@@ -315,8 +315,11 @@ extension VoiceConversationDatabaseManager {
 
 extension VoiceConversationDatabaseManager {
   func getVoice(fetchRequest: NSFetchRequest<VoiceConversation>) -> VoiceConversation? {
+    let context = container.viewContext
+    // Refresh to pick up background writes and recover from fault/eviction (long sessions or app backgrounding)
+    context.refreshAllObjects()
     do {
-      let results = try container.viewContext.fetch(fetchRequest)
+      let results = try context.fetch(fetchRequest)
       return results.first
     } catch {
       print("Fetch error: \(error)")
