@@ -78,11 +78,12 @@ extension VoiceConversation {
   /// Used to get all the file names from a voice entry
   /// - Returns: Array of the file names
   func getFileNames() -> [String] {
-    (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+    let fileNames = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+    return fileNames.sorted()
   }
   
   /// Used to get file chunk info from the voice entry
-  /// - Returns: An array of file chunk info dictionaries, each containing one file name as the key
+  /// - Returns: An array of file chunk info dictionaries, each containing one file name as the key, sorted by file name in ascending order
   func getChunksInfo() -> [[String: ChunkInfo]] {
     var chunkInfoList: [[String: ChunkInfo]] = []
     
@@ -98,6 +99,11 @@ extension VoiceConversation {
       }
     }
     
-    return chunkInfoList
+    // Sort by file name in ascending order
+    return chunkInfoList.sorted { dict1, dict2 in
+      let fileName1 = dict1.keys.first ?? ""
+      let fileName2 = dict2.keys.first ?? ""
+      return fileName1 < fileName2
+    }
   }
 }
