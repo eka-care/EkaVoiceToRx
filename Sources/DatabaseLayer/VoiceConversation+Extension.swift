@@ -78,37 +78,28 @@ extension VoiceConversation {
   /// Used to get all the file names from a voice entry
   /// - Returns: Array of the file names
   func getFileNames() -> [String] {
-    let fileNames = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
-    let sortedFileName = fileNames.sorted { extractNumericValue(from: $0) < extractNumericValue(from: $1) }
-    return fileNames.sorted { extractNumericValue(from: $0) < extractNumericValue(from: $1) }
+    let chunks = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>) ?? []
+    return chunks
+      .sorted { extractTimestamp(from: $0.startTime) < extractTimestamp(from: $1.startTime) }
+      .compactMap { $0.fileName }
   }
   
   /// Used to get file chunk info from the voice entry
   /// - Returns: An array of file chunk info dictionaries, each containing one file name as the key, sorted by file name in ascending order
   func getChunksInfo() -> [[String: ChunkInfo]] {
-    var chunkInfoList: [[String: ChunkInfo]] = []
-    
-    (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.forEach {
-      if let fileName = $0.fileName {
-        let fileChunkInfo: [String: ChunkInfo] = [
-          fileName: ChunkInfo(
-            st: $0.startTime ?? "",
-            et: $0.endTime ?? ""
-          )
-        ]
-        chunkInfoList.append(fileChunkInfo)
+    let chunks = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>) ?? []
+    return chunks
+      .sorted { extractTimestamp(from: $0.startTime) < extractTimestamp(from: $1.startTime) }
+      .compactMap { chunk in
+        guard let fileName = chunk.fileName else { return nil }
+        return [fileName: ChunkInfo(st: chunk.startTime ?? "", et: chunk.endTime ?? "")]
       }
-    }
-    
-    return chunkInfoList.sorted { dict1, dict2 in
-      let numericValue1 = extractNumericValue(from: dict1.keys.first ?? "")
-      let numericValue2 = extractNumericValue(from: dict2.keys.first ?? "")
-      return numericValue1 < numericValue2
-    }
   }
   
-  /// Extracts numeric value from file name (e.g. "1.m4a" -> 1, "10.m4a" -> 10)
-  private func extractNumericValue(from fileName: String) -> Int {
-    Int(fileName.components(separatedBy: ".").first ?? "") ?? 0
+  /// Extracts a comparable timestamp value from a time string for sorting purposes.
+  /// Falls back to 0 if the string is nil or unparseable.
+  private func extractTimestamp(from timeString: String?) -> Double {
+    guard let timeString else { return 0 }
+    return Double(timeString) ?? 0
   }
 }
