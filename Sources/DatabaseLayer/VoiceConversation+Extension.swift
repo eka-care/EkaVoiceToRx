@@ -79,6 +79,8 @@ extension VoiceConversation {
   /// - Returns: Array of the file names
   func getFileNames() -> [String] {
     let fileNames = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+    print("#BB \(fileNames.sorted())")
+    print("#BB reversed \(fileNames.sorted().reversed())")
     return fileNames.sorted().reversed()
   }
   
@@ -104,6 +106,6 @@ extension VoiceConversation {
       let fileName1 = dict1.keys.first ?? ""
       let fileName2 = dict2.keys.first ?? ""
       return fileName1 < fileName2
-    }.reversed()
+    }
   }
 }
