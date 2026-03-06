@@ -80,9 +80,7 @@ extension VoiceConversation {
   func getFileNames() -> [String] {
     let fileNames = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
     let sortedFileName = fileNames.sorted { extractNumericValue(from: $0) < extractNumericValue(from: $1) }
-    print("#BB: \(sortedFileName)")
-    print("#BB: \(sortedFileName.reversed())")
-    return fileNames.sorted { extractNumericValue(from: $0) < extractNumericValue(from: $1) }.reversed()
+    return fileNames.sorted { extractNumericValue(from: $0) < extractNumericValue(from: $1) }
   }
   
   /// Used to get file chunk info from the voice entry
@@ -106,7 +104,7 @@ extension VoiceConversation {
       let numericValue1 = extractNumericValue(from: dict1.keys.first ?? "")
       let numericValue2 = extractNumericValue(from: dict2.keys.first ?? "")
       return numericValue1 < numericValue2
-    }.reversed()
+    }
   }
   
   /// Extracts numeric value from file name (e.g. "1.m4a" -> 1, "10.m4a" -> 10)
