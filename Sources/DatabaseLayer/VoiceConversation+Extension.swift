@@ -78,26 +78,28 @@ extension VoiceConversation {
   /// Used to get all the file names from a voice entry
   /// - Returns: Array of the file names
   func getFileNames() -> [String] {
-    (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.compactMap { $0.fileName } ?? []
+    let chunks = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>) ?? []
+    return chunks
+      .sorted { extractTimestamp(from: $0.startTime) < extractTimestamp(from: $1.startTime) }
+      .compactMap { $0.fileName }
   }
   
   /// Used to get file chunk info from the voice entry
-  /// - Returns: An array of file chunk info dictionaries, each containing one file name as the key
+  /// - Returns: An array of file chunk info dictionaries, each containing one file name as the key, sorted by file name in ascending order
   func getChunksInfo() -> [[String: ChunkInfo]] {
-    var chunkInfoList: [[String: ChunkInfo]] = []
-    
-    (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>)?.forEach {
-      if let fileName = $0.fileName {
-        let fileChunkInfo: [String: ChunkInfo] = [
-          fileName: ChunkInfo(
-            st: $0.startTime ?? "",
-            et: $0.endTime ?? ""
-          )
-        ]
-        chunkInfoList.append(fileChunkInfo)
+    let chunks = (self.toVoiceChunkInfo as? Set<VoiceChunkInfo>) ?? []
+    return chunks
+      .sorted { extractTimestamp(from: $0.startTime) < extractTimestamp(from: $1.startTime) }
+      .compactMap { chunk in
+        guard let fileName = chunk.fileName else { return nil }
+        return [fileName: ChunkInfo(st: chunk.startTime ?? "", et: chunk.endTime ?? "")]
       }
-    }
-    
-    return chunkInfoList
+  }
+  
+  /// Extracts a comparable timestamp value from a time string for sorting purposes.
+  /// Falls back to 0 if the string is nil or unparseable.
+  private func extractTimestamp(from timeString: String?) -> Double {
+    guard let timeString else { return 0 }
+    return Double(timeString) ?? 0
   }
 }
