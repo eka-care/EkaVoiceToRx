@@ -16,12 +16,12 @@ let package = Package(
     ],
     dependencies: [
       .package(url: "https://github.com/aws-amplify/aws-sdk-ios-spm.git", .upToNextMajor(from: "2.36.6")),
-      .package(url: "https://github.com/firebase/firebase-ios-sdk.git", .upToNextMajor(from: "12.0.0")),
+      .package(url: "https://github.com/firebase/firebase-ios-sdk.git", .upToNextMajor(from: "12.9.0")),
       .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", .upToNextMajor(from: "5.0.0")),
       .package(url: "https://github.com/gfreezy/libfvad.git", .upToNextMajor(from: "1.0.0")),
       .package(url: "https://github.com/Alamofire/Alamofire.git", .upToNextMajor(from: "5.10.2")),
       .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.6.0"),
-      .package(url: "git@github.com:eka-care/EkaUI.git", branch: "main")
+      .package(url: "git@github.com:eka-care/EkaUI.git", from: "1.0.5")
     ],
     targets: [
         .target(
