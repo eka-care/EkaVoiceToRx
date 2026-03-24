@@ -50,8 +50,16 @@ public enum EventType: String {
   case stopRecordingViewModel
   case audioEngineFailed
   case microPhonePermissionDenied
-  
-  
+  // V2RX DEBUG event types
+  case screenStateChanged
+  case clearSessionCalled
+  case pollingStatusUpdate
+  case floatingButtonShow
+  case floatingButtonHide
+  case viewModelDeinit
+  case delegateCallback
+
+
 public var eventName: String {
     switch self {
     case .create:
@@ -86,6 +94,20 @@ public var eventName: String {
       return "VoiceToRx_AUDIO_ENGINE_FAILED"
     case .microPhonePermissionDenied:
       return "VoiceToRx_Mic_Permission_Denied"
+    case .screenStateChanged:
+      return "VoiceToRx_SCREEN_STATE_CHANGED"
+    case .clearSessionCalled:
+      return "VoiceToRx_CLEAR_SESSION"
+    case .pollingStatusUpdate:
+      return "VoiceToRx_POLLING_STATUS"
+    case .floatingButtonShow:
+      return "VoiceToRx_FLOATING_SHOW"
+    case .floatingButtonHide:
+      return "VoiceToRx_FLOATING_HIDE"
+    case .viewModelDeinit:
+      return "VoiceToRx_VIEWMODEL_DEINIT"
+    case .delegateCallback:
+      return "VoiceToRx_DELEGATE_CALLBACK"
     }
   }
 }
