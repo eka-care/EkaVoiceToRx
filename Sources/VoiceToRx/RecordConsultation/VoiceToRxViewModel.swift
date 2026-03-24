@@ -526,9 +526,9 @@ extension VoiceToRxViewModel {
           if isComplete {
             timer.invalidate()
             self.pollingTimer = nil
-            print("[V2RX DEBUG] startStatusPolling : pollingComplete : sessionID : \(currentSessionID) | valueLength : \(value?.count ?? 0)")
+              print("[V2RX DEBUG] startStatusPolling : pollingComplete : sessionID : \(currentSessionID) | valueLength : \(value.count)")
             let eventLog = EventLog(
-              params: ["session_id": currentSessionID, "polling_result": "complete", "value_length": "\(value?.count ?? 0)"],
+              params: ["session_id": currentSessionID, "polling_result": "complete", "value_length": "\(value.count)"],
               eventType: .pollingStatusUpdate,
               message: "pollingComplete : sessionID : \(currentSessionID)",
               status: .success,
