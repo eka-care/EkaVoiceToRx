@@ -109,25 +109,35 @@ public class FloatingVoiceToRxViewController: UIViewController {
     modelType: ModelType = .pro,
     liveActivityDelegate: LiveActivityDelegate?
   ) async throws {
+    print("[V2RX DEBUG] showFloatingButton : isWindowActive : \(isWindowActive) | isInitializing : \(isInitializing) | sessionID : \(viewModel.sessionID?.uuidString ?? "nil")")
     guard !isWindowActive && !isInitializing else {
+      print("[V2RX DEBUG] showFloatingButton : BLOCKED : isWindowActive : \(isWindowActive) | isInitializing : \(isInitializing)")
       debugPrint("FloatingVoiceToRxViewController: Window is already active or initializing. Ignoring duplicate call.")
       throw EkaScribeError.floatingButtonAlreadyPresented
     }
- 
+
     isInitializing = true
     defer { isInitializing = false }
     do {
       try await viewModel.startRecording(conversationType: conversationType, inputLanguage: inputLanguage, templates: templates, modelType: modelType)
     } catch {
+      print("[V2RX DEBUG] showFloatingButton : startRecording FAILED : error : \(error.localizedDescription)")
       let eventlog = EventLog(eventType: .startRecordingFloatingButton,message: error.localizedDescription, status: .failure, platform: .network)
       V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
       throw error
       return
     }
-    
-    let eventlog = EventLog(eventType: .startRecordingFloatingButton, status: .success, platform: .network)
+
+    print("[V2RX DEBUG] showFloatingButton : startRecording SUCCESS : sessionID : \(viewModel.sessionID?.uuidString ?? "nil") | screenState : \(viewModel.screenState)")
+    let eventlog = EventLog(
+      params: ["session_id": viewModel.sessionID?.uuidString ?? "nil", "screen_state": "\(viewModel.screenState)"],
+      eventType: .floatingButtonShow,
+      message: "showFloatingButton : sessionID : \(viewModel.sessionID?.uuidString ?? "nil")",
+      status: .success,
+      platform: .network
+    )
     V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
-    
+
     isWindowActive = true
     window.windowLevel = UIWindow.Level(rawValue: CGFloat.greatestFiniteMagnitude)
     window.isHidden = false
@@ -142,21 +152,35 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   public func hideFloatingButton() {
+    let sessionID = viewModel?.sessionID?.uuidString ?? "nil"
+    let currentScreenState = viewModel != nil ? "\(viewModel!.screenState)" : "nil"
+    print("[V2RX DEBUG] hideFloatingButton : isWindowActive : \(isWindowActive) | sessionID : \(sessionID) | screenState : \(currentScreenState) | thread : \(Thread.isMainThread ? "main" : "bg")")
     guard isWindowActive else {
+      print("[V2RX DEBUG] hideFloatingButton : SKIPPED : window not active")
       debugPrint("FloatingVoiceToRxViewController: Window is not active. Ignoring hide request.")
       return
     }
-    
+
+    let eventLog = EventLog(
+      params: ["session_id": sessionID, "screen_state": currentScreenState],
+      eventType: .floatingButtonHide,
+      message: "hideFloatingButton : sessionID : \(sessionID) | screenState : \(currentScreenState)",
+      status: .success,
+      platform: .network
+    )
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
+
     viewModel?.clearSession()
     window.windowLevel = UIWindow.Level(rawValue: 0)
     window.isHidden = true
     window.rootViewController = self
     view.subviews.forEach { $0.removeFromSuperview() }
-    
+
     // Reset state to allow future window creation
     isWindowActive = false
     cancellables.removeAll()
-    
+    print("[V2RX DEBUG] hideFloatingButton : completed : isWindowActive : \(isWindowActive)")
+
     Task {
       await liveActivityDelegate?.endLiveActivity()
     }
@@ -218,17 +242,18 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func handleDoneRecording() {
-    debugPrint("handleDoneRecording called")
+    print("[V2RX DEBUG] handleDoneRecording : sessionID : \(viewModel?.sessionID?.uuidString ?? "nil") | screenState : \(viewModel != nil ? "\(viewModel!.screenState)" : "nil")")
     let eventlog = EventLog(eventType: .endRecordingFloatingButton, status: .success, platform: .network)
     V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
     Task { [weak self] in
       guard let self else { return }
       do {
         try await viewModel?.stopRecording()
+        print("[V2RX DEBUG] handleDoneRecording : stopRecording SUCCESS")
       } catch {
+        print("[V2RX DEBUG] handleDoneRecording : stopRecording FAILED : error : \(error.localizedDescription)")
         let eventlog = EventLog(eventType: .endRecordingFloatingButton, message: error.localizedDescription,status: .failure, platform: .network)
         V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventlog)
-        debugPrint("Error stopping recording: \(error.localizedDescription)")
       }
       await liveActivityDelegate?.endLiveActivity()
     }
@@ -241,7 +266,7 @@ public class FloatingVoiceToRxViewController: UIViewController {
   }
   
   private func handleCancelRecording() {
-    debugPrint("handleCancelRecording called")
+    print("[V2RX DEBUG] handleCancelRecording : sessionID : \(viewModel?.sessionID?.uuidString ?? "nil") | screenState : \(viewModel != nil ? "\(viewModel!.screenState)" : "nil")")
     viewModel?.stopAudioRecording()
     Task {
       await liveActivityDelegate?.endLiveActivity()
@@ -385,11 +410,30 @@ private class FloatingButtonWindow: UIWindow {
 
 extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
   public func onResultValueReceived(value: String) {
+    let delegateAlive = viewModel?.voiceToRxDelegate != nil
+    print("[V2RX DEBUG] onResultValueReceived : valueLength : \(value.count) | delegateAlive : \(delegateAlive) | sessionID : \(viewModel?.sessionID?.uuidString ?? "nil")")
+    let eventLog = EventLog(
+      params: [
+        "session_id": viewModel?.sessionID?.uuidString ?? "nil",
+        "value_length": "\(value.count)",
+        "delegate_alive": "\(delegateAlive)",
+        "callback": "onResultValueReceived"
+      ],
+      eventType: .delegateCallback,
+      message: "onResultValueReceived : valueLength : \(value.count) | delegateAlive : \(delegateAlive)",
+      status: .success,
+      platform: .network
+    )
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
     viewModel?.voiceToRxDelegate?.onResultValueReceived(value: value)
   }
-  
+
   public func onTapResultDisplayView(success: Bool) {
-    guard let sessionID = viewModel?.sessionID else { return }
+    guard let sessionID = viewModel?.sessionID else {
+      print("[V2RX DEBUG] onTapResultDisplayView : sessionID is nil → ignoring")
+      return
+    }
+    print("[V2RX DEBUG] onTapResultDisplayView : success : \(success) | sessionID : \(sessionID.uuidString)")
     if success {
       hideFloatingButton()
       viewModel?.voiceToRxDelegate?.moveToDeepthoughtPage(id: sessionID)
@@ -399,15 +443,23 @@ extension FloatingVoiceToRxViewController: PictureInPictureViewDelegate {
 
 extension FloatingVoiceToRxViewController {
   private func subscribeToScreenStates() {
+    print("[V2RX DEBUG] subscribeToScreenStates : subscribing | isWindowActive : \(isWindowActive) | sessionID : \(viewModel?.sessionID?.uuidString ?? "nil")")
     viewModel?.$screenState.sink { [weak self] screenState in
       guard let self else { return }
+      let sessionID = viewModel?.sessionID?.uuidString ?? "nil"
+      print("[V2RX DEBUG] subscribeToScreenStates : received : screenState : \(screenState) | isWindowActive : \(isWindowActive) | sessionID : \(sessionID)")
       switch screenState {
       case .startRecording, .listening, .processing, .retry, .deletedRecording, .paused:
         debugPrint("Subscribed screen state is -> \(screenState)")
       case .resultDisplay:
         debugPrint("Subscribed screen state is -> \(screenState)")
+        print("[V2RX DEBUG] subscribeToScreenStates : resultDisplay : scheduling auto-hide in 5s | sessionID : \(sessionID)")
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-          guard let self else { return }
+          guard let self else {
+            print("[V2RX DEBUG] subscribeToScreenStates : auto-hide : self is nil → skipping")
+            return
+          }
+          print("[V2RX DEBUG] subscribeToScreenStates : auto-hide : executing hideFloatingButton | isWindowActive : \(self.isWindowActive)")
           self.hideFloatingButton()
         }
       }

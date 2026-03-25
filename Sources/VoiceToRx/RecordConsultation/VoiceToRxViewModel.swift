@@ -34,11 +34,27 @@ public final class VoiceToRxViewModel: ObservableObject {
   
   @Published public var screenState: RecordConsultationState = .startRecording {
     didSet {
-      print("Screen state is -> \(screenState)")
+      let delegateAlive = voiceToRxDelegate != nil
+      print("[V2RX DEBUG] screenState.didSet : screenState : \(screenState) | oldValue : \(oldValue) | sessionID : \(sessionID?.uuidString ?? "nil") | delegateAlive : \(delegateAlive) | thread : \(Thread.isMainThread ? "main" : "bg")")
+      let eventLog = EventLog(
+        params: [
+          "screen_state": "\(screenState)",
+          "old_state": "\(oldValue)",
+          "session_id": sessionID?.uuidString ?? "nil",
+          "delegate_alive": "\(delegateAlive)"
+        ],
+        eventType: .screenStateChanged,
+        message: "screenState.didSet : \(oldValue) → \(screenState)",
+        status: .success,
+        platform: .network
+      )
+      V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
       switch screenState {
       case .startRecording, .deletedRecording:
+        print("[V2RX DEBUG] screenState.didSet : calling : onVoiceToRxRecordingEnded")
         voiceToRxDelegate?.onVoiceToRxRecordingEnded()
       default:
+        print("[V2RX DEBUG] screenState.didSet : calling : onVoiceToRxRecordingStarted")
         voiceToRxDelegate?.onVoiceToRxRecordingStarted()
         break
       }
@@ -127,6 +143,10 @@ public final class VoiceToRxViewModel: ObservableObject {
   // MARK: - De-Init
   
   deinit {
+    let hadPollingTimer = pollingTimer != nil
+    print("[V2RX DEBUG] deinit : sessionID : \(sessionID?.uuidString ?? "nil") | hadPollingTimer : \(hadPollingTimer) | screenState : \(screenState)")
+    pollingTimer?.invalidate()
+    pollingTimer = nil
     filesProcessedListenerReference?.remove()
     listenerReference?.remove()
     removeInterruptionObserver()
@@ -420,6 +440,32 @@ extension VoiceToRxViewModel {
   
   /// Reinitialize all the values to make sure nothing from previouse session remains
   public func clearSession() {
+    let hadPollingTimer = pollingTimer != nil
+    let oldSessionID = sessionID?.uuidString ?? "nil"
+    let oldScreenState = "\(screenState)"
+    print("[V2RX DEBUG] clearSession : sessionID : \(oldSessionID) | screenState : \(oldScreenState) | hadPollingTimer : \(hadPollingTimer) | emptyResponseCount : \(emptyResponseCount) | thread : \(Thread.isMainThread ? "main" : "bg")")
+    let eventLog = EventLog(
+      params: [
+        "session_id": oldSessionID,
+        "screen_state": oldScreenState,
+        "had_polling_timer": "\(hadPollingTimer)",
+        "empty_response_count": "\(emptyResponseCount)"
+      ],
+      eventType: .clearSessionCalled,
+      message: "clearSession : sessionID : \(oldSessionID) | screenState : \(oldScreenState) | hadPollingTimer : \(hadPollingTimer)",
+      status: .success,
+      platform: .network
+    )
+    V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
+    // Invalidate polling timer BEFORE resetting state to prevent stale callbacks
+    // that would set screenState back to .resultDisplay after session is cleared
+    pollingTimer?.invalidate()
+    pollingTimer = nil
+    // Remove Firestore listeners to prevent callbacks on cleared session
+    filesProcessedListenerReference?.remove()
+    filesProcessedListenerReference = nil
+    listenerReference?.remove()
+    listenerReference = nil
     sessionID = nil
     s3FileUploader = AmazonS3FileUploaderService()
     audioChunkUploader.reset()
@@ -428,6 +474,7 @@ extension VoiceToRxViewModel {
     }
     screenState = .startRecording
     emptyResponseCount = 0
+    print("[V2RX DEBUG] clearSession : completed | screenState : \(screenState)")
   }
 }
 
@@ -452,37 +499,79 @@ extension VoiceToRxViewModel {
 
 extension VoiceToRxViewModel {
   func startStatusPolling() {
+    print("[V2RX DEBUG] startStatusPolling : sessionID : \(sessionID?.uuidString ?? "nil") | hadExistingTimer : \(pollingTimer != nil)")
     pollingTimer?.invalidate()
     pollingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] timer in
-      guard let self else { return }
+      guard let self else {
+        print("[V2RX DEBUG] startStatusPolling : timer fired : self is nil → invalidating timer")
+        timer.invalidate()
+        return
+      }
+      let currentSessionID = sessionID?.uuidString ?? "nil"
+      print("[V2RX DEBUG] startStatusPolling : timer fired : sessionID : \(currentSessionID) | emptyResponseCount : \(emptyResponseCount) | screenState : \(screenState)")
       VoiceToRxRepo.shared.fetchVoiceToRxSessionStatus(sessionID: sessionID) { [weak self] result in
-        guard let self else { return }
+        guard let self else {
+          print("[V2RX DEBUG] startStatusPolling : callback : self is nil → ignoring")
+          return
+        }
+        // Guard: If sessionID became nil, clearSession() was called while this API call was in-flight.
+        // Ignore the stale result to prevent setting screenState on a cleared session.
+        guard self.sessionID != nil else {
+          print("[V2RX DEBUG] startStatusPolling : callback : sessionID is nil (session was cleared) → ignoring stale result")
+          timer.invalidate()
+          return
+        }
         switch result {
         case .success((let isComplete, let value)):
           if isComplete {
             timer.invalidate()
             self.pollingTimer = nil
-            print("✅ Polling complete. All templates have status = success.")
+              print("[V2RX DEBUG] startStatusPolling : pollingComplete : sessionID : \(currentSessionID) | valueLength : \(value.count)")
+            let eventLog = EventLog(
+              params: ["session_id": currentSessionID, "polling_result": "complete", "value_length": "\(value.count)"],
+              eventType: .pollingStatusUpdate,
+              message: "pollingComplete : sessionID : \(currentSessionID)",
+              status: .success,
+              platform: .network
+            )
+            V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
             DispatchQueue.main.async { [weak self] in
-              guard let self else { return }
+              guard let self, self.sessionID != nil else { return }
               screenState = .resultDisplay(success: true, value: value)
-            } 
+            }
           } else {
             self.emptyResponseCount += 1
+            print("[V2RX DEBUG] startStatusPolling : emptyResponse : sessionID : \(currentSessionID) | emptyResponseCount : \(self.emptyResponseCount)")
             if self.emptyResponseCount >= 3 {
-                print("Stopping polling after 3 empty responses")
+                print("[V2RX DEBUG] startStatusPolling : maxEmptyResponses : sessionID : \(currentSessionID) | stopping polling")
+                let eventLog = EventLog(
+                  params: ["session_id": currentSessionID, "polling_result": "max_empty_responses"],
+                  eventType: .pollingStatusUpdate,
+                  message: "maxEmptyResponses : sessionID : \(currentSessionID)",
+                  status: .failure,
+                  platform: .network
+                )
+                V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
                 timer.invalidate()
                 self.pollingTimer = nil
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.sessionID != nil else { return }
                     self.screenState = .resultDisplay(success: false, value: nil)
                 }
             }
         }
-          // If not complete, continue polling
         case .failure(let error):
-          print("❌ Polling stopped due to API/model error: \(error.localizedDescription)")
+          print("[V2RX DEBUG] startStatusPolling : apiError : sessionID : \(currentSessionID) | error : \(error.localizedDescription)")
+          let eventLog = EventLog(
+            params: ["session_id": currentSessionID, "polling_result": "api_error", "error": error.localizedDescription],
+            eventType: .pollingStatusUpdate,
+            message: "apiError : sessionID : \(currentSessionID) | error : \(error.localizedDescription)",
+            status: .failure,
+            platform: .network
+          )
+          V2RxInitConfigurations.shared.delegate?.receiveEvent(eventLog: eventLog)
           DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
+            guard let self, self.sessionID != nil else { return }
             screenState = .resultDisplay(success: false, value: nil)
           }
           timer.invalidate()
